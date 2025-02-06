@@ -10,20 +10,19 @@ const userSchema = new mongoose.Schema(
     phoneNumber: { type: String },
     role: {
       type: String,
-      enum: ["SuperAdmin", "Admin", "User"],
-      default: "User",
+      enum: ["admin", "architect", "client"],
+      default: "client",
     },
-    birthDate: { type: Date },
     pays: { type: String },
     region: { type: String },
-    codeParrainage: { type: String },
     contentTerm: { type: Boolean, default: false },
     cgvAndCguTerm: { type: Boolean, default: false },
     infoTerm: { type: Boolean, default: false },
     majorTerm: { type: Boolean, default: false },
     exterieurParticipantTerm: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true, discriminatorKey: "role" } // Enable inheritance
 );
 
-module.exports = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+module.exports = User;

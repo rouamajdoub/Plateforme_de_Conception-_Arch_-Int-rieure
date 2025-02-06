@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const User = require("./models/User");
+const Architect = require("./models/Architect");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,7 +30,7 @@ async function createAdminIfNotExists() {
   try {
     const adminExists = await User.findOne({ email: adminEmail });
     if (adminExists) {
-      console.log("Admin already exists");
+      console.log("✅ Admin already exists");
       return;
     }
 
@@ -38,9 +39,9 @@ async function createAdminIfNotExists() {
       nomDeFamille: "admin",
       prenom: "admin",
       email: adminEmail,
-      password: "123456789",
+      password: "123456789", // ⚠️ Change later when adding bcrypt
       phoneNumber: "22334455",
-      role: "SuperAdmin",
+      role: "admin",
       birthDate: new Date("1999-10-10"),
       pays: "France",
       region: "Ile-de-France",
@@ -60,7 +61,7 @@ async function createAdminIfNotExists() {
   }
 }
 
-// Basic CRUD Routes (Add more as needed)
+// ✅ Get all users
 app.get("/users", async (req, res) => {
   try {
     const users = await User.find();
@@ -70,6 +71,7 @@ app.get("/users", async (req, res) => {
   }
 });
 
+// ✅ Create a new user
 app.post("/users", async (req, res) => {
   try {
     const newUser = new User(req.body);
@@ -77,6 +79,70 @@ app.post("/users", async (req, res) => {
     res.status(201).json(newUser);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+});
+
+// ✅ Get all architects
+app.get("/architects", async (req, res) => {
+  try {
+    const architects = await Architect.find();
+    res.json(architects);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ✅ Create a new architect
+app.post("/architects", async (req, res) => {
+  try {
+    const newArchitect = new Architect(req.body);
+    await newArchitect.save();
+    res.status(201).json(newArchitect);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// ✅ Get a specific architect by ID
+app.get("/architects/:id", async (req, res) => {
+  try {
+    const architect = await Architect.findById(req.params.id);
+    if (!architect)
+      return res.status(404).json({ message: "Architect not found" });
+    res.json(architect);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ✅ Update an architect
+app.put("/architects/:id", async (req, res) => {
+  try {
+    const updatedArchitect = await Architect.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    if (!updatedArchitect)
+      return res.status(404).json({ message: "Architect not found" });
+    res.json(updatedArchitect);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// ✅ Delete an architect
+app.delete("/architects/:id", async (req, res) => {
+  try {
+    const deletedArchitect = await Architect.findByIdAndDelete(req.params.id);
+    if (!deletedArchitect)
+      return res.status(404).json({ message: "Architect not found" });
+    res.json({ message: "Architect deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 
