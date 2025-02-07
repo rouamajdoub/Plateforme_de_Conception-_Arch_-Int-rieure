@@ -1,12 +1,13 @@
 const mongoose = require("mongoose");
+const { hashPassword } = require("../utils/hashUtils");
 
 const userSchema = new mongoose.Schema(
   {
-    pseudo: { type: String, required: true },
-    nomDeFamille: { type: String, required: true },
-    prenom: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    pseudo: { type: String, required: true, trim: true },
+    nomDeFamille: { type: String, required: true, trim: true },
+    prenom: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true, minlength: 8 },
     phoneNumber: { type: String },
     role: {
       type: String,
@@ -15,6 +16,8 @@ const userSchema = new mongoose.Schema(
     },
     pays: { type: String },
     region: { type: String },
+
+    // Terms & Conditions
     contentTerm: { type: Boolean, default: false },
     cgvAndCguTerm: { type: Boolean, default: false },
     infoTerm: { type: Boolean, default: false },
@@ -23,6 +26,13 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true, discriminatorKey: "role" } // Enable inheritance
 );
+
+// Hash password before saving
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await hashPassword(this.password);
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;
