@@ -1,81 +1,62 @@
 const mongoose = require("mongoose");
-const validator = require("validator");
 const { hashPassword } = require("../utils/hashUtils");
 
 const architectSchema = new mongoose.Schema(
   {
-    pseudo: { type: String, required: true, trim: true, minlength: 3 },
+    pseudo: { type: String, required: true, trim: true },
     nomDeFamille: { type: String, required: true, trim: true },
     prenom: { type: String, required: true, trim: true },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      validate: [validator.isEmail, "Invalid email"],
-      lowercase: true,
-    },
-    password: { type: String, required: true, minlength: 8 },
-    phoneNumber: {
-      type: String,
-      required: true,
-      validate: {
-        validator: (v) => validator.isMobilePhone(v, "any"),
-        message: "Invalid phone number",
-      },
-    },
-    experienceYears: { type: Number, required: true, min: 0 },
-    specialization: {
-      type: [String],
-      required: true,
-      enum: ["Residential", "Commercial", "Interior Design", "Urban Planning", "3D Modeling"],
-    },
-    portfolioURL: { type: String, validate: [validator.isURL, "Invalid URL"] },
-    certifications: { type: [String], enum: ["LEED", "ISO 9001", "RIBA", "NCARB"] },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
+    experienceYears: { type: Number, required: true },
+    specialization: { type: [String], required: true },
+    portfolioURL: { type: String },
+    certifications: { type: [String] },
     education: {
-      degree: { type: String, enum: ["Bachelor", "Master", "PhD"] },
+      degree: { type: String },
       institution: String,
       graduationYear: Number,
     },
     softwareProficiency: [
       {
         name: String,
-        level: { type: String, enum: ["Beginner", "Intermediate", "Expert"] },
+        level: { type: String },
       },
     ],
     location: {
       country: { type: String, required: true },
       region: { type: String, required: true },
       city: { type: String },
-      coordinates: { type: { type: String, default: "Point" }, coordinates: [Number] },
+      coordinates: {
+        type: { type: String, default: "Point" },
+        coordinates: [Number],
+      },
     },
-    website: { type: String, validate: [validator.isURL, "Invalid URL"] },
+    website: { type: String },
     socialMedia: {
       linkedin: String,
       instagram: String,
     },
     subscription: {
-      type: { type: String, enum: ["Gratuit", "Premium", "VIP"], default: "Gratuit" },
+      type: { type: String, default: "Gratuit" },
       startDate: { type: Date },
-      endDate: {
-        type: Date,
-        validate: {
-          validator: function (v) {
-            return this.subscription.startDate <= v;
-          },
-          message: "End date must be after start date",
-        },
-      },
+      endDate: { type: Date },
       isActive: { type: Boolean, default: false },
     },
     rating: {
-      average: { type: Number, min: 0, max: 5, default: 0 },
+      average: { type: Number, default: 0 },
       count: { type: Number, default: 0 },
     },
     reviews: [
       {
-        client: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-        comment: { type: String, maxlength: 500 },
-        rating: { type: Number, min: 0, max: 5, required: true },
+        client: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        comment: { type: String },
+        rating: { type: Number, required: true },
         date: { type: Date, default: Date.now },
       },
     ],

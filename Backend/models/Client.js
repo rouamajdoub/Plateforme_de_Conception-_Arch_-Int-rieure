@@ -1,28 +1,14 @@
 const mongoose = require("mongoose");
-const validator = require("validator");
 const { hashPassword } = require("../utils/hashUtils");
 
 const clientSchema = new mongoose.Schema(
   {
-    pseudo: { type: String, required: true, trim: true, minlength: 3 },
+    pseudo: { type: String, required: true, trim: true },
     nomDeFamille: { type: String, required: true, trim: true },
     prenom: { type: String, required: true, trim: true },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      validate: [validator.isEmail, "Invalid email"],
-    },
-    password: { type: String, required: true, minlength: 8 },
-    phoneNumber: {
-      type: String,
-      required: true,
-      validate: {
-        validator: (v) => validator.isMobilePhone(v, "any"),
-        message: "Invalid phone number",
-      },
-    },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
     location: {
       country: { type: String, required: true },
       region: { type: String, required: true },
