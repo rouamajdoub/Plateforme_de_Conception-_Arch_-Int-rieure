@@ -6,7 +6,13 @@ const Client = require("../models/Client");
 // Create User (automatically handles discriminators)
 exports.createUser = async (req, res) => {
   try {
-    const role = req.body.role.toLowerCase(); // Ensure lowercase
+    if (!req.body.role) {
+      return res.status(400).json({ error: "Role is required" });
+    }
+
+    let newUser;
+    const role = req.body.role.toLowerCase(); // Convert to lowercase
+
     switch (role) {
       case "admin":
         newUser = new Admin(req.body);
@@ -18,7 +24,11 @@ exports.createUser = async (req, res) => {
         newUser = new Client(req.body);
         break;
       default:
-        return res.status(400).json({ error: "Invalid role" });
+        return res
+          .status(400)
+          .json({
+            error: "Invalid role. Must be 'admin', 'architect', or 'client'",
+          });
     }
 
     await newUser.save();
