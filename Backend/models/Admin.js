@@ -1,16 +1,11 @@
 const mongoose = require("mongoose");
+const User = require("./User");
 const { hashPassword } = require("../utils/hashUtils");
 
 const adminSchema = new mongoose.Schema(
   {
-    pseudo: { type: String, required: true, trim: true, minlength: 3 },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true, minlength: 8 },
-    role: {
-      type: String,
-      enum: ["SuperAdmin", "Admin"],
-      default: "Admin",
-    },
+    adminPrivileges: { type: [String], default: ["content-moderation"] },
+    superAdmin: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

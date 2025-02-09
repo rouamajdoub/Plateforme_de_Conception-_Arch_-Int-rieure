@@ -13,6 +13,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["admin", "architect", "client"],
       default: "client",
+      required: true
+
     },
     pays: { type: String },
     region: { type: String },

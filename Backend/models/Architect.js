@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
+const User = require("./User");
 const { hashPassword } = require("../utils/hashUtils");
 
 const architectSchema = new mongoose.Schema(
   {
-    pseudo: { type: String, required: true, trim: true },
     nomDeFamille: { type: String, required: true, trim: true },
     prenom: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const User = require("./User");
 const { hashPassword } = require("../utils/hashUtils");
 
 const clientSchema = new mongoose.Schema(
@@ -7,8 +8,6 @@ const clientSchema = new mongoose.Schema(
     nomDeFamille: { type: String, required: true, trim: true },
     prenom: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
     location: {
       country: { type: String, required: true },
       region: { type: String, required: true },
