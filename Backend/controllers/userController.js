@@ -6,15 +6,15 @@ const Client = require("../models/Client");
 // Create User (automatically handles discriminators)
 exports.createUser = async (req, res) => {
   try {
-    let newUser;
-    switch (req.body.role) {
-      case "Admin":
+    const role = req.body.role.toLowerCase(); // Ensure lowercase
+    switch (role) {
+      case "admin":
         newUser = new Admin(req.body);
         break;
-      case "Architect":
+      case "architect":
         newUser = new Architect(req.body);
         break;
-      case "Client":
+      case "client":
         newUser = new Client(req.body);
         break;
       default:
@@ -32,7 +32,7 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
   try {
     const { role } = req.query;
-    const filter = role ? { role } : {}; // Filter by role if provided
+    const filter = role ? { role: role.toLowerCase() } : {};
     const users = await User.find(filter);
     res.json(users);
   } catch (error) {

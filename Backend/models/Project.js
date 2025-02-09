@@ -4,6 +4,7 @@ const projectSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true, maxlength: 2000 },
+    images: [{ type: String }], // Array of image URLs
     budget: { type: Number, required: true, min: 0 },
     location: {
       country: { type: String, required: true },
