@@ -15,20 +15,18 @@ exports.createUser = async (req, res) => {
 
     switch (role) {
       case "admin":
-        newUser = new User(req.body, { discriminatorKey: "admin" });
+        newUser = new Admin(req.body); // Use Admin discriminator
         break;
       case "architect":
-        newUser = new User(req.body, { discriminatorKey: "architect" });
+        newUser = new Architect(req.body); // Use Architect discriminator
         break;
       case "client":
-        newUser = new User(req.body, { discriminatorKey: "client" });
+        newUser = new Client(req.body); // Use Client discriminator
         break;
       default:
-        return res
-          .status(400)
-          .json({
-            error: "Invalid role. Must be 'admin', 'architect', or 'client'",
-          });
+        return res.status(400).json({
+          error: "Invalid role. Must be 'admin', 'architect', or 'client'",
+        });
     }
 
     await newUser.save();

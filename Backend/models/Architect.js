@@ -23,10 +23,20 @@ const architectSchema = new mongoose.Schema(
       region: { type: String, required: true },
       city: { type: String },
       coordinates: {
-        type: { type: String, default: "Point" },
-        coordinates: [Number],
+        type: { type: String, enum: ["Point"], required: true },
+        coordinates: {
+          type: [Number],
+          required: true,
+          validate: {
+            validator: function (arr) {
+              return arr.length === 2; // Ensure two values exist
+            },
+            message: "Coordinates must be an array of [longitude, latitude]",
+          },
+        },
       },
     },
+
     website: { type: String },
     socialMedia: {
       linkedin: String,
@@ -67,7 +77,5 @@ const architectSchema = new mongoose.Schema(
 );
 
 architectSchema.index({ "location.coordinates": "2dsphere" });
-
-
 
 module.exports = User.discriminator("architect", architectSchema);
