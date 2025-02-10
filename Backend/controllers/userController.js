@@ -11,17 +11,17 @@ exports.createUser = async (req, res) => {
     }
 
     let newUser;
-    const role = req.body.role.toLowerCase(); // Convert to lowercase
+    const role = req.body.role.toLowerCase(); // Ensure lowercase
 
     switch (role) {
       case "admin":
-        newUser = new Admin(req.body);
+        newUser = new User(req.body, { discriminatorKey: "admin" });
         break;
       case "architect":
-        newUser = new Architect(req.body);
+        newUser = new User(req.body, { discriminatorKey: "architect" });
         break;
       case "client":
-        newUser = new Client(req.body);
+        newUser = new User(req.body, { discriminatorKey: "client" });
         break;
       default:
         return res

@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const User = require("./User");
-const { hashPassword } = require("../utils/hashUtils");
 
 const adminSchema = new mongoose.Schema(
   {
@@ -11,11 +10,4 @@ const adminSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password before saving
-adminSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await hashPassword(this.password);
-  next();
-});
-
-module.exports = mongoose.model("Admin", adminSchema);
+module.exports = User.discriminator("admin", adminSchema);

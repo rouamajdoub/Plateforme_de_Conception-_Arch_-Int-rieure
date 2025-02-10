@@ -1,14 +1,8 @@
 const mongoose = require("mongoose");
 const User = require("./User");
-const { hashPassword } = require("../utils/hashUtils");
 
 const architectSchema = new mongoose.Schema(
   {
-    nomDeFamille: { type: String, required: true, trim: true },
-    prenom: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
     experienceYears: { type: Number, required: true },
     specialization: { type: [String], required: true },
     portfolioURL: { type: String },
@@ -74,11 +68,6 @@ const architectSchema = new mongoose.Schema(
 
 architectSchema.index({ "location.coordinates": "2dsphere" });
 
-// Hash password before saving
-architectSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await hashPassword(this.password);
-  next();
-});
 
-module.exports = mongoose.model("Architect", architectSchema);
+
+module.exports = User.discriminator("architect", architectSchema);
