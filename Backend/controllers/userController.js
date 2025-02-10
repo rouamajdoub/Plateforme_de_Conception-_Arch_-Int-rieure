@@ -3,7 +3,6 @@ const Admin = require("../models/Admin");
 const Architect = require("../models/Architect");
 const Client = require("../models/Client");
 
-// Create User (automatically handles discriminators)
 exports.createUser = async (req, res) => {
   try {
     if (!req.body.role) {
@@ -11,17 +10,17 @@ exports.createUser = async (req, res) => {
     }
 
     let newUser;
-    const role = req.body.role.toLowerCase(); // Ensure lowercase
+    const role = req.body.role.toLowerCase();
 
     switch (role) {
       case "admin":
-        newUser = new Admin(req.body); // Use Admin discriminator
+        newUser = new Admin(req.body);
         break;
       case "architect":
-        newUser = new Architect(req.body); // Use Architect discriminator
+        newUser = new Architect(req.body);
         break;
       case "client":
-        newUser = new Client(req.body); // Use Client discriminator
+        newUser = new Client(req.body);
         break;
       default:
         return res.status(400).json({
@@ -66,8 +65,8 @@ exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findByIdAndUpdate(id, req.body, {
-      new: true, // Return the updated document
-      runValidators: true, // Validate the update
+      new: true,
+      runValidators: true,
     });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -85,7 +84,7 @@ exports.deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    res.status(204).send(); // No content (successful deletion)
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

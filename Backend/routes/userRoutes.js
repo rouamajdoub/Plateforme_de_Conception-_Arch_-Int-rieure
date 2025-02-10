@@ -5,14 +5,14 @@ const {
   getUserById,
   updateUser,
   deleteUser,
-} = require("../controllers/userController"); // Ensure this path is correct
+} = require("../controllers/userController"); 
 
 const router = express.Router();
 
-router.get("/", getUsers); // Ensure getUsers is defined
-router.post("/", createUser); // Ensure createUser is defined
-router.get("/:id", getUserById); // Ensure getUserById is defined
-router.put("/:id", updateUser); // Ensure updateUser is defined
-router.delete("/:id", deleteUser); // Ensure deleteUser is defined
+router.get("/", getUsers); 
+router.post("/", createUser); 
+router.get("/:id", getUserById); 
+router.put("/:id", updateUser); 
+router.delete("/:id", deleteUser); 
 
 module.exports = router;
