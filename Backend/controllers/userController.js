@@ -1,45 +1,49 @@
 const User = require("../models/User");
-const Admin = require("../models/Admin");
-const Architect = require("../models/Architect");
-const Client = require("../models/Client");
-
-exports.createUser = async (req, res) => {
+const Subscription = require("../models/Subscriptions");
+exports.createUser = async (req, res, role = null) => {
   try {
-    if (!req.body.role) {
+    let newUser;
+    const userRole = role || req.body.role;
+    if (!userRole) {
       return res.status(400).json({ error: "Role is required" });
     }
 
-    let newUser;
-    const role = req.body.role.toLowerCase();
+    const roleLower = userRole.toLowerCase();
+    req.body.role = roleLower;
 
-    switch (role) {
-      case "admin":
-        newUser = new Admin(req.body);
-        break;
-      case "architect":
-        newUser = new Architect(req.body);
-        break;
-      case "client":
-        newUser = new Client(req.body);
-        break;
-      default:
-        return res.status(400).json({
-          error: "Invalid role. Must be 'admin', 'architect', or 'client'",
+    if (roleLower === "architect" || roleLower === "client") {
+      newUser = new User(req.body);
+      await newUser.save();
+
+      // Create a default subscription if the user is an architect
+      if (roleLower === "architect") {
+        console.log("Creating subscription for:", newUser._id);
+
+        const subscription = new Subscription({
+          architectId: newUser._id,
+          plan: "Free",
+          price: 0,
+          endDate: null,
         });
-    }
+        newUser.subscription = subscription._id;
+        await subscription.save();
+        console.log("Subscription created successfully:", subscription);
+      }
 
-    await newUser.save();
-    res.status(201).json(newUser);
+      return res.status(201).json(newUser);
+    } else {
+      return res.status(400).json({
+        error: "Invalid role. Must be 'architect' or 'client'",
+      });
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-// Get all Users (with optional filtering)
-exports.getUsers = async (req, res) => {
+exports.getUsers = async (req, res, role = null) => {
   try {
-    const { role } = req.query;
-    const filter = role ? { role: role.toLowerCase() } : {};
+    const filter = role ? { role } : {};
     const users = await User.find(filter);
     res.json(users);
   } catch (error) {
@@ -47,10 +51,12 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-// Get a single user by ID
-exports.getUserById = async (req, res) => {
+exports.getUserById = async (req, res, role = null) => {
   try {
-    const user = await User.findById(req.params.id);
+    const filter = { _id: req.params.id };
+    if (role) filter.role = role;
+
+    const user = await User.findOne(filter);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -60,14 +66,16 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// Update a user by ID
-exports.updateUser = async (req, res) => {
+exports.updateUser = async (req, res, role = null) => {
   try {
-    const { id } = req.params;
-    const user = await User.findByIdAndUpdate(id, req.body, {
+    const filter = { _id: req.params.id };
+    if (role) filter.role = role;
+
+    const user = await User.findOneAndUpdate(filter, req.body, {
       new: true,
       runValidators: true,
     });
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -77,10 +85,12 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Delete a user by ID
-exports.deleteUser = async (req, res) => {
+exports.deleteUser = async (req, res, role = null) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const filter = { _id: req.params.id };
+    if (role) filter.role = role;
+
+    const user = await User.findOneAndDelete(filter);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }

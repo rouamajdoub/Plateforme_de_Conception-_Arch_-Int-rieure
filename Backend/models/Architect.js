@@ -29,7 +29,7 @@ const architectSchema = new mongoose.Schema(
           required: true,
           validate: {
             validator: function (arr) {
-              return arr.length === 2; // Ensure two values exist
+              return arr.length === 2; 
             },
             message: "Coordinates must be an array of [longitude, latitude]",
           },
@@ -43,10 +43,8 @@ const architectSchema = new mongoose.Schema(
       instagram: String,
     },
     subscription: {
-      type: { type: String, default: "Gratuit" },
-      startDate: { type: Date },
-      endDate: { type: Date },
-      isActive: { type: Boolean, default: false },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription", 
     },
     rating: {
       average: { type: Number, default: 0 },
