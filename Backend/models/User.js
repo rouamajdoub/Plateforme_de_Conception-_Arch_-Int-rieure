@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { hashPassword } = require("../utils/hashUtils");
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
     nomDeFamille: { type: String, required: true, trim: true },
     prenom: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true, minlength: 8 },
+    password: { type: String, required: true, minlength: 8, select: false },
     phoneNumber: { type: String },
     role: {
       type: String,
@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
     },
     pays: { type: String },
     region: { type: String },
+    isVerified: { type: Boolean, default: false },
 
     // Terms & Conditions
     contentTerm: { type: Boolean, default: false },
@@ -31,9 +32,13 @@ const userSchema = new mongoose.Schema(
 // Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = await hashPassword(this.password);
+  this.password = await bcrypt.hash(this.password, 10); // Utiliser bcrypt directement ici
   next();
 });
+// 🔹 Vérifier le mot de passe
+userSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;

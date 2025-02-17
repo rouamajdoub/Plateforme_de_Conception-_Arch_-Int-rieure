@@ -1,73 +1,88 @@
 const Payment = require("../models/paymentModel");
+const Subscription = require("../models/Subscriptions");
 const Order = require("../models/Order");
 
-// 📌 Créer un paiement
+// ✅ 1. Effectuer un paiement
 exports.createPayment = async (req, res) => {
   try {
-    const { userId, orderId, amount, paymentMethod, transactionId } = req.body;
-
-    // Vérifier si la commande existe
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ message: "Commande non trouvée" });
-    }
-
-    // Créer un nouveau paiement
-    const payment = new Payment({
-      userId,
-      orderId,
+    const {
+      user,
       amount,
       paymentMethod,
+      type,
+      subscription,
+      order,
       transactionId,
-      status: "pending", 
+    } = req.body;
+
+    if (type === "subscription" && !subscription) {
+      return res
+        .status(400)
+        .json({
+          error: "Subscription ID is required for subscription payments.",
+        });
+    }
+    if (type === "product" && !order) {
+      return res
+        .status(400)
+        .json({ error: "Order ID is required for product payments." });
+    }
+
+    const payment = new Payment({
+      user,
+      amount,
+      paymentMethod,
+      type,
+      subscription: type === "subscription" ? subscription : undefined,
+      order: type === "product" ? order : undefined,
+      transactionId,
+      status: "completed",
     });
 
     await payment.save();
-    res.status(201).json({ message: "Paiement créé avec succès", payment });
+    res.status(201).json(payment);
   } catch (error) {
-    res.status(500).json({ message: "Erreur lors du paiement", error });
+    res.status(400).json({ error: error.message });
   }
 };
 
-// 📌 Récupérer un paiement par ID
+// ✅ 2. Récupérer tous les paiements
+exports.getAllPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find()
+      .populate("user", "nom prenom email")
+      .populate("subscription")
+      .populate("order");
+    res.json(payments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ✅ 3. Récupérer un paiement par ID
 exports.getPaymentById = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id).populate("userId orderId");
-    if (!payment) {
-      return res.status(404).json({ message: "Paiement introuvable" });
-    }
-    res.status(200).json(payment);
+    const payment = await Payment.findById(req.params.id)
+      .populate("user")
+      .populate("subscription")
+      .populate("order");
+    if (!payment) return res.status(404).json({ error: "Paiement non trouvé" });
+    res.json(payment);
   } catch (error) {
-    res.status(500).json({ message: "Erreur lors de la récupération du paiement", error });
+    res.status(500).json({ error: error.message });
   }
 };
 
-// 📌 Mettre à jour le statut d'un paiement
-exports.updatePaymentStatus = async (req, res) => {
+// ✅ 4. Vérifier le statut d'un paiement
+exports.checkPaymentStatus = async (req, res) => {
   try {
-    const { status } = req.body;
-    const payment = await Payment.findById(req.params.id);
-    if (!payment) {
-      return res.status(404).json({ message: "Paiement introuvable" });
-    }
-
-    payment.status = status;
-    await payment.save();
-    res.status(200).json({ message: "Statut du paiement mis à jour", payment });
+    const payment = await Payment.findOne({
+      transactionId: req.params.transactionId,
+    });
+    if (!payment)
+      return res.status(404).json({ error: "Transaction non trouvée" });
+    res.json({ status: payment.status });
   } catch (error) {
-    res.status(500).json({ message: "Erreur lors de la mise à jour du paiement", error });
-  }
-};
-
-// 📌 Supprimer un paiement
-exports.deletePayment = async (req, res) => {
-  try {
-    const payment = await Payment.findByIdAndDelete(req.params.id);
-    if (!payment) {
-      return res.status(404).json({ message: "Paiement introuvable" });
-    }
-    res.status(200).json({ message: "Paiement supprimé avec succès" });
-  } catch (error) {
-    res.status(500).json({ message: "Erreur lors de la suppression du paiement", error });
+    res.status(500).json({ error: error.message });
   }
 };

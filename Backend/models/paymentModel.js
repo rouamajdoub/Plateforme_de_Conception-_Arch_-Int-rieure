@@ -2,14 +2,63 @@ const mongoose = require("mongoose");
 
 const paymentSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // L'utilisateur qui a effectué le paiement
-    orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order", required: true }, // La commande associée au paiement
-    amount: { type: Number, required: true }, // Montant total du paiement
-    paymentMethod: { type: String, enum: ["credit_card", "paypal", "bank_transfer"], required: true }, // Méthode de paiement
-    status: { type: String, enum: ["pending", "completed", "failed"], default: "pending" }, // Statut du paiement
-    transactionId: { type: String, unique: true, required: true }, // ID unique de transaction (fourni par le service de paiement)
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    }, // L'utilisateur qui paie (architecte ou client)
+
+    amount: {
+      type: Number,
+      required: true,
+    }, // Montant payé
+
+    paymentMethod: {
+      type: String,
+      enum: ["stripe", "paypal", "bank_transfer"],
+      required: true,
+    }, // Moyen de paiement
+
+    status: {
+      type: String,
+      enum: ["pending", "completed", "failed"],
+      default: "pending",
+    }, // État du paiement
+
+    type: {
+      type: String,
+      enum: ["subscription", "product"],
+      required: true,
+    }, // Paiement pour abonnement ou achat produit
+
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+      required: function () {
+        return this.type === "subscription";
+      },
+    }, // ID de l'abonnement (si applicable)
+
+    order: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      required: function () {
+        return this.type === "product";
+      },
+    }, // ID de la commande (si applicable)
+
+    transactionId: {
+      type: String,
+      required: true,
+      unique: true,
+    }, // ID de transaction unique
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  { timestamps: true } // Ajoute createdAt et updatedAt automatiquement
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Payment", paymentSchema);
