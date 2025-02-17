@@ -4,6 +4,7 @@ const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const projectsDatabaseRoutes = require("./routes/projects_dbRoutes");
+const marketplaceRoutes = require("./routes/marketplaceRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,8 +23,12 @@ app.use("/api/architects", userRoutes);
 // Mount subscription routes
 app.use("/api/subscriptions", subscriptionRoutes);
 
-// Mount projects database routes
-app.use("/api/projectsDatabase", projectsDatabaseRoutes); // Ajout des routes des projets
+// Mount projects  routes
+app.use("/api/projectsDatabase", projectsDatabaseRoutes);
+
+// Mount Marketplace routes
+
+app.use("/api/marketplace", marketplaceRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
