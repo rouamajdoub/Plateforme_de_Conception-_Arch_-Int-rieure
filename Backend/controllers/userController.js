@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const Subscription = require("../models/Subscriptions");
+const jwt = require("jsonwebtoken"); 
+
 exports.createUser = async (req, res, role = null) => {
   try {
     let newUser;
@@ -17,8 +19,6 @@ exports.createUser = async (req, res, role = null) => {
 
       // Create a default subscription if the user is an architect
       if (roleLower === "architect") {
-        console.log("Creating subscription for:", newUser._id);
-
         const subscription = new Subscription({
           architectId: newUser._id,
           plan: "Free",
@@ -27,7 +27,6 @@ exports.createUser = async (req, res, role = null) => {
         });
         newUser.subscription = subscription._id;
         await subscription.save();
-        console.log("Subscription created successfully:", subscription);
       }
 
       return res.status(201).json(newUser);
@@ -98,4 +97,29 @@ exports.deleteUser = async (req, res, role = null) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+// Logout Functionality
+exports.logout = async (req, res) => {
+  try {
+    const token = req.header("Authorization").replace("Bearer ", "");
+    req.user.authTokens = req.user.authTokens.filter(
+      (userToken) => userToken.token !== token
+    );
+    await req.user.save();
+
+    res.json({ message: "Déconnexion réussie" });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+// Function to generate a token on login
+exports.generateAuthToken = async (user) => {
+  const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+  user.authTokens.push({ token });
+  await user.save();
+  return token;
 };

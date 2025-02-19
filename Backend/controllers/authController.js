@@ -1,7 +1,9 @@
+//-----------------------Require-----------------------
 const User = require("../models/User");
-const jwt = require("jsonwebtoken");
-
-// ✅ 1. Inscription (Signup)
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
+// -----------------------Signup---------------------------------
 exports.register = async (req, res) => {
   try {
     const { pseudo, nomDeFamille, prenom, email, password, role } = req.body;
@@ -17,8 +19,8 @@ exports.register = async (req, res) => {
       password,
       role,
     });
-    const authToken = await user.generateAuthToken(); // Generate token after saving
-    await user.save(); // Save the user after token generation
+    const authToken = await user.generateAuthToken();
+    await user.save();
     res
       .status(201)
       .json({ user, authToken, message: "Utilisateur créé avec succès" });
@@ -27,7 +29,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// ✅ 2. Connexion (Login)
+//--------------------Login------------------------
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -38,7 +40,6 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: "Email ou mot de passe incorrect" });
     }
 
-    // Check password match
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ error: "Email ou mot de passe incorrect" });
@@ -52,7 +53,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ 3. Récupérer le profil utilisateur
+// --------------------profile--------------------
 exports.getProfile = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
@@ -69,7 +70,7 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-// ✅ 4. Déconnexion (Logout)
+// ----------------------------logout-----------------------------------
 exports.logout = async (req, res) => {
   try {
     const token = req.header("Authorization").replace("Bearer ", "");
@@ -82,4 +83,62 @@ exports.logout = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
+};
+
+//----------------------Reset Password---------------------
+// Demander une réinitialisation de mot de passe
+exports.requestPasswordReset = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  user.resetPasswordToken = resetToken;
+  user.resetPasswordExpires = Date.now() + 3600000;
+  await user.save();
+
+  // Configurer Nodemailer
+  const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  // Envoyer l'email
+  const resetUrl = `http://localhost:5000/reset-password/${resetToken}`;
+  await transporter.sendMail({
+    to: user.email,
+    subject: "Password Reset Request",
+    html: `<p>You requested a password reset. Click the link below to reset your password:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+  });
+
+  res.json({ message: "Password reset email sent" });
+};
+
+// Réinitialiser le mot de passe
+exports.resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res.status(400).json({ error: "Token is invalid or has expired" });
+  }
+
+  // Hash the new password before saving
+  user.password = await bcrypt.hash(password, 10);
+  user.resetPasswordToken = undefined; // Clear the token
+  user.resetPasswordExpires = undefined; // Clear the expiration
+  await user.save();
+
+  res.json({ message: "Password has been reset successfully" });
 };
