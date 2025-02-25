@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "frontend/src/styles/Auth.css"; 
+import "../styles/Auth.css";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -86,11 +86,18 @@ const Signup = () => {
             required
           />
         </div>
-        <select name="role" value={formData.role} onChange={handleChange}>
+        <select
+          className="select-box"
+          name="role"
+          value={formData.role}
+          onChange={handleChange}
+        >
           <option value="client">Client</option>
           <option value="architect">Architecte</option>
         </select>
-        <button type="submit" className="btn">Sign Up</button>
+        <button type="submit" className="btn">
+          Sign Up
+        </button>
       </form>
       <p className="registre-link">
         Already have an account? <a href="/login">Login</a>

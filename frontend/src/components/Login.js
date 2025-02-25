@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./Auth.css"; 
+import "../styles/Auth.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -12,7 +12,10 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", { email, password });
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        { email, password }
+      );
       localStorage.setItem("token", response.data.token);
       alert("Login successful!");
       navigate("/dashboard");
@@ -44,7 +47,9 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit" className="btn">Login</button>
+        <button type="submit" className="btn">
+          Login
+        </button>
       </form>
       <p className="registre-link">
         Don't have an account? <a href="/signup">Sign Up</a>
