@@ -33,7 +33,7 @@ app.use("/api/architects", userRoutes);
 //  subscription routes
 app.use("/api/subscriptions", subscriptionRoutes);
 //  projects  routes
-app.use("/api/projectsDatabase", projectsDatabaseRoutes);
+app.use("/api/projects", projectsDatabaseRoutes);
 
 // routes de la marketplace
 app.use("/api/marketplace", marketplaceRoutes);

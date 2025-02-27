@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
+import SubscriptionPlans from "./SubscriptionPlans";
+import "../styles/Auth.css";
 
 const Signup = () => {
   const [step, setStep] = useState(1);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { error, loading } = useSelector((state) => state.auth); // Récupère l'état global Redux
+  const { error, loading } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     role: "",
@@ -30,6 +32,11 @@ const Signup = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleSubscriptionSelect = (subscriptionId) => {
+    setFormData({ ...formData, subscription: subscriptionId });
+    setStep(4);
+  };
+
   const handleNextStep = () => setStep(step + 1);
   const handlePrevStep = () => setStep(step - 1);
 
@@ -46,11 +53,11 @@ const Signup = () => {
   return (
     <div className="wrapper">
       <h2>Inscription</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
-        
+        {/* Étape 1 - Sélection du rôle */}
         {step === 1 && (
-          <div>
+          <div className="step">
             <h3>Choisissez votre rôle</h3>
             <select name="role" value={formData.role} onChange={handleChange} required>
               <option value="">Sélectionnez...</option>
@@ -63,8 +70,9 @@ const Signup = () => {
           </div>
         )}
 
+        {/* Étape 2 - Informations personnelles */}
         {step === 2 && (
-          <div>
+          <div className="step">
             <h3>Informations personnelles</h3>
             <input type="text" name="pseudo" placeholder="Pseudo" value={formData.pseudo} onChange={handleChange} required />
             <input type="text" name="nomDeFamille" placeholder="Nom de famille" value={formData.nomDeFamille} onChange={handleChange} required />
@@ -94,30 +102,22 @@ const Signup = () => {
           </div>
         )}
 
+        {/* Étape 3 - Sélection de l'abonnement (uniquement pour les architectes) */}
         {step === 3 && formData.role === "architect" && (
-          <div>
+          <div className="step">
             <h3>Choisissez un abonnement</h3>
-            <select name="subscription" value={formData.subscription} onChange={handleChange} required>
-              <option value="">Sélectionnez un abonnement...</option>
-              <option value="free">Gratuit</option>
-              <option value="premium">Premium - 10€/mois</option>
-              <option value="vip">VIP - 20€/mois</option>
-            </select>
-
+            <SubscriptionPlans onSelect={handleSubscriptionSelect} />
             <button type="button" className="btn" onClick={handlePrevStep}>
               Précédent
-            </button>
-            <button type="submit" className="btn" disabled={loading}>
-              {loading ? "Inscription en cours..." : "S'inscrire"}
             </button>
           </div>
         )}
 
-        {step === 3 && formData.role === "client" && (
-          <div>
+        {/* Étape 4 - Confirmation et inscription */}
+        {step === 4 && (
+          <div className="step">
             <h3>Confirmation</h3>
             <p>Merci d'avoir rempli le formulaire ! Cliquez sur "S'inscrire" pour finaliser.</p>
-
             <button type="button" className="btn" onClick={handlePrevStep}>
               Précédent
             </button>

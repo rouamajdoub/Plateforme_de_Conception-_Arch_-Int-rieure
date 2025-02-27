@@ -1,0 +1,39 @@
+/* src/styles/navbar.css */
+.navbar-top {
+    background-color: #34495e;
+    color: #ecf0f1;
+    padding: 10px 30px;
+    display: flex;
+    justify-content: flex-end;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-top ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+}
+
+.navbar-top ul li {
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.navbar-top ul li:hover {
+    color: #3498db;
+}
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .navbar-top ul {
+        gap: 10px;
+    }
+}

@@ -1,0 +1,106 @@
+.review-management {
+    padding: 20px;
+}
+
+.review-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.review-table th, .review-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.review-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.btn-edit, .btn-delete {
+    padding: 5px 10px;
+    margin-right: 5px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px; /* Ajout d'un arrondi aux coins */
+}
+
+.btn-edit {
+    background-color: #4CAF50; /* Vert */
+    color: white;
+}
+
+.btn-delete {
+    background-color: #f44336; /* Rouge */
+    color: white;
+}
+
+/* Ajout d'un style pour les boutons au survol */
+.btn-edit:hover {
+    background-color: #45a049; /* Couleur plus foncée au survol */
+}
+
+.btn-delete:hover {
+    background-color: #e53935; /* Couleur plus foncée au survol */
+}
+
+/* Style pour le message d'erreur et de chargement */
+p {
+    font-size: 16px;
+    color: #333;
+}
+
+/* Style pour le champ de filtrage */
+input[type="text"] {
+    padding: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box; /* Pour inclure le padding dans la largeur totale */
+}
+/* src/styles/UserManagement.css */
+.user-management {
+    padding: 20px;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.user-table th, .user-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.user-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.btn-delete {
+    padding: 5px 10px;
+    border: none;
+    background-color: #f44336; /* Red */
+    color: white;
+    cursor: pointer;
+}
+
+.btn-delete:hover {
+    background-color: #e53935; /* Darker red on hover */
+}
+
+/* Style for the filter input */
+input[type="text"] {
+    padding: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box; /* Include padding in width */
+}

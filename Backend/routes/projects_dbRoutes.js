@@ -25,6 +25,8 @@ router.put("/matches/:id", matchController.updateMatchStatus);
 
 // 🔹 Reviews Routes
 router.post("/reviews", reviewController.createReview);
+router.delete("/reviews/:id", reviewController.deleteReview);
+router.get("/reviews", reviewController.getAllReviews);
 router.get("/reviews/:projectId", reviewController.getReviewsByProject);
 
 // 🔹 Quotes Routes
