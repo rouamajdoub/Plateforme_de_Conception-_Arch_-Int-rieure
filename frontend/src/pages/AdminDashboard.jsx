@@ -1,13 +1,14 @@
+// src/pages/AdminDashboard.js
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import ReviewManagement from "./ReviewManagement";
 import UserManagement from "./UserManagement";
 import SubscriptionManagement from "./SubscriptionManagement";
-import Header from "../components/Header";
+import Header from "../components/Header/Header";
 import Navbar from "../components/Navbar";
-import D3UserStatistics from "../components/D3UserStatistics";
-import D3ReviewManagementChart from "../components/D3ReviewManagementChart";
-import D3SubscriptionChart from "../components/D3SubscriptionChart";
+import UserStatisticsChart from "../components/charts/Bar/UserStat";
+import ReviewManagementChart from "../components/charts/Bar/ReviewChart";
+import SubscriptionChart from "../components/charts/Pie/SubscriptionChart";
 import "../styles/adminDashboard.css";
 
 const AdminDashboard = () => {
@@ -43,16 +44,28 @@ const AdminDashboard = () => {
       <div className="admin-dashboard">
         <nav className="navbar">
           <ul>
-            <li><Link to="/admin/reviews">Gestion des Avis</Link></li>
-            <li><Link to="/admin/users">Gestion des Utilisateurs</Link></li>
-            <li><Link to="/admin/subscriptions">Gestion des Abonnements</Link></li>
+            <li>
+              <Link to="/admin/reviews">Gestion des Avis</Link>
+            </li>
+            <li>
+              <Link to="/admin/users">Gestion des Utilisateurs</Link>
+            </li>
+            <li>
+              <Link to="/admin/subscriptions">Gestion des Abonnements</Link>
+            </li>
           </ul>
         </nav>
 
         <main className="main-content">
-          {userData.length > 0 && <D3UserStatistics data={userData} />}
-          {reviewData.length > 0 && <D3ReviewManagementChart data={reviewData} />}
-          {subscriptionData.length > 0 && <D3SubscriptionChart data={subscriptionData} />}
+          <div className="card chart-container">
+            {userData.length > 0 && <UserStatisticsChart data={userData} />}
+          </div>
+          <div className="card chart-container">
+            {reviewData.length > 0 && <ReviewManagementChart data={reviewData} />}
+          </div>
+          <div className="card chart-container">
+            {subscriptionData.length > 0 && <SubscriptionChart data={subscriptionData} />}
+          </div>
           <Routes>
             <Route path="/admin/reviews" element={<ReviewManagement />} />
             <Route path="/admin/users" element={<UserManagement />} />

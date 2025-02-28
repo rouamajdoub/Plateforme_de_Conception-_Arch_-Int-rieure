@@ -6,16 +6,18 @@ import store from './redux/store';
 import { Provider } from "react-redux";
 import { BrowserRouter as Router } from 'react-router-dom'; // Import Router
 import reportWebVitals from './reportWebVitals';
+import { ThemeProvider } from './context/ThemeContext'; // Adjust the path as necessary
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <Provider store={store}>
     <Router>
-      <App />
+      <ThemeProvider> {/* Wrap App with ThemeProvider */}
+        <App />
+      </ThemeProvider>
     </Router>
   </Provider>
 );
 
-// Measure performance in your app
 reportWebVitals(console.log);
