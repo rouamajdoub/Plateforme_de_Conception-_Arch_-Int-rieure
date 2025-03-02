@@ -1,78 +1,101 @@
-/* styles/adminDashboard.css */
+/* 🎨 Palette de couleurs */
+:root {
+    --primary-color: #304F7E;
+    --secondary-color: #19254F;
+    --tertiary-color: #223458;
+    --accent-color: #CFC7BA;
+    --neutral-color: #485896;
 
+    --text-light: #CFC7BA;
+    --text-dark: #E5E7EB;
+    --bg-light: #F5F5F5;
+    --bg-dark: #19254F;
+}
+
+/* 🌍 Global Styles */
 body {
     font-family: 'Roboto', sans-serif;
     margin: 0;
-    background-color: #223458; /* Dark Night Blue */
-    color: #CFC7BA; /* Light Beige */
+    background-color: var(--tertiary-color);
+    color: var(--text-light);
 }
 
-/* General Glassmorphism Card Style */
-.card {
-    background: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
-    backdrop-filter: blur(10px); /* Blur effect */
-    border: 1px solid rgba(255, 255, 255, 0.2); /* Semi-transparent border */
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Soft shadow */
-    padding: 20px;
-    margin: 20px 0;
+/* 🎨 Dashboard Layout */
+.admin-dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-/* Navbar Styles */
+/* 📌 Header & Navbar */
 .navbar {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(15px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     display: flex;
     justify-content: center;
-    padding: 10px 0;
+    padding: 15px;
 }
 
 .navbar ul {
     list-style: none;
     padding: 0;
+    display: flex;
+    gap: 20px;
 }
 
 .navbar li {
     display: inline;
-    margin: 0 15px;
 }
 
 .navbar a {
-    color: #CFC7BA;
+    color: var(--text-light);
     text-decoration: none;
     font-weight: bold;
-    transition: color 0.3s;
+    transition: color 0.3s, transform 0.2s;
 }
 
 .navbar a:hover {
-    color: #304F7E; /* Deep Blue */
+    color: var(--primary-color);
+    transform: scale(1.05);
 }
 
-/* Main Content Styles */
+/* 📊 Dashboard Content */
 .main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 30px;
 }
 
-/* Chart Container */
+/* 💎 Glassmorphism Card */
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+    padding: 25px;
+    margin: 20px 0;
+    width: 90%;
+    max-width: 800px;
+    text-align: center;
+}
+
+/* 📊 Chart Container */
 .chart-container {
     width: 100%;
-    max-width: 800px;
 }
 
-/* Typography */
+/* 📝 Typography */
 h1, h2 {
     font-family: 'Open Sans', sans-serif;
-    color: #CFC7BA;
+    color: var(--text-light);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .navbar li {
-        display: block;
-        margin: 10px 0;
-    }
+p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    opacity: 0.9;
 }

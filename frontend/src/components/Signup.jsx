@@ -42,6 +42,7 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log(formData); // Log formData for debugging
     dispatch(registerUser(formData)).then((response) => {
       if (!response.error) {
         alert("Inscription réussie !");
@@ -59,12 +60,22 @@ const Signup = () => {
         {step === 1 && (
           <div className="step">
             <h3>Choisissez votre rôle</h3>
-            <select name="role" value={formData.role} onChange={handleChange} required>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              required
+            >
               <option value="">Sélectionnez...</option>
               <option value="client">Client</option>
               <option value="architect">Architecte</option>
             </select>
-            <button type="button" className="btn" onClick={handleNextStep} disabled={!formData.role}>
+            <button
+              type="button"
+              className="btn"
+              onClick={handleNextStep}
+              disabled={!formData.role}
+            >
               Suivant
             </button>
           </div>
@@ -74,22 +85,106 @@ const Signup = () => {
         {step === 2 && (
           <div className="step">
             <h3>Informations personnelles</h3>
-            <input type="text" name="pseudo" placeholder="Pseudo" value={formData.pseudo} onChange={handleChange} required />
-            <input type="text" name="nomDeFamille" placeholder="Nom de famille" value={formData.nomDeFamille} onChange={handleChange} required />
-            <input type="text" name="prenom" placeholder="Prénom" value={formData.prenom} onChange={handleChange} required />
-            <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
-            <input type="password" name="password" placeholder="Mot de passe" value={formData.password} onChange={handleChange} required />
-            <input type="password" name="confirmPassword" placeholder="Confirmer le mot de passe" value={formData.confirmPassword} onChange={handleChange} required />
-            <input type="text" name="phone" placeholder="Numéro de téléphone" value={formData.phone} onChange={handleChange} required />
+            <input
+              type="text"
+              name="pseudo"
+              placeholder="Pseudo"
+              value={formData.pseudo}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="text"
+              name="nomDeFamille"
+              placeholder="Nom de famille"
+              value={formData.nomDeFamille}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="text"
+              name="prenom"
+              placeholder="Prénom"
+              value={formData.prenom}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Mot de passe"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirmer le mot de passe"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="text"
+              name="phone"
+              placeholder="Numéro de téléphone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+            />
 
             {formData.role === "architect" && (
               <>
                 <h4>Informations professionnelles</h4>
-                <input type="text" name="experienceYears" placeholder="Années d'expérience" value={formData.experienceYears} onChange={handleChange} required />
-                <input type="text" name="specialization" placeholder="Spécialisation" value={formData.specialization} onChange={handleChange} required />
-                <input type="text" name="certifications" placeholder="Certifications" value={formData.certifications} onChange={handleChange} required />
-                <input type="text" name="region" placeholder="Région" value={formData.region} onChange={handleChange} required />
-                <input type="text" name="city" placeholder="Ville" value={formData.city} onChange={handleChange} required />
+                <input
+                  type="number"
+                  name="experienceYears"
+                  placeholder="Années d'expérience"
+                  value={formData.experienceYears}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="specialization"
+                  placeholder="Spécialisation"
+                  value={formData.specialization}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="certifications"
+                  placeholder="Certifications"
+                  value={formData.certifications}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="region"
+                  placeholder="Région"
+                  value={formData.region}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="city"
+                  placeholder="Ville"
+                  value={formData.city}
+                  onChange={handleChange}
+                  required
+                />
               </>
             )}
 
@@ -117,7 +212,10 @@ const Signup = () => {
         {step === 4 && (
           <div className="step">
             <h3>Confirmation</h3>
-            <p>Merci d'avoir rempli le formulaire ! Cliquez sur "S'inscrire" pour finaliser.</p>
+            <p>
+              Merci d'avoir rempli le formulaire ! Cliquez sur "S'inscrire" pour
+              finaliser.
+            </p>
             <button type="button" className="btn" onClick={handlePrevStep}>
               Précédent
             </button>
