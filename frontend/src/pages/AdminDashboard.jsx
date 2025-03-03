@@ -1,92 +1,105 @@
-import React, { useEffect, useState } from "react";
-import { Routes, Route, Link } from "react-router-dom";
-import ReviewManagement from "./ReviewManagement";
-import UserManagement from "./UserManagement";
-import SubscriptionManagement from "./SubscriptionManagement";
+import React, { useEffect } from "react";
+import { Routes, Route } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchUsers,
+  fetchReviews,
+  fetchSubscriptions,
+} from "../redux/slices/adminSlice";
+import { Box, Grid, Paper } from "@mui/material";
+
+//--------------------import global -----------------------------
+import Topbar from "../global_admin/Topbar";
+import Sidebar from "../global_admin/Sidebar";
 import Header from "../components/Header";
-import Navbar from "../components/Navbar";
+//--------------------import charts -----------------------
 import UserStatisticsChart from "../components/charts/Bar/UserStat";
 import ReviewManagementChart from "../components/charts/Bar/ReviewChart";
 import SubscriptionChart from "../components/charts/Pie/SubscriptionChart";
-import "../styles/adminDashboard.css";
+
+//--------------------import pages -----------------------
+import ReviewManagement from "./ReviewManagement";
+import UserManagement from "./UserManagement";
+import SubscriptionManagement from "./SubscriptionManagement";
+//--------------------import styles -----------------------
+import "../styles/admindash.css";
 
 const AdminDashboard = () => {
-  const [userData, setUserData] = useState([]);
-  const [reviewData, setReviewData] = useState([]);
-  const [subscriptionData, setSubscriptionData] = useState([]);
-  const [architectLocations, setArchitectLocations] = useState([]);
+  const dispatch = useDispatch();
+  const { users, reviews, subscriptions, loading } = useSelector(
+    (state) => state.admin
+  );
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 🟢 Récupérer tous les utilisateurs
-        const userRes = await fetch("http://localhost:5000/api/users");
-        if (!userRes.ok) throw new Error("Failed to fetch users");
-        const users = await userRes.json();
-        console.log("User Data:", users); // Debugging
-        setUserData(users);
+    dispatch(fetchUsers());
+    dispatch(fetchReviews());
+    dispatch(fetchSubscriptions());
+  }, [dispatch]);
 
-        // ⭐ Récupérer les avis
-        const reviewRes = await fetch("http://localhost:5000/api/projects/reviews");
-        if (!reviewRes.ok) throw new Error("Failed to fetch reviews");
-        const reviews = await reviewRes.json();
-        console.log("Review Data:", reviews); // Debugging
-        setReviewData(reviews);
+  // Calculate counts per subscription plan
+  const counts = subscriptions.reduce((acc, sub) => {
+    const plan = sub.plan.toLowerCase(); // Ensure the plan is in lowercase
+    if (plan === "free" || plan === "vip" || plan === "premium") {
+      acc[plan] = (acc[plan] || 0) + 1;
+    }
+    return acc;
+  }, {});
 
-        // 📜 Récupérer les abonnements
-        const subscriptionRes = await fetch("http://localhost:5000/api/subscriptions");
-        if (!subscriptionRes.ok) throw new Error("Failed to fetch subscriptions");
-        const subscriptions = await subscriptionRes.json();
-        console.log("Subscription Data:", subscriptions); // Debugging
-        setSubscriptionData(subscriptions);
+  // Ensure we have values for all types
+  const chartData = ["free", "vip", "premium"].map(plan => ({
+    id: plan,
+    label: plan.charAt(0).toUpperCase() + plan.slice(1), // Capitalize for display
+    value: counts[plan] || 0, // Default to 0 if undefined
+  }));
 
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []); // Ensure the dependency array is set
+  console.log("Chart Data:", chartData); // Debugging
 
   return (
-    <div className="admin-dashboard-layout">
-      <Header />
-      <Navbar />
+    <Box sx={{ display: "flex", height: "100vh", backgroundColor: "#cfc7ba" }}>
+      {/* Sidebar */}
+      <Sidebar />
 
-      <div className="admin-dashboard">
-        <nav className="navbar">
-          <ul>
-            <li>
-              <Link to="/admin/reviews">📝 Gestion des Avis</Link>
-            </li>
-            <li>
-              <Link to="/admin/users">👥 Gestion des Utilisateurs</Link>
-            </li>
-            <li>
-              <Link to="/admin/subscriptions">📜 Gestion des Abonnements</Link>
-            </li>
-          </ul>
-        </nav>
+      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+        {/* Topbar */}
+        <Topbar />
 
-        <main className="main-content">
-          {/* 📊 Statistiques Utilisateurs */}
-          <UserStatisticsChart data={userData} />
+        {/* Main Content */}
+        <Box sx={{ p: 3 }}>
+          <Header title="Admin Dashboard" subtitle="Overview of the platform" />
 
-          {/* ⭐ Avis Clients */}
-          <ReviewManagementChart data={reviewData} />
+          {/* Stats Section */}
+          <Grid container spacing={3} sx={{ mt: 2 }}>
+            <Grid item xs={12} md={4}>
+              <Paper elevation={3} sx={{ p: 2 }}>
+                <UserStatisticsChart data={users} />
+              </Paper>
+            </Grid>
 
-          {/* 🎟️ Gestion des Abonnements */}
-          <SubscriptionChart data={subscriptionData} />
+            <Grid item xs={12} md={4}>
+              <Paper elevation={3} sx={{ p: 2 }}>
+                <ReviewManagementChart data={reviews} />
+              </Paper>
+            </Grid>
 
-          {/* 📌 Routes */}
+            <Grid item xs={12} md={4}>
+              <Paper elevation={3} sx={{ p: 2 }}>
+                <SubscriptionChart data={chartData} /> {/* Updated chart data */}
+              </Paper>
+            </Grid>
+          </Grid>
+
+          {/* Routes for Management Pages */}
           <Routes>
             <Route path="/admin/reviews" element={<ReviewManagement />} />
             <Route path="/admin/users" element={<UserManagement />} />
-            <Route path="/admin/subscriptions" element={<SubscriptionManagement />} />
+            <Route
+              path="/admin/subscriptions"
+              element={<SubscriptionManagement />}
+            />
           </Routes>
-        </main>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

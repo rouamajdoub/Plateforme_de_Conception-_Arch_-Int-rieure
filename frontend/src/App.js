@@ -5,13 +5,12 @@ import Signup from "./components/Signup.jsx";
 import Dashboard from "./pages/AdminDashboard.jsx";
 import SubscriptionManagement from "./pages/SubscriptionManagement.jsx";
 import ReviewManagement from "./pages/ReviewManagement.jsx";
-import UserManagement from "./pages/UserManagement.jsx"; // New import
-import Topbar from "./global/Topbar.jsx";
+import UserManagement from "./pages/UserManagement.jsx"; 
 
 function App() {
   return (
     <>
-      <Topbar />
+      
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -22,7 +21,6 @@ function App() {
         />
         <Route path="/admin/reviews" element={<ReviewManagement />} />
         <Route path="/admin/users" element={<UserManagement />} />{" "}
-        {/* New Route */}
         <Route path="*" element={<Dashboard />} />
       </Routes>
     </>

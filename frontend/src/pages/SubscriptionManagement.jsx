@@ -4,12 +4,20 @@ import {
   fetchSubscriptions,
   deleteSubscription,
 } from "../redux/slices/adminSlice";
-import EditSubscriptionModal from "../components/EditSubscription";
-import "../styles/adminManagement.css";
-
+import EditSubscriptionModal from "../components/subs/EditSubscription";
+import { Box, Typography, useTheme } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { tokens } from "../theme";
+import Header from "../components/Header";
 const SubscriptionManagement = () => {
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
   const dispatch = useDispatch();
-  const { subscriptions, loading, error } = useSelector((state) => state.admin);
+  const {
+    subscriptions = [],
+    loading,
+    error,
+  } = useSelector((state) => state.admin);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
 
   useEffect(() => {
@@ -34,54 +42,110 @@ const SubscriptionManagement = () => {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (error)
+    return <p>Error: {error.message || "An unknown error occurred"}</p>;
 
+  // Define columns for the DataGrid
+  const columns = [
+    { field: "id", headerName: "ID", flex: 1 },
+    {
+      field: "architect",
+      headerName: "Architecte",
+      flex: 1,
+      renderCell: ({ row }) => (
+        <Typography>
+          {row.architectId?.pseudo ||
+            `${row.architectId?.nomDeFamille} ${row.architectId?.prenom}`}
+        </Typography>
+      ),
+    },
+    { field: "plan", headerName: "Plan", flex: 1 },
+    {
+      field: "startDate",
+      headerName: "Date de début",
+      flex: 1,
+      renderCell: ({ value }) => new Date(value).toLocaleDateString(),
+    },
+    {
+      field: "endDate",
+      headerName: "Date de fin",
+      flex: 1,
+      renderCell: ({ row }) => (
+        <Typography>
+          {row.endDate ? new Date(row.endDate).toLocaleDateString() : "N/A"}
+        </Typography>
+      ),
+    },
+    { field: "status", headerName: "Statut", flex: 1 },
+    { field: "price", headerName: "Prix", flex: 1 },
+    {
+      field: "actions",
+      headerName: "Actions",
+      renderCell: ({ row }) => (
+        <Box>
+          <button className="btn-edit" onClick={() => handleEdit(row)}>
+            Modifier
+          </button>
+
+          <button className="btn-delete" onClick={() => handleDelete(row.id)}>
+            Supprimer
+          </button>
+        </Box>
+      ),
+    },
+  ];
+
+  // Map subscriptions to the format expected by DataGrid
+  const rows = (subscriptions || []).map((sub) => ({
+    id: sub._id,
+    architectId: sub.architectId,
+    plan: sub.plan,
+    startDate: sub.startDate,
+    endDate: sub.endDate,
+    status: sub.status,
+    price: sub.price,
+  }));
   return (
-    <div className="subscription-management">
-      <h2>Gestion des Abonnements</h2>
-      <table className="subscription-table">
-        <thead>
-          <tr>
-            <th>Architecte</th>
-            <th>Plan</th>
-            <th>Date de début</th>
-            <th>Date de fin</th>
-            <th>Statut</th>
-            <th>Prix</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {subscriptions.map((sub) => (
-            <tr key={sub._id}>
-              <td>
-                {sub.architectId?.pseudo ||
-                  `${sub.architectId?.nomDeFamille} ${sub.architectId?.prenom}`}
-              </td>
-              <td>{sub.plan}</td>
-              <td>{new Date(sub.startDate).toLocaleDateString()}</td>
-              <td>
-                {sub.endDate
-                  ? new Date(sub.endDate).toLocaleDateString()
-                  : "N/A"}
-              </td>
-              <td>{sub.status}</td>
-              <td>{sub.price} €</td>
-              <td>
-                <button className="btn-edit" onClick={() => handleEdit(sub)}>
-                  Modifier
-                </button>
-                <button
-                  className="btn-delete"
-                  onClick={() => handleDelete(sub._id)}
-                >
-                  Supprimer
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <Box m="20px">
+      <Header
+        title="Gestion des Abonnements"
+        subtitle="List of subscriptions and plans"
+      />
+      <Box
+        m="40px 0 0 0"
+        height="75vh"
+        sx={{
+          "& .MuiDataGrid-root": {
+            border: "none",
+          },
+          "& .MuiDataGrid-cell": {
+            borderBottom: "none",
+          },
+          "& .name-column--cell": {
+            color: colors.greenAccent[300],
+          },
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: colors.blueAccent[700],
+            borderBottom: "none",
+          },
+          "& .MuiDataGrid-virtualScroller": {
+            backgroundColor: colors.primary[400],
+          },
+          "& .MuiDataGrid-footerContainer": {
+            borderTop: "none",
+            backgroundColor: colors.blueAccent[700],
+          },
+          "& .MuiCheckbox-root": {
+            color: `${colors.greenAccent[200]} !important`,
+          },
+        }}
+      >
+        <DataGrid
+          checkboxSelection
+          rows={rows} // Use the mapped subscriptions as rows
+          columns={columns} // Use the defined columns
+        />
+      </Box>
 
       {selectedSubscription && (
         <EditSubscriptionModal
@@ -89,7 +153,7 @@ const SubscriptionManagement = () => {
           onClose={handleCloseModal}
         />
       )}
-    </div>
+    </Box>
   );
 };
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
-import SubscriptionPlans from "./SubscriptionPlans";
+import SubscriptionPlans from "./subs/SubscriptionPlans";
 import "../styles/Auth.css";
 
 const Signup = () => {

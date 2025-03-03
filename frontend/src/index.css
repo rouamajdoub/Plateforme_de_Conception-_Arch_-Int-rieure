@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap");
 
 html,
 body,
@@ -8,8 +8,8 @@ body,
   height: 100%;
   width: 100%;
   font-family: "Source Sans Pro", sans-serif;
-
 }
+
 .app {
   display: flex;
   position: relative;
@@ -19,67 +19,17 @@ body,
   width: 10px;
 }
 
-/*track*/
+/* Track */
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #e0e0e0;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
   background: #888;
 }
+
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-:root {
-  --primary-color: #304f7e; 
-  --secondary-color: #19254f;
-  --tertiary-color: #223458; 
-  --accent-color: #cfc7ba; 
-  --neutral-color: #485896; 
-}
-/*
-/* 🌙 Mode sombre (optionnel)/
-[data-theme="dark"] {
-  --bg-light: #19254f;
-  --bg-dark: #0f1a37;
-  --text-light: #cfc7ba;
-  --text-dark: #e5e7eb;
-}
-
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-}
-*/

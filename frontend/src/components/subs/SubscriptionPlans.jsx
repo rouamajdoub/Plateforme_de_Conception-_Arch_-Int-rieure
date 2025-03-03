@@ -1,8 +1,6 @@
 import React from "react";
-import "../styles/Auth.css"; // Assure-toi que le CSS est bien importé
 
 const SubscriptionPlans = ({ onSelect }) => {
-  // Liste des abonnements
   const plans = [
     {
       id: "free",
