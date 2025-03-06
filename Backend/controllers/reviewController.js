@@ -1,52 +1,149 @@
-const Review = require("../models/Review");
+const ProductReview = require("../models/ProductReview");
+const ProjectReview = require("../models/ProjectReview");
 
-// Create a new review
-exports.createReview = async (req, res) => {
+// Create a new Product Review
+exports.createProductReview = async (req, res) => {
   try {
-    const review = new Review(req.body);
-    await review.save();
-    res.status(201).json(review);
+    const { client, comment, rating, productId } = req.body;
+
+    const newReview = new ProductReview({
+      client,
+      comment,
+      rating,
+      productId,
+    });
+
+    await newReview.save();
+    return res.status(201).json({ message: "Product review created successfully!", review: newReview });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("Error creating product review:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// Get all reviews
-exports.getAllReviews = async (req, res) => {
+// Create a new Project Review
+exports.createProjectReview = async (req, res) => {
   try {
-    const reviews = await Review.find()
-      .populate("reviewerId")
-      .populate("projectId");
-    res.json(reviews);
+    const { client, comment, rating, projectId } = req.body;
+
+    const newReview = new ProjectReview({
+      client,
+      comment,
+      rating,
+      projectId,
+    });
+
+    await newReview.save();
+    return res.status(201).json({ message: "Project review created successfully!", review: newReview });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error creating project review:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// Get reviews by project ID
-exports.getReviewsByProject = async (req, res) => {
+// Retrieve all Product Reviews
+exports.getProductReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({
-      projectId: req.params.projectId,
-    }).populate("reviewerId");
-    res.json(reviews);
+    const reviews = await ProductReview.find().populate('client', 'pseudo nomDeFamille'); // Populate client info
+    return res.status(200).json(reviews);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error retrieving product reviews:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// Delete a review by ID
-exports.deleteReview = async (req, res) => {
+// Retrieve all Project Reviews
+exports.getProjectReviews = async (req, res) => {
   try {
-    const { id } = req.params;
-    const review = await Review.findByIdAndDelete(id);
+    const reviews = await ProjectReview.find().populate('client', 'pseudo nomDeFamille'); // Populate client info
+    return res.status(200).json(reviews);
+  } catch (error) {
+    console.error("Error retrieving project reviews:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
-    if (!review) {
-      return res.status(404).json({ message: "Review not found" });
+// Update a Product Review
+exports.updateProductReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const updatedReview = await ProductReview.findByIdAndUpdate(reviewId, req.body, { new: true });
+
+    if (!updatedReview) {
+      return res.status(404).json({ message: "Product review not found" });
     }
 
-    res.json({ message: "Review deleted successfully" });
+    return res.status(200).json({ message: "Product review updated successfully!", review: updatedReview });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error updating product review:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Update a Project Review
+exports.updateProjectReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const updatedReview = await ProjectReview.findByIdAndUpdate(reviewId, req.body, { new: true });
+
+    if (!updatedReview) {
+      return res.status(404).json({ message: "Project review not found" });
+    }
+
+    return res.status(200).json({ message: "Project review updated successfully!", review: updatedReview });
+  } catch (error) {
+    console.error("Error updating project review:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Delete a Product Review
+exports.deleteProductReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const deletedReview = await ProductReview.findByIdAndDelete(reviewId);
+
+    if (!deletedReview) {
+      return res.status(404).json({ message: "Product review not found" });
+    }
+
+    return res.status(200).json({ message: "Product review deleted successfully!" });
+  } catch (error) {
+    console.error("Error deleting product review:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Delete a Project Review
+exports.deleteProjectReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const deletedReview = await ProjectReview.findByIdAndDelete(reviewId);
+
+    if (!deletedReview) {
+      return res.status(404).json({ message: "Project review not found" });
+    }
+
+    return res.status(200).json({ message: "Project review deleted successfully!" });
+  } catch (error) {
+    console.error("Error deleting project review:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+// Retrieve all reviews (both product and project)
+exports.getAllReviews = async (req, res) => {
+  try {
+    const productReviews = await ProductReview.find().populate('client', 'pseudo nomDeFamille');
+    const projectReviews = await ProjectReview.find().populate('client', 'pseudo nomDeFamille');
+
+    const allReviews = {
+      productReviews,
+      projectReviews,
+    };
+
+    return res.status(200).json(allReviews);
+  } catch (error) {
+    console.error("Error retrieving all reviews:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };

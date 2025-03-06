@@ -1,16 +1,15 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import Login from "./components/Login.jsx";
-import Signup from "./components/Signup.jsx";
-import Dashboard from "./pages/AdminDashboard.jsx";
-import SubscriptionManagement from "./pages/SubscriptionManagement.jsx";
-import ReviewManagement from "./pages/ReviewManagement.jsx";
-import UserManagement from "./pages/UserManagement.jsx"; 
+import Login from "./pages/auth/Login.jsx";
+import Signup from "./pages/auth/Signup.jsx";
+import Dashboard from "./pages/Dashboard/Admin/AdminDashboard.jsx";
+import SubscriptionManagement from "./pages/Dashboard/Admin/SubscriptionManagement.jsx";
+import ReviewManagement from "./pages/Dashboard/Admin/ReviewManagement.jsx";
+import UserManagement from "./pages/Dashboard/Admin/UserManagement.jsx";
 
 function App() {
   return (
     <>
-      
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

@@ -48,3 +48,24 @@ exports.deleteProject = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Create a new Project Review (this can be moved to reviewController)
+exports.createProjectReview = async (req, res) => {
+  try {
+    const { client, comment, rating } = req.body; // Make sure to include projectId
+    const projectId = req.params.id;
+
+    const review = new ProjectReview({
+      client,
+      comment,
+      rating,
+      projectId,
+    });
+
+    await review.save();
+    res.status(201).json({ message: "Project review created successfully!", review });
+  } catch (error) {
+    console.error("Error creating project review:", error);
+    res.status(400).json({ error: error.message });
+  }
+};

@@ -3,8 +3,9 @@ const User = require("./User");
 
 const architectSchema = new mongoose.Schema(
   {
-    experienceYears: { type: Number, required: true },
-    specialization: { type: [String], required: true },
+    companyName: { type: String },
+    experienceYears: { type: Number },
+    specialization: { type: [String] },
     portfolioURL: { type: String },
     certifications: { type: [String] },
     education: {
@@ -19,24 +20,22 @@ const architectSchema = new mongoose.Schema(
       },
     ],
     location: {
-      country: { type: String, required: true },
-      region: { type: String, required: true },
+      country: { type: String },
+      region: { type: String },
       city: { type: String },
       coordinates: {
-        type: { type: String, enum: ["Point"], required: true },
+        type: { type: String, enum: ["Point"] },
         coordinates: {
           type: [Number],
-          required: true,
           validate: {
             validator: function (arr) {
-              return arr.length === 2; 
+              return arr.length === 2;
             },
             message: "Coordinates must be an array of [longitude, latitude]",
           },
         },
       },
     },
-
     website: { type: String },
     socialMedia: {
       linkedin: String,
@@ -44,7 +43,7 @@ const architectSchema = new mongoose.Schema(
     },
     subscription: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Subscription", 
+      ref: "Subscription",
     },
     rating: {
       average: { type: Number, default: 0 },
@@ -55,10 +54,9 @@ const architectSchema = new mongoose.Schema(
         client: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
-          required: true,
         },
         comment: { type: String },
-        rating: { type: Number, required: true },
+        rating: { type: Number },
         date: { type: Date, default: Date.now },
       },
     ],
@@ -68,7 +66,13 @@ const architectSchema = new mongoose.Schema(
       privacy: { type: Boolean, default: false },
       lastUpdated: Date,
     },
-    isVerified: { type: Boolean, default: false },
+    emailVerified: { type: Boolean, default: false },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    documents: [{ type: String }],
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

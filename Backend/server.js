@@ -12,12 +12,12 @@ const authRoutes = require("./routes/authRoutes");
 //--------------------------------------------------------------------------------
 const app = express();
 const PORT = process.env.PORT || 5000;
-// Enable CORS for all routes
+// -------------Enable CORS for all routes -----------------Fontens conx-----------------------
 app.use(
   cors({
-    origin: "http://localhost:3000", // Allow your frontend origin
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Specify allowed methods
-    credentials: true, // Allow credentials if needed
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
   })
 );
 
@@ -41,7 +41,7 @@ app.use("/api/marketplace", marketplaceRoutes);
 app.use("/api/payments", paymentRoutes);
 // routes de la Dashboard
 app.use("/api/dashboard", dashboardRoutes);
-////////////////////////
+
 //-----------------------------------------------------
 app.get("/", (req, res) => {
   res.send("Hello, Roua! Express & MongoDB are working 🚀");

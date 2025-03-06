@@ -1,7 +1,7 @@
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 const Category = require("../models/Category");
-const ProductReview = require("../models/ProductReviews");
+const ProductReview = require("../models/ProductReview");
 
 // ✅ 1. Ajouter un produit
 exports.createProduct = async (req, res) => {

@@ -1,6 +1,6 @@
 const express = require("express");
 const marketplaceController = require("../controllers/marketplaceController");
-
+const reviewController = require("../controllers/reviewController");
 const router = express.Router();
 
 // 🔹 Produits
@@ -20,7 +20,13 @@ router.post("/categories", marketplaceController.createCategory);
 router.get("/categories", marketplaceController.getAllCategories);
 
 // 🔹 Avis produits
-router.post("/reviews", marketplaceController.addProductReview);
-router.get("/reviews/:productId", marketplaceController.getProductReviews);
+router.post("/product-reviews", reviewController.createProductReview);
+router.get("/product-reviews", reviewController.getProductReviews);
+router.put("/product-reviews/:reviewId", reviewController.updateProductReview);
+router.delete(
+  "/product-reviews/:reviewId",
+  reviewController.deleteProductReview
+);
+router.get("/reviews", reviewController.getAllReviews); // Route to get all reviews
 
 module.exports = router;

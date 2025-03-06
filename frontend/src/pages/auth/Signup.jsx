@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser } from "../redux/slices/authSlice";
+import { registerUser } from "../../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
-import SubscriptionPlans from "./subs/SubscriptionPlans";
-import "../styles/Auth.css";
+import SubscriptionPlans from "../../components/subs/SubscriptionPlans";
+import "../../styles/Auth.css";
 
 const Signup = () => {
   const [step, setStep] = useState(1);
@@ -20,21 +20,67 @@ const Signup = () => {
     password: "",
     confirmPassword: "",
     phone: "",
-    region: "",
-    city: "",
+    companyName: "",
     experienceYears: "",
-    specialization: "",
-    certifications: "",
+    specialization: [],
+    portfolioURL: "",
+    certifications: [],
+    region: "",
+    country: "", // New field for country
+    city: "",
+    location: {
+      coordinates: {
+        type: "Point", // Default type for coordinates
+        coordinates: [], // Array for longitude and latitude
+      },
+    },
     subscription: "",
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCoordinatesChange = (longitude, latitude) => {
+    setFormData((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        coordinates: {
+          ...prev.location.coordinates,
+          coordinates: [longitude, latitude],
+        },
+      },
+    }));
+  };
+
+  const handleSpecializationChange = (e) => {
+    const { value } = e.target;
+    if (!formData.specialization.includes(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        specialization: [...prev.specialization, value],
+      }));
+    }
+  };
+
+  const handleCertificationChange = (e) => {
+    const { value } = e.target;
+    if (!formData.certifications.includes(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        certifications: [...prev.certifications, value],
+      }));
+    }
   };
 
   const handleSubscriptionSelect = (subscriptionId) => {
-    setFormData({ ...formData, subscription: subscriptionId });
-    setStep(4);
+    setFormData((prev) => ({ ...prev, subscription: subscriptionId }));
+    setStep(4); // Go to confirmation step
   };
 
   const handleNextStep = () => setStep(step + 1);
@@ -42,7 +88,6 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData); // Log formData for debugging
     dispatch(registerUser(formData)).then((response) => {
       if (!response.error) {
         alert("Inscription réussie !");
@@ -56,7 +101,7 @@ const Signup = () => {
       <h2>Inscription</h2>
       {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
-        {/* Étape 1 - Sélection du rôle */}
+        {/* Step 1 - Role selection */}
         {step === 1 && (
           <div className="step">
             <h3>Choisissez votre rôle</h3>
@@ -81,7 +126,7 @@ const Signup = () => {
           </div>
         )}
 
-        {/* Étape 2 - Informations personnelles */}
+        {/* Step 2 - Personal information */}
         {step === 2 && (
           <div className="step">
             <h3>Informations personnelles</h3>
@@ -141,53 +186,86 @@ const Signup = () => {
               onChange={handleChange}
               required
             />
-
-            {formData.role === "architect" && (
-              <>
-                <h4>Informations professionnelles</h4>
-                <input
-                  type="number"
-                  name="experienceYears"
-                  placeholder="Années d'expérience"
-                  value={formData.experienceYears}
-                  onChange={handleChange}
-                  required
-                />
-                <input
-                  type="text"
-                  name="specialization"
-                  placeholder="Spécialisation"
-                  value={formData.specialization}
-                  onChange={handleChange}
-                  required
-                />
-                <input
-                  type="text"
-                  name="certifications"
-                  placeholder="Certifications"
-                  value={formData.certifications}
-                  onChange={handleChange}
-                  required
-                />
-                <input
-                  type="text"
-                  name="region"
-                  placeholder="Région"
-                  value={formData.region}
-                  onChange={handleChange}
-                  required
-                />
-                <input
-                  type="text"
-                  name="city"
-                  placeholder="Ville"
-                  value={formData.city}
-                  onChange={handleChange}
-                  required
-                />
-              </>
-            )}
-
+            <input
+              type="text"
+              name="companyName"
+              placeholder="Nom de l'entreprise"
+              value={formData.companyName}
+              onChange={handleChange}
+            />
+            <input
+              type="text"
+              name="portfolioURL"
+              placeholder="Portfolio URL"
+              value={formData.portfolioURL}
+              onChange={handleChange}
+            />
+            <input
+              type="number"
+              name="experienceYears"
+              placeholder="Années d'expérience"
+              value={formData.experienceYears}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="text"
+              name="specialization"
+              placeholder="Spécialisation"
+              onChange={handleSpecializationChange}
+              required
+            />
+            <input
+              type="text"
+              name="certifications"
+              placeholder="Certifications"
+              onChange={handleCertificationChange}
+            />
+            <input
+              type="text"
+              name="country"
+              placeholder="Pays"
+              value={formData.country}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="text"
+              name="region"
+              placeholder="Région"
+              value={formData.region}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="text"
+              name="city"
+              placeholder="Ville"
+              value={formData.city}
+              onChange={handleChange}
+            />
+            <input
+              type="number"
+              placeholder="Longitude"
+              onChange={(e) =>
+                handleCoordinatesChange(
+                  e.target.value,
+                  formData.location.coordinates.coordinates[1] || 0
+                )
+              }
+              required
+            />
+            <input
+              type="number"
+              placeholder="Latitude"
+              onChange={(e) =>
+                handleCoordinatesChange(
+                  formData.location.coordinates.coordinates[0] || 0,
+                  e.target.value
+                )
+              }
+              required
+            />
             <button type="button" className="btn" onClick={handlePrevStep}>
               Précédent
             </button>
@@ -197,8 +275,8 @@ const Signup = () => {
           </div>
         )}
 
-        {/* Étape 3 - Sélection de l'abonnement (uniquement pour les architectes) */}
-        {step === 3 && formData.role === "architect" && (
+        {/* Step 3 - Subscription selection */}
+        {step === 3 && (
           <div className="step">
             <h3>Choisissez un abonnement</h3>
             <SubscriptionPlans onSelect={handleSubscriptionSelect} />
@@ -208,7 +286,7 @@ const Signup = () => {
           </div>
         )}
 
-        {/* Étape 4 - Confirmation et inscription */}
+        {/* Step 4 - Confirmation and signup */}
         {step === 4 && (
           <div className="step">
             <h3>Confirmation</h3>

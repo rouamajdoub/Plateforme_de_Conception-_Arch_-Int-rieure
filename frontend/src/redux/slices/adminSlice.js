@@ -55,7 +55,7 @@ export const fetchReviews = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/projects/reviews"
+        "http://localhost:5000/api/marketplace/product-reviews"
       );
       console.log("Fetched reviews:", response.data); // Ajoutez ceci
       return response.data;
@@ -93,107 +93,105 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 export const deleteUser = createAsyncThunk(
-    "admin/deleteUser",
-    async (id, { rejectWithValue, dispatch }) => {
-      try {
-        await axios.delete(`http://localhost:5000/api/users/${id}`);
-        dispatch(fetchUsers()); // Refresh the user list after deletion
-        return id;
-      } catch (error) {
-        return rejectWithValue(error.response.data);
-      }
+  "admin/deleteUser",
+  async (id, { rejectWithValue, dispatch }) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/users/${id}`);
+      dispatch(fetchUsers()); // Refresh the user list after deletion
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
     }
-  );
-  
+  }
+);
 
-  const adminSlice = createSlice({
-    name: "admin",
-    initialState: {
-      users: [],
-      subscriptions: [],
-      reviews: [],
-      loading: false,
-      error: null,
-    },
-    extraReducers: (builder) => {
-      builder
-        // Gestion des abonnements
-        .addCase(fetchSubscriptions.pending, (state) => {
-          state.loading = true;
-        })
-        .addCase(fetchSubscriptions.fulfilled, (state, action) => {
-          state.loading = false;
-          state.subscriptions = action.payload;
-        })
-        .addCase(fetchSubscriptions.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        })
-        .addCase(updateSubscription.pending, (state) => {
-          state.loading = true;
-        })
-        .addCase(updateSubscription.fulfilled, (state, action) => {
-          state.loading = false;
-          state.subscriptions = state.subscriptions.map((sub) =>
-            sub._id === action.payload._id ? action.payload : sub
-          );
-        })
-        .addCase(updateSubscription.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        })
-  
-        // Gestion des avis
-        .addCase(fetchReviews.pending, (state) => {
-          state.loading = true;
-        })
-        .addCase(fetchReviews.fulfilled, (state, action) => {
-          state.loading = false;
-          state.reviews = action.payload;
-        })
-        .addCase(fetchReviews.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        })
-        .addCase(deleteReview.pending, (state) => {
-          state.loading = true;
-        })
-        .addCase(deleteReview.fulfilled, (state, action) => {
-          state.loading = false;
-          state.reviews = state.reviews.filter(
-            (review) => review._id !== action.payload
-          );
-        })
-        .addCase(deleteReview.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        })
-  
-        // Gestion des utilisateurs
-        .addCase(fetchUsers.pending, (state) => {
-          state.loading = true;
-        })
-        .addCase(fetchUsers.fulfilled, (state, action) => {
-          state.loading = false;
-          state.users = action.payload;
-        })
-        .addCase(fetchUsers.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        })
-        .addCase(deleteUser.pending, (state) => {
-          state.loading = true;
-        })
-        .addCase(deleteUser.fulfilled, (state, action) => {
-          state.loading = false;
-          state.users = state.users.filter(user => user._id !== action.payload);
-        })
-        .addCase(deleteUser.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        });
-    },
-  });
-  
+const adminSlice = createSlice({
+  name: "admin",
+  initialState: {
+    users: [],
+    subscriptions: [],
+    reviews: [],
+    loading: false,
+    error: null,
+  },
+  extraReducers: (builder) => {
+    builder
+      // Gestion des abonnements
+      .addCase(fetchSubscriptions.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchSubscriptions.fulfilled, (state, action) => {
+        state.loading = false;
+        state.subscriptions = action.payload;
+      })
+      .addCase(fetchSubscriptions.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateSubscription.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateSubscription.fulfilled, (state, action) => {
+        state.loading = false;
+        state.subscriptions = state.subscriptions.map((sub) =>
+          sub._id === action.payload._id ? action.payload : sub
+        );
+      })
+      .addCase(updateSubscription.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Gestion des avis
+      .addCase(fetchReviews.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchReviews.fulfilled, (state, action) => {
+        state.loading = false;
+        state.reviews = action.payload;
+      })
+      .addCase(fetchReviews.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(deleteReview.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteReview.fulfilled, (state, action) => {
+        state.loading = false;
+        state.reviews = state.reviews.filter(
+          (review) => review._id !== action.payload
+        );
+      })
+      .addCase(deleteReview.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Gestion des utilisateurs
+      .addCase(fetchUsers.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users = action.payload;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(deleteUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users = state.users.filter((user) => user._id !== action.payload);
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+  },
+});
 
 export default adminSlice.reducer;

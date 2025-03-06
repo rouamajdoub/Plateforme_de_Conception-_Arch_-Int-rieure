@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchReviews, deleteReview } from "../redux/slices/adminSlice";
+import { fetchReviews, deleteReview } from "../../../redux/slices/adminSlice";
 import { Box, Typography, useTheme } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { tokens } from "../theme";
-import Header from "../components/Header";
+import { tokens } from "../../../theme";
+import Header from "../../../components/Header";
 
 const ReviewManagement = () => {
   const theme = useTheme();

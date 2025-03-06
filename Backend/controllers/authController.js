@@ -1,16 +1,34 @@
 //-----------------------Require-----------------------
 const User = require("../models/User");
+const Architect = require("../models/Architect"); // Import the Architect model
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+
 // -----------------------Signup---------------------------------
 exports.register = async (req, res) => {
   try {
-    const { pseudo, nomDeFamille, prenom, email, password, role } = req.body;
+    const {
+      pseudo,
+      nomDeFamille,
+      prenom,
+      email,
+      password,
+      role,
+      companyName,
+      experienceYears,
+      specialization,
+      portfolioURL,
+      certifications,
+      region,
+      city,
+      subscription,
+    } = req.body;
 
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ error: "Email déjà utilisé" });
 
+    // Create new user
     user = new User({
       pseudo,
       nomDeFamille,
@@ -19,17 +37,35 @@ exports.register = async (req, res) => {
       password,
       role,
     });
-    const authToken = await user.generateAuthToken();
+
+    // Save user to the database
     await user.save();
-    res
-      .status(201)
-      .json({ user, authToken, message: "Utilisateur créé avec succès" });
+
+    // If the user is an architect, create an architect profile
+    if (role === "architect") {
+      const architect = new Architect({
+        user: user._id, // Assuming you have a reference to the User model
+        companyName,
+        experienceYears,
+        specialization,
+        portfolioURL,
+        certifications,
+        region,
+        city,
+        subscription,
+      });
+
+      await architect.save();
+    }
+
+    const authToken = await user.generateAuthToken();
+    res.status(201).json({ user, authToken, message: "Utilisateur créé avec succès" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-//--------------------Login------------------------
+// --------------------Login------------------------
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -53,7 +89,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// --------------------profile--------------------
+// --------------------Profile--------------------
 exports.getProfile = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
@@ -70,7 +106,8 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-// ----------------------------logout-----------------------------------
+
+// ----------------------------Logout-----------------------------------
 exports.logout = async (req, res) => {
   try {
     const token = req.header("Authorization").replace("Bearer ", "");

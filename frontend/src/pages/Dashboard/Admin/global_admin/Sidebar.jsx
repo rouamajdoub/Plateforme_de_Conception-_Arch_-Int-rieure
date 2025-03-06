@@ -1,16 +1,16 @@
-import { useState } from "react";
+// Sidebar.js
+import React, { useState } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
-import { Link } from "react-router-dom";
-import "react-pro-sidebar/dist/css/styles.css";
-import { tokens } from "../theme";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined"; // You can keep this icon for User Management
-import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined"; // Change this icon if needed
-import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined"; // Change this icon if needed
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
+import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
+import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
+import "react-pro-sidebar/dist/css/styles.css";
+import { tokens } from "../../../../theme";
 
-const Item = ({ title, to, icon, selected, setSelected }) => {
+const Item = ({ title, icon, selected, setSelected, onClick }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   return (
@@ -19,16 +19,18 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
       style={{
         color: colors.grey[100],
       }}
-      onClick={() => setSelected(title)}
+      onClick={() => {
+        setSelected(title);
+        onClick(); // Call the onClick function to change view
+      }}
       icon={icon}
     >
       <Typography>{title}</Typography>
-      <Link to={to} />
     </MenuItem>
   );
 };
 
-const Sidebar = () => {
+const Sidebar = ({ setCurrentView }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -66,12 +68,7 @@ const Sidebar = () => {
             }}
           >
             {!isCollapsed && (
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                ml="15px"
-              >
+              <Box display="flex" justifyContent="space-between" alignItems="center" ml="15px">
                 <Typography variant="h3" color={colors.grey[100]}>
                   ADMINIS
                 </Typography>
@@ -100,7 +97,7 @@ const Sidebar = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  admin name
+                  Admin Name
                 </Typography>
                 <Typography variant="h5" color={colors.greenAccent[500]}>
                   Admin
@@ -112,12 +109,11 @@ const Sidebar = () => {
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
             <Item
               title="Dashboard"
-              to="/"
               icon={<HomeOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
+              onClick={() => setCurrentView("dashboard")}
             />
-
             <Typography
               variant="h6"
               color={colors.grey[300]}
@@ -127,28 +123,32 @@ const Sidebar = () => {
             </Typography>
             <Item
               title="Subscription Management"
-              to="/admin/subscriptions"
               icon={<PeopleOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
+              onClick={() => setCurrentView("subscriptions")}
             />
             <Item
               title="User Management"
-              to="/admin/users"
               icon={<ContactsOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
+              onClick={() => setCurrentView("users")}
             />
             <Item
               title="Reviews Management"
-              to="/admin/reviews"
               icon={<ReceiptOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
+              onClick={() => setCurrentView("reviews")}
             />
-
-            
-            
+            <Item
+              title="Sign Up"
+              icon={<ReceiptOutlinedIcon />} // Change to appropriate icon
+              selected={selected}
+              setSelected={setSelected}
+              onClick={() => setCurrentView("signup")}
+            />
           </Box>
         </Menu>
       </ProSidebar>

@@ -1,14 +1,14 @@
 // src/pages/UserManagement.js
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUsers, deleteUser } from "../redux/slices/adminSlice"; // Import actions from your slice
+import { fetchUsers, deleteUser } from "../../../redux/slices/adminSlice"; // Import actions from your slice
 import { Box, Typography, useTheme } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { tokens } from "../theme";
+import { tokens } from "../../../theme";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 
 const UserManagement = () => {
   const theme = useTheme();
@@ -22,7 +22,9 @@ const UserManagement = () => {
   }, [dispatch]);
 
   const handleDelete = (id) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
+    if (
+      window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")
+    ) {
       dispatch(deleteUser(id)); // Dispatch delete user action
     }
   };
@@ -74,10 +76,7 @@ const UserManagement = () => {
       field: "actions",
       headerName: "Actions",
       renderCell: ({ row }) => (
-        <button
-          className="btn-delete"
-          onClick={() => handleDelete(row._id)}
-        >
+        <button className="btn-delete" onClick={() => handleDelete(row._id)}>
           Supprimer
         </button>
       ),
@@ -88,7 +87,7 @@ const UserManagement = () => {
   if (error) return <p>Erreur : {error}</p>;
 
   // Map users to the format expected by DataGrid
-  const rows = users.map(user => ({
+  const rows = users.map((user) => ({
     id: user._id, // Assuming _id is the unique identifier
     pseudo: user.pseudo,
     email: user.email,
