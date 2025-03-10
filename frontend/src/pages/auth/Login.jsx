@@ -17,8 +17,17 @@ const Login = () => {
         { email, password }
       );
       localStorage.setItem("token", response.data.token);
+
+      const userRole = response.data.role;
+
       alert("Login successful!");
-      navigate("/dashboard");
+
+      // Redirect correctly
+      if (userRole === "client") {
+        window.location.href = "http://localhost:3000"; // ✅ Next.js showcase
+      } else {
+        navigate("/dashboard"); // ✅ React dashboard
+      }
     } catch (err) {
       setError("Invalid email or password");
     }

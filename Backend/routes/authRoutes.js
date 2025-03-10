@@ -6,6 +6,7 @@ const {
   logout,
   requestPasswordReset,
   resetPassword,
+  verifyEmail,
 } = require("../controllers/authController");
 const { protect } = require("../middlewares/authMiddleware");
 
@@ -29,4 +30,6 @@ router.post("/request-password-reset", requestPasswordReset);
 // Réinitialiser le mot de passe
 router.post("/reset-password/:token", resetPassword);
 
+// Vérification de l'email
+router.get("/verify-email/:token", verifyEmail);
 module.exports = router;

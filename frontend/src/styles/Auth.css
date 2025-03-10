@@ -10,100 +10,112 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: url("../assets/images/123.png") no-repeat;
+  background: url("../assets/images/123.png") no-repeat center center fixed;
   background-size: cover;
-  background-position: center;
 }
 
-.wrapper {
-  width: 420px;
-  background: transparent;
+.signup-wrapper {
+  width: 90%;
+  max-width: 480px; /* Increased max width for better visibility */
+  background: rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
   color: #fff;
   border-radius: 10px;
   padding: 30px 40px;
 }
 
-.wrapper h2 {
-  font-size: 36px;
+.signup-wrapper h1 {
+  font-size: 28px;
   text-align: center;
+  margin-bottom: 20px;
 }
 
-.input-box {
-  position: relative;
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.step-dot {
+  width: 30px;
+  height: 30px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #333;
+  font-weight: bold;
+}
+
+.step-line {
+  width: 30px;
+  height: 4px;
+  background: #fff;
+  align-self: center;
+}
+
+.form-group {
+  margin: 15px 0;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.select-box {
   width: 100%;
   height: 50px;
-  margin: 30px 0;
-}
-
-.input-box input {
-  width: 100%;
-  height: 100%;
   background: transparent;
-  border: none;
-  outline: none;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 40px;
   font-size: 16px;
   color: #fff;
-  padding: 20px 45px 20px 20px;
+  padding: 10px 20px;
+  outline: none;
+  transition: border-color 0.3s ease;
 }
 
-.input-box input::placeholder {
-  color: #fff;
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.form-group input:focus,
+.select-box:focus {
+  border-color: #fff; /* Change border color on focus */
 }
 
 .btn {
   width: 100%;
   height: 50px;
-  background: #fff;
+  background: #4CAF50; /* Green background */
   border: none;
-  outline: none;
   border-radius: 40px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   font-size: 16px;
-  color: #333;
+  color: #fff;
   font-weight: 600;
+  transition: background 0.3s ease;
 }
 
-.registre-link {
-  font-size: 14.5px;
+.btn:hover {
+  background: #45a049; /* Darker green on hover */
+}
+
+.error-message {
+  color: #e74c3c;
+  margin: 10px 0;
   text-align: center;
-  margin: 20px 0 15px;
 }
 
-.registre-link p a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
+.terms-conditions {
+  margin: 15px 0;
 }
 
-.registre-link p a:hover {
-  text-decoration: underline;
-}
-.select-box {
-  width: 100%;
-  height: 50px;
-  background: transparent;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 40px;
-  color: #fff;
-  font-size: 16px;
-  padding: 10px 20px;
-  appearance: none; /* Remove default arrow */
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.5 6.5a.5.5 0 0 1 .5-.5h12a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-12a.5.5 0 0 1-.5-.5v-7zM0 4.5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2H0v-2z"/></svg>'); /* Custom arrow */
-  background-repeat: no-repeat;
-  background-position: right 10px center; /* Position the custom arrow */
-  cursor: pointer;
-}
-
-.select-box:focus {
-  outline: none; /* Remove default focus outline */
-  border-color: #fff; /* Change border color on focus */
-}
 .subscription-container {
   text-align: center;
   padding: 20px;
