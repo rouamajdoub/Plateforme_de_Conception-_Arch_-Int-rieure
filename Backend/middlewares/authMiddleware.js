@@ -1,28 +1,48 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+// middleware/auth.js
 
+const authService = require("../services/authService");
+const {
+  AuthenticationError,
+  AuthorizationError,
+} = require("../utils/customErrors");
+
+/**
+ * Middleware to protect routes that require authentication
+ */
 exports.protect = async (req, res, next) => {
- 
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-  }
-
-  if (!token) {
-    return res.status(401).json({ error: "Not authorized, no token" });
-  }
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded._id).select("-password");
-    if (!req.user) {
-      return res.status(401).json({ error: "User not found" });
+    // Get token from header
+    const authHeader = req.header("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new AuthenticationError("Accès non autorisé");
     }
+
+    const token = authHeader.replace("Bearer ", "");
+
+    // Verify token
+    const decoded = authService.verifyToken(token);
+
+    // Set user in request
+    req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    next(error);
   }
+};
+
+/**
+ * Middleware to restrict access based on user roles
+ * @param {...string} roles - Allowed roles
+ */
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AuthorizationError(
+          "Vous n'avez pas la permission d'effectuer cette action"
+        )
+      );
+    }
+    next();
+  };
 };

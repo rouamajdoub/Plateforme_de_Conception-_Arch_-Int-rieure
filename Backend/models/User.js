@@ -42,13 +42,6 @@ const userSchema = new mongoose.Schema(
 
 //------------------------------------les fct-------------------------------
 
-// Remove password and auth tokens from user object
-userSchema.methods.toJSON = function () {
-  const user = this.toObject();
-  delete user.password;
-  delete user.authTokens;
-  return user;
-};
 // Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
@@ -68,6 +61,14 @@ userSchema.methods.generateAuthToken = async function () {
   this.authTokens.push({ token });
   await this.save();
   return token;
+};
+
+// Remove password and auth tokens from user object
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+  delete user.password;
+  delete user.authTokens;
+  return user;
 };
 
 const User = mongoose.model("User", userSchema);

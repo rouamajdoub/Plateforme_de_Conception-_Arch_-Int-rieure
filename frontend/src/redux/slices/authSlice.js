@@ -4,8 +4,8 @@ import axios from "axios";
 // URL de base de ton API
 const BASE_URL = "http://localhost:5000/api/auth";
 
-// Récupérer le token du localStorage (si existant)
-const storedUser = JSON.parse(localStorage.getItem("user")) || null;
+// Récupérer le token du sessionStorage (si existant)
+const storedUser = JSON.parse(sessionStorage.getItem("user")) || null;
 
 // 🔹 Inscription
 export const registerUser = createAsyncThunk(
@@ -16,7 +16,7 @@ export const registerUser = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || "Registration failed"
+        error.response?.data?.error || "Inscription échouée"
       );
     }
   }
@@ -30,24 +30,31 @@ export const loginUser = createAsyncThunk(
       const response = await axios.post(`${BASE_URL}/login`, credentials);
       const user = response.data;
 
-      // Stocker l'utilisateur et le token dans le localStorage
-      localStorage.setItem("user", JSON.stringify(user));
+      // Stocker les infos de l'utilisateur dans sessionStorage
+      sessionStorage.setItem("user", JSON.stringify(user));
 
       return user;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || "Login failed"
+        error.response?.data?.error || "Connexion échouée"
       );
     }
   }
 );
 
 // 🔹 Déconnexion (Logout)
-export const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
-  // Supprime l'utilisateur du localStorage
-  localStorage.removeItem("user");
-  return null; // Reset du state
-});
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      await axios.post(`${BASE_URL}/logout`);
+      sessionStorage.removeItem("user"); // Supprimer du sessionStorage
+      return null;
+    } catch (error) {
+      return rejectWithValue("Déconnexion échouée");
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: "auth",

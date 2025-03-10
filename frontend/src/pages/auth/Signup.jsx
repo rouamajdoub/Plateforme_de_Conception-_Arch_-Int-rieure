@@ -192,11 +192,11 @@ const Signup = () => {
       // Check required fields
       const requiredFields = ["pseudo", "nomDeFamille", "prenom", "email", "password", "confirmPassword"];
       
-      // Add architect-specific required fields only if the role is architect
+      // Add architect-specific required fields
       if (formData.role === "architect") {
         requiredFields.push("companyName", "experienceYears", "pays", "region");
       } else if (formData.role === "client") {
-        requiredFields.push("pays", "region", "city"); // Ensure city is also required for clients
+        requiredFields.push("pays", "region");
       }
       
       for (const field of requiredFields) {
@@ -251,6 +251,7 @@ const Signup = () => {
       setStep(4); // Skip to confirmation
     }
   };
+
   const handlePrevStep = () => {
     setStep(step - 1);
   };

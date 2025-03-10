@@ -1,37 +1,34 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { loginUser } from "../../redux/slices/authSlice"; // Import Redux action
 import "../../styles/Auth.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  // Access Redux state
+  const { user, loading, error } = useSelector((state) => state.auth);
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        { email, password }
-      );
-      localStorage.setItem("token", response.data.token);
-
-      const userRole = response.data.role;
-
-      alert("Login successful!");
-
-      // Redirect correctly
-      if (userRole === "client") {
-        window.location.href = "http://localhost:3000"; // ✅ Next.js showcase
-      } else {
-        navigate("/dashboard"); // ✅ React dashboard
-      }
-    } catch (err) {
-      setError("Invalid email or password");
-    }
+    dispatch(loginUser({ email, password }));
   };
+
+  // Redirect user after login
+  useEffect(() => {
+    if (user) {
+      const userRole = user.role;
+      if (userRole === "client") {
+        window.location.href = "http://localhost:3001"; // ✅ Redirect to Next.js showcase
+      } else {
+        navigate("/dashboard"); // ✅ Redirect to React dashboard
+      }
+    }
+  }, [user, navigate]);
 
   return (
     <div className="wrapper">
@@ -56,8 +53,8 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit" className="btn">
-          Login
+        <button type="submit" className="btn" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
       <p className="registre-link">
