@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,10 @@ const Signup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const authState = useSelector((state) => state.auth);
+
+  // References for software proficiency inputs
+  const softwareNameRef = useRef(null);
+  const softwareLevelRef = useRef(null);
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -81,7 +85,9 @@ const Signup = () => {
       const otherField = name === "password" ? "confirmPassword" : "password";
       setValidation((prev) => ({
         ...prev,
-        passwordMatch: !formData[otherField] || value === formData[otherField]
+        passwordMatch: 
+          !formData[otherField] || 
+          value === formData[otherField]
       }));
     }
 
@@ -120,21 +126,28 @@ const Signup = () => {
 
   const handleSoftwareChange = (e) => {
     e.preventDefault();
-    const name = document.getElementById("softwareName").value.trim();
-    const level = document.getElementById("softwareLevel").value;
+    const name = softwareNameRef.current.value.trim();
+    const level = softwareLevelRef.current.value.trim();
     
-    if (name) {
-      setFormData((prev) => ({
-        ...prev,
-        softwareProficiency: [
-          ...prev.softwareProficiency,
-          { name, level }
-        ]
-      }));
+    if (name && level) {
+      // Check if software already exists
+      const existingSoftware = formData.softwareProficiency.find(
+        software => software.name.toLowerCase() === name.toLowerCase()
+      );
+      
+      if (!existingSoftware) {
+        setFormData((prev) => ({
+          ...prev,
+          softwareProficiency: [
+            ...prev.softwareProficiency,
+            { name, level }
+          ]
+        }));
+      }
       
       // Clear inputs
-      document.getElementById("softwareName").value = "";
-      document.getElementById("softwareLevel").value = ""; // Clear level
+      softwareNameRef.current.value = "";
+      softwareLevelRef.current.value = "";
     }
   };
 
@@ -162,12 +175,41 @@ const Signup = () => {
 
   const handleCoordinatesChange = (index, value) => {
     const newCoordinates = [...formData.coordinates];
-    newCoordinates[index] = parseFloat(value) || 0;
+    // Validate if it's a proper number
+    const parsedValue = parseFloat(value);
+    if (!isNaN(parsedValue)) {
+      newCoordinates[index] = parsedValue;
+    } else {
+      newCoordinates[index] = 0;
+    }
     
     setFormData((prev) => ({
       ...prev,
       coordinates: newCoordinates
     }));
+  };
+
+  // Remove item from arrays
+  const handleRemoveItem = (array, index) => {
+    setFormData((prev) => {
+      const newArray = [...prev[array]];
+      newArray.splice(index, 1);
+      return {
+        ...prev,
+        [array]: newArray
+      };
+    });
+  };
+
+  const handleRemoveSoftware = (index) => {
+    setFormData((prev) => {
+      const newArray = [...prev.softwareProficiency];
+      newArray.splice(index, 1);
+      return {
+        ...prev,
+        softwareProficiency: newArray
+      };
+    });
   };
 
   // Handle subscription selection
@@ -176,7 +218,7 @@ const Signup = () => {
       ...prev,
       subscription: subscriptionPlan
     }));
-    setStep(4); // Move to confirmation step
+    setStep(5); // Move to confirmation step
   };
 
   // Navigation between steps
@@ -190,14 +232,7 @@ const Signup = () => {
     // Validation for Step 2
     if (step === 2) {
       // Check required fields
-      const requiredFields = ["pseudo", "nomDeFamille", "prenom", "email", "password", "confirmPassword"];
-      
-      // Add architect-specific required fields
-      if (formData.role === "architect") {
-        requiredFields.push("companyName", "experienceYears", "pays", "region");
-      } else if (formData.role === "client") {
-        requiredFields.push("pays", "region");
-      }
+      const requiredFields = ["pseudo", "nomDeFamille", "prenom", "email", "password", "confirmPassword", "pays", "region", "city"];
       
       for (const field of requiredFields) {
         if (!formData[field]) {
@@ -227,12 +262,8 @@ const Signup = () => {
         return;
       }
       
-      // Terms validation
-      if (formData.role === "architect" && !(
-        formData.contentTerm && 
-        formData.cgvAndCguTerm && 
-        formData.majorTerm
-      )) {
+      // Terms validation for all users
+      if (!(formData.contentTerm && formData.cgvAndCguTerm && formData.majorTerm)) {
         setValidation((prev) => ({
           ...prev,
           termsAccepted: false
@@ -242,13 +273,31 @@ const Signup = () => {
       }
     }
     
+    // Validation for Step 3 (Architect specific)
+    if (step === 3 && formData.role === "architect") {
+      const requiredArchitectFields = ["companyName", "experienceYears"];
+      
+      for (const field of requiredArchitectFields) {
+        if (!formData[field]) {
+          setError(`Le champ ${field} est requis`);
+          return;
+        }
+      }
+      
+      // Validate experienceYears is a number
+      if (isNaN(parseFloat(formData.experienceYears))) {
+        setError("Les années d'expérience doivent être un nombre");
+        return;
+      }
+    }
+    
     // If all validations pass, proceed to next step
     setError(null);
     setStep(step + 1);
     
     // Skip subscription step for clients
-    if (step === 2 && formData.role === "client") {
-      setStep(4); // Skip to confirmation
+    if (step === 3 && formData.role === "client") {
+      setStep(5); // Skip to confirmation
     }
   };
 
@@ -263,11 +312,6 @@ const Signup = () => {
     setError(null);
     
     try {
-      // Final validation
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error("Les mots de passe ne correspondent pas");
-      }
-      
       // Prepare data for API
       const userData = {
         role: formData.role,
@@ -339,6 +383,8 @@ const Signup = () => {
         <div className={`step-dot ${step >= 3 ? "active" : ""}`}>3</div>
         <div className="step-line"></div>
         <div className={`step-dot ${step >= 4 ? "active" : ""}`}>4</div>
+        <div className="step-line"></div>
+        <div className={`step-dot ${step >= 5 ? "active" : ""}`}>5</div>
       </div>
       
       <form onSubmit={handleSubmit}>
@@ -514,7 +560,7 @@ const Signup = () => {
                   checked={formData.contentTerm}
                   onChange={handleChange}
                 />
-                J'accepte les conditions générales
+                J'accepte les conditions générales *
               </label>
               <label>
                 <input
@@ -523,7 +569,7 @@ const Signup = () => {
                   checked={formData.cgvAndCguTerm}
                   onChange={handleChange}
                 />
-                J'accepte les CGV et CGU
+                J'accepte les CGV et CGU *
               </label>
               <label>
                 <input
@@ -532,186 +578,359 @@ const Signup = () => {
                   checked={formData.majorTerm}
                   onChange={handleChange}
                 />
-                J'ai plus de 18 ans
+                J'ai plus de 18 ans *
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="infoTerm"
+                  checked={formData.infoTerm}
+                  onChange={handleChange}
+                />
+                Je souhaite recevoir des informations
               </label>
               {!validation.termsAccepted && (
-                <span className="validation-error">Vous devez accepter les conditions</span>
+                <span className="validation-error">Vous devez accepter les conditions obligatoires (*)</span>
               )}
             </div>
 
-            <button 
-              type="button" 
-              className="next-btn"
-              onClick={handleNextStep}
-            >
-              Continuer
-            </button>
+            <div className="form-buttons">
+              <button 
+                type="button" 
+                className="prev-btn"
+                onClick={handlePrevStep}
+              >
+                Précédent
+              </button>
+              <button 
+                type="button" 
+                className="next-btn"
+                onClick={handleNextStep}
+              >
+                Continuer
+              </button>
+            </div>
           </div>
         )}
 
         {/* Step 3: Architect Specific Fields */}
-        {step === 3 && formData.role === "architect" && (
+        {step === 3 && (
           <div className="step architect-info">
-            <h2>Informations de l'architecte</h2>
+            <h2>Informations professionnelles</h2>
 
-            <div className="form-group">
-              <label htmlFor="companyName">Nom de l'entreprise *</label>
-              <input
-                type="text"
-                id="companyName"
-                name="companyName"
-                value={formData.companyName}
-                onChange={handleChange}
-                required
-              />
+            {formData.role === "architect" && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="companyName">Nom de l'entreprise *</label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="experienceYears">Années d'expérience *</label>
+                  <input
+                    type="number"
+                    id="experienceYears"
+                    name="experienceYears"
+                    value={formData.experienceYears}
+                    onChange={handleChange}
+                    min="0"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="portfolioURL">URL du portfolio</label>
+                  <input
+                    type="url"
+                    id="portfolioURL"
+                    name="portfolioURL"
+                    value={formData.portfolioURL}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Spécialisations</label>
+                  <div className="input-with-button">
+                    <input
+                      type="text"
+                      placeholder="Ajoutez une spécialisation"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSpecializationChange(e);
+                        }
+                      }}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={(e) => {
+                        handleSpecializationChange({ target: e.target.previousSibling })
+                      }}
+                    >
+                      Ajouter
+                    </button>
+                  </div>
+                  
+                  {formData.specialization.length > 0 && (
+                    <div className="tags-container">
+                      {formData.specialization.map((spec, index) => (
+                        <div key={index} className="tag">
+                          {spec}
+                          <button 
+                            type="button" 
+                            className="remove-tag" 
+                            onClick={() => handleRemoveItem('specialization', index)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Certifications</label>
+                  <div className="input-with-button">
+                    <input
+                      type="text"
+                      placeholder="Ajoutez une certification"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleCertificationChange(e);
+                        }
+                      }}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={(e) => {
+                        handleCertificationChange({ target: e.target.previousSibling })
+                      }}
+                    >
+                      Ajouter
+                    </button>
+                  </div>
+                  
+                  {formData.certifications.length > 0 && (
+                    <div className="tags-container">
+                      {formData.certifications.map((cert, index) => (
+                        <div key={index} className="tag">
+                          {cert}
+                          <button 
+                            type="button" 
+                            className="remove-tag" 
+                            onClick={() => handleRemoveItem('certifications', index)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Maîtrise des logiciels</label>
+                  <div className="software-inputs">
+                    <input
+                      type="text"
+                      id="softwareName"
+                      ref={softwareNameRef}
+                      placeholder="Nom du logiciel"
+                    />
+                    <select 
+                      id="softwareLevel"
+                      ref={softwareLevelRef}
+                    >
+                      <option value="">Niveau de compétence</option>
+                      <option value="Débutant">Débutant</option>
+                      <option value="Intermédiaire">Intermédiaire</option>
+                      <option value="Avancé">Avancé</option>
+                      <option value="Expert">Expert</option>
+                    </select>
+                    <button 
+                      type="button" 
+                      onClick={handleSoftwareChange}
+                    >
+                      Ajouter
+                    </button>
+                  </div>
+                  
+                  {formData.softwareProficiency.length > 0 && (
+                    <div className="software-list">
+                      {formData.softwareProficiency.map((software, index) => (
+                        <div key={index} className="software-item">
+                          <span>{software.name} - {software.level}</span>
+                          <button 
+                            type="button" 
+                            className="remove-software" 
+                            onClick={() => handleRemoveSoftware(index)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Éducation</label>
+                  <input
+                    type="text"
+                    name="degree"
+                    placeholder="Diplôme"
+                    value={formData.education.degree}
+                    onChange={handleEducationChange}
+                  />
+                  <input
+                    type="text"
+                    name="institution"
+                    placeholder="Institution"
+                    value={formData.education.institution}
+                    onChange={handleEducationChange}
+                  />
+                  <input
+                    type="number"
+                    name="graduationYear"
+                    placeholder="Année de graduation"
+                    value={formData.education.graduationYear}
+                    onChange={handleEducationChange}
+                    min="1900"
+                    max={new Date().getFullYear()}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="website">Site web</label>
+                  <input
+                    type="url"
+                    id="website"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Réseaux sociaux</label>
+                  <input
+                    type="text"
+                    name="linkedin"
+                    placeholder="LinkedIn"
+                    value={formData.socialMedia.linkedin}
+                    onChange={handleSocialMediaChange}
+                  />
+                  <input
+                    type="text"
+                    name="instagram"
+                    placeholder="Instagram"
+                    value={formData.socialMedia.instagram}
+                    onChange={handleSocialMediaChange}
+                  />
+                </div>
+
+                <div className="form-group coordinates">
+                  <h4>Coordonnées (Latitude, Longitude)</h4>
+                  <input
+                    type="text"
+                    placeholder="Latitude"
+                    value={formData.coordinates[0]}
+                    onChange={(e) => handleCoordinatesChange(0, e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Longitude"
+                    value={formData.coordinates[1]}
+                    onChange={(e) => handleCoordinatesChange(1, e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="form-buttons">
+              <button 
+                type="button" 
+                className="prev-btn"
+                onClick={handlePrevStep}
+              >
+                Précédent
+              </button>
+              <button 
+                type="button" 
+                className="next-btn"
+                onClick={handleNextStep}
+              >
+                Continuer
+              </button>
             </div>
-
-            <div className="form-group">
-              <label htmlFor="experienceYears">Années d'expérience *</label>
-              <input
-                type="number"
-                id="experienceYears"
-                name="experienceYears"
-                value={formData.experienceYears}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="portfolioURL">URL du portfolio</label>
-              <input
-                type="url"
-                id="portfolioURL"
-                name="portfolioURL"
-                value={formData.portfolioURL}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="specialization">Spécialisation (ajoutez une spécialisation)</label>
-              <input
-                type="text"
-                onChange={handleSpecializationChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="certifications">Certifications (ajoutez une certification)</label>
-              <input
-                type="text"
-                onChange={handleCertificationChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="education">Éducation</label>
-              <input
-                type="text"
-                name="degree"
-                placeholder="Diplôme"
-                value={formData.education.degree}
-                onChange={handleEducationChange}
-              />
-              <input
-                type="text"
-                name="institution"
-                placeholder="Institution"
-                value={formData.education.institution}
-                onChange={handleEducationChange}
-              />
-              <input
-                type="text"
-                name="graduationYear"
-                placeholder="Année de graduation"
-                value={formData.education.graduationYear}
-                onChange={handleEducationChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="website">Site web</label>
-              <input
-                type="url"
-                id="website"
-                name="website"
-                value={formData.website}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="socialMedia">Réseaux sociaux</label>
-              <input
-                type="text"
-                name="linkedin"
-                placeholder="LinkedIn"
-                value={formData.socialMedia.linkedin}
-                onChange={handleSocialMediaChange}
-              />
-              <input
-                type="text"
-                name="instagram"
-                placeholder="Instagram"
-                value={formData.socialMedia.instagram}
-                onChange={handleSocialMediaChange}
-              />
-            </div>
-
-            <div className="form-group coordinates">
-              <h4>Coordonnées (Latitude, Longitude)</h4>
-              <input
-                type="text"
-                placeholder="Latitude"
-                value={formData.coordinates[0]}
-                onChange={(e) => handleCoordinatesChange(0, e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Longitude"
-                value={formData.coordinates[1]}
-                onChange={(e) => handleCoordinatesChange(1, e.target.value)}
-              />
-            </div>
-
-            <button 
-              type="button" 
-              className="next-btn"
-              onClick={handleNextStep}
-            >
-              Continuer
-            </button>
-            <button 
-              type="button" 
-              className="prev-btn"
-              onClick={handlePrevStep}
-            >
-              Précédent
-            </button>
           </div>
         )}
 
-        {/* Step 4: Subscription Selection */}
-        {step === 4 && (
+        {/* Step 4: Subscription Selection for Architects */}
+        {step === 4 && formData.role === "architect" && (
           <div className="step subscription-selection">
             <h2>Sélectionnez un abonnement</h2>
             <SubscriptionPlans onSelect={handleSubscriptionSelect} />
             
-            <button 
-              type="button" 
-              className="prev-btn"
-              onClick={handlePrevStep}
-            >
-              Précédent
-            </button>
-            <button 
-              type="submit" 
-              className="submit-btn"
-              disabled={loading} // Disable button when loading
-            >
-              {loading ? "Chargement..." : "S'inscrire"}
-            </button>
+            <div className="form-buttons">
+              <button 
+                type="button" 
+                className="prev-btn"
+                onClick={handlePrevStep}
+              >
+                Précédent
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Confirmation and Submission */}
+        {step === 5 && (
+          <div className="step confirmation">
+            <h2>Confirmation</h2>
+            
+            <div className="summary">
+              <h3>Récapitulatif</h3>
+              <p><strong>Nom:</strong> {formData.prenom} {formData.nomDeFamille}</p>
+              <p><strong>Pseudo:</strong> {formData.pseudo}</p>
+              <p><strong>Email:</strong> {formData.email}</p>
+              <p><strong>Rôle:</strong> {formData.role === "architect" ? "Architecte" : "Client"}</p>
+              
+              {formData.role === "architect" && (
+                <>
+                  <p><strong>Entreprise:</strong> {formData.companyName}</p>
+                  <p><strong>Années d'expérience:</strong> {formData.experienceYears}</p>
+                  <p><strong>Abonnement:</strong> {formData.subscription?.name || "Aucun abonnement sélectionné"}</p>
+                </>
+              )}
+            </div>
+            
+            <div className="form-buttons">
+              <button 
+                type="button" 
+                className="prev-btn"
+                onClick={handlePrevStep}
+              >
+                Précédent
+              </button>
+              <button 
+                type="submit" 
+                className="submit-btn"
+                disabled={loading} // Disable button when loading
+              >
+                {loading ? "Chargement..." : "S'inscrire"}
+              </button>
+            </div>
           </div>
         )}
       </form>
