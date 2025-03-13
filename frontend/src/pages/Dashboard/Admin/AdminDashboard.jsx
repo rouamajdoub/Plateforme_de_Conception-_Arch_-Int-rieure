@@ -1,85 +1,89 @@
-// AdminDashboard.js
 import React, { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Box, Grid, Paper } from "@mui/material";
-import { fetchUsers, fetchReviews, fetchSubscriptions } from "../../../redux/slices/adminSlice";
+import { Box, Grid, Paper, CircularProgress, Typography } from "@mui/material";
 
-// Import global components
+// Global components
 import Topbar from "./global_admin/Topbar";
 import Sidebar from "./global_admin/Sidebar";
 import Header from "../../../components/Header";
 
-// Import charts
+// Charts (replace with your actual chart components)
 import UserStatisticsChart from "../../../components/charts/Bar/UserStat";
 import ReviewManagementChart from "../../../components/charts/Bar/ReviewChart";
-import SubscriptionChart from "../../../components/charts/Pie/SubscriptionChart";
+import UserStatsChart from "../../../components/charts/line/UserStatsChart";
 
-// Import management pages
+// Management pages (for example purposes)
 import ReviewManagement from "./ReviewManagement";
 import UserManagement from "./UserManagement";
 import SubscriptionManagement from "./SubscriptionManagement";
+import ArchiSignUpReq from "./ArchiSignUpReq";
+//-----------css--
+import "./css/style.css";
+
+// Redux actions from adminSlice
+import {
+  fetchUsers,
+  fetchAllReviews,
+  fetchSubscriptions,
+  fetchUserStats,
+} from "../../../redux/slices/adminSlice";
 
 const AdminDashboard = () => {
   const dispatch = useDispatch();
-  const { users, reviews, subscriptions } = useSelector((state) => state.admin);
-  
-  const [currentView, setCurrentView] = useState("dashboard"); // Default view
+  const { users, reviews, userStats, loading, error } = useSelector(
+    (state) => state.admin
+  );
+  const [currentView, setCurrentView] = useState("dashboard");
 
   useEffect(() => {
     dispatch(fetchUsers());
-    dispatch(fetchReviews());
+    dispatch(fetchAllReviews());
     dispatch(fetchSubscriptions());
+    dispatch(fetchUserStats()); // Fetch user stats here
   }, [dispatch]);
 
-  // Calculate counts per subscription plan
-  const counts = subscriptions.reduce((acc, sub) => {
-    const plan = sub.plan.toLowerCase();
-    if (plan === "free" || plan === "vip" || plan === "premium") {
-      acc[plan] = (acc[plan] || 0) + 1;
-    }
-    return acc;
-  }, {});
-
-  const chartData = ["free", "vip", "premium"].map((plan) => ({
-    id: plan,
-    label: plan.charAt(0).toUpperCase() + plan.slice(1),
-    value: counts[plan] || 0,
-  }));
+  const Header = ({ title }) => (
+    <Typography variant="h1" className="section-title">
+      {title}
+    </Typography>
+  );
+  const renderDashboard = () => (
+    <Grid container spacing={3} sx={{ mt: 2 }}>
+      <Grid item xs={12} md={4}>
+        <Paper elevation={3} sx={{ p: 2, backgroundColor: "transparent" }}>
+          <UserStatisticsChart data={users} />
+        </Paper>
+      </Grid>
+      <Grid item xs={12} md={4}>
+        <Paper elevation={3} sx={{ p: 2, backgroundColor: "transparent" }}>
+          <ReviewManagementChart
+            productReviews={reviews?.productReviews || []}
+          />
+        </Paper>
+      </Grid>
+      <Grid item xs={12} md={4}>
+        <Paper elevation={3} sx={{ p: 2, backgroundColor: "transparent" }}>
+          <UserStatsChart data={userStats} />
+        </Paper>
+      </Grid>
+    </Grid>
+  );
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", backgroundColor: "#2D3748" }}>
+    <Box className="custom-background" sx={{ display: "flex" }}>
       <Sidebar setCurrentView={setCurrentView} />
-
       <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
         <Topbar />
-
         <Box sx={{ p: 3 }}>
-          <Header title="Admin Dashboard" subtitle="Overview of the platform" />
-
-          {/* Conditional rendering based on currentView */}
-          {currentView === "dashboard" && (
-            <Grid container spacing={3} sx={{ mt: 2 }}>
-              <Grid item xs={12} md={4}>
-                <Paper elevation={3} sx={{ p: 2 }}>
-                  <UserStatisticsChart data={users} />
-                </Paper>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Paper elevation={3} sx={{ p: 2 }}>
-                  <ReviewManagementChart data={reviews} />
-                </Paper>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Paper elevation={3} sx={{ p: 2 }}>
-                  <SubscriptionChart data={chartData} />
-                </Paper>
-              </Grid>
-            </Grid>
-          )}
-
+          <Header title="Admin Dashboard" />
+          {loading && <CircularProgress />}
+          {error && <Typography color="error">{error}</Typography>}
+          {currentView === "dashboard" && renderDashboard()}
           {currentView === "reviews" && <ReviewManagement />}
           {currentView === "users" && <UserManagement />}
           {currentView === "subscriptions" && <SubscriptionManagement />}
+          {currentView === "sign-up-req" && <ArchiSignUpReq />}
         </Box>
       </Box>
     </Box>

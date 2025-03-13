@@ -126,3 +126,31 @@ exports.generateAuthToken = async (user) => {
   await user.save();
   return token;
 };
+
+// 📊 Get user count per month
+exports.getUserStats = async (req, res) => {
+  try {
+    const stats = await User.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+    ]);
+
+    const formattedStats = stats.map((stat) => ({
+      month: `${stat._id.year}-${String(stat._id.month).padStart(2, "0")}`,
+      count: stat.count,
+    }));
+
+    res.json(formattedStats);
+  } catch (error) {
+    console.error("Error fetching user stats:", error); // Log the error for debugging
+    res.status(500).json({ error: error.message });
+  }
+};

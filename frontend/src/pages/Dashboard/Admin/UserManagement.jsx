@@ -8,7 +8,6 @@ import { tokens } from "../../../theme";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
-import Header from "../../../components/Header";
 
 const UserManagement = () => {
   const theme = useTheme();
@@ -96,7 +95,6 @@ const UserManagement = () => {
 
   return (
     <Box m="20px">
-      <Header title="Gestion des Utilisateurs" subtitle="Bienvenue" />
       <Box
         m="40px 0 0 0"
         height="75vh"

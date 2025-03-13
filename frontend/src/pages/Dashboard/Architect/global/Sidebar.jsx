@@ -36,10 +36,15 @@ const Sidebar = () => {
       >
         {/* logo */}
         <div className="logo">
-          <img src={Logo} alt="logo" />
-          <span>
-            Sh<span>o</span>ps
-          </span>
+          <img
+            src={Logo}
+            alt="Logo"
+            style={{
+              width: "100px",
+              height: "auto",
+              borderRadius: "8px",
+            }}
+          />
         </div>
 
         <div className="menu">

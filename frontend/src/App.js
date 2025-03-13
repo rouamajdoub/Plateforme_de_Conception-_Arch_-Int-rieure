@@ -7,22 +7,22 @@ import Dashboard from "./pages/Dashboard/Admin/AdminDashboard.jsx";
 import SubscriptionManagement from "./pages/Dashboard/Admin/SubscriptionManagement.jsx";
 import ReviewManagement from "./pages/Dashboard/Admin/ReviewManagement.jsx";
 import UserManagement from "./pages/Dashboard/Admin/UserManagement.jsx";
-import ArchitectDashboard from "./pages/Dashboard/Architect/main.jsx";
+import ArchitectDashboard from "./pages/Dashboard/Architect/Main.jsx";
 function App() {
   return (
     <>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/Arch_Dashboard" element={<ArchitectDashboard />} />
-        <Route path="/admin/dashboard" element={<Dashboard />} />
+        <Route path="/arch_Dashboard" element={<ArchitectDashboard />} />
+        <Route path="/admin_dashboard" element={<Dashboard />} />
         <Route
           path="/admin/subscriptions"
           element={<SubscriptionManagement />}
         />
-        <Route path="/admin/reviews" element={<ReviewManagement />} />
-        <Route path="/admin/users" element={<UserManagement />} />{" "}
-        <Route path="*" element={<ArchitectDashboard />} />
+        <Route path="/admin_reviews" element={<ReviewManagement />} />
+        <Route path="/admin_users" element={<UserManagement />} />{" "}
+        <Route path="*" element={<Dashboard />} />
       </Routes>
     </>
   );

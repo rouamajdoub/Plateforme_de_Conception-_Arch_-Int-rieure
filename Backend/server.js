@@ -8,6 +8,9 @@ const projectsDatabaseRoutes = require("./routes/projects_dbRoutes");
 const marketplaceRoutes = require("./routes/marketplaceRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const reviewRoutes = require("./routes/reviews");
+const architectRoutes = require("./routes/architectRoutes"); // Adjust path as necessary
+
 const authRoutes = require("./routes/authRoutes");
 //--------------------------------------------------------------------------------
 const app = express();
@@ -41,6 +44,8 @@ app.use("/api/marketplace", marketplaceRoutes);
 app.use("/api/payments", paymentRoutes);
 // routes de la Dashboard
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/arch", architectRoutes);
 
 //-----------------------------------------------------
 app.get("/", (req, res) => {

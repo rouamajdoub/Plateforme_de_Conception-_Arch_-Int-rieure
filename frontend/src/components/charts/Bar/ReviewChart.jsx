@@ -1,30 +1,42 @@
 import React from "react";
-import { useTheme } from "@mui/material";
+import { useTheme, Box, Typography } from "@mui/material";
 import { ResponsiveBar } from "@nivo/bar";
-import { tokens } from "../../../theme"; // Adjust the import path as necessary
+import { tokens } from "../../../theme";
 
-const ReviewChart = ({ data }) => {
+const ReviewChart = ({ productReviews }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
-  if (!data || data.length === 0) return <p>No data available</p>;
+  if (!productReviews || productReviews.length === 0)
+    return <Typography>Loading...</Typography>;
 
-  // Prepare the data for Nivo
-  const chartData = data.map(d => ({
-    product: d.product,
-    reviewCount: d.reviewCount,
+  // Aggregate product reviews count by productId
+  const productCounts = productReviews.reduce((acc, review) => {
+    const productId = review.productId;
+    if (productId) {
+      acc[productId] = (acc[productId] || 0) + 1;
+    }
+    return acc;
+  }, {});
+
+  // Prepare data for the bar chart
+  const chartData = Object.keys(productCounts).map((productId) => ({
+    product: productId,
+    count: productCounts[productId],
   }));
 
   return (
-    <div style={{ height: 400 }}>
-      <h2>Reviews per Product</h2>
+    <Box height={400}>
+      <Typography variant="h6" gutterBottom>
+        Most Popular Products by Reviews
+      </Typography>
       <ResponsiveBar
         data={chartData}
-        keys={["reviewCount"]}
+        keys={["count"]}
         indexBy="product"
-        margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+        margin={{ top: 50, right: 50, bottom: 50, left: 60 }}
         padding={0.3}
-        colors={{ scheme: "orange_red" }}
+        colors={[colors.blueAccent[400]]}
         theme={{
           axis: {
             domain: {
@@ -57,7 +69,7 @@ const ReviewChart = ({ data }) => {
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 0,
-          legend: "Product",
+          legend: "Product ID",
           legendPosition: "middle",
           legendOffset: 32,
         }}
@@ -65,7 +77,7 @@ const ReviewChart = ({ data }) => {
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 0,
-          legend: "Reviews",
+          legend: "Review Count",
           legendPosition: "middle",
           legendOffset: -40,
         }}
@@ -76,7 +88,7 @@ const ReviewChart = ({ data }) => {
         )}
         enableLabel={false}
       />
-    </div>
+    </Box>
   );
 };
 

@@ -1,34 +1,28 @@
-// Sidebar.js
 import React, { useState } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
-import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
-import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import profile from "../img/avatar.png";
+import logo from "../img/logo.png";
+import {
+  faHome,
+  faUsers,
+  faClipboardList,
+  faFileInvoiceDollar,
+  faCog,
+} from "@fortawesome/free-solid-svg-icons";
 import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../../../theme";
+import { motion } from "framer-motion";
 
-const Item = ({ title, icon, selected, setSelected, onClick }) => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
-  return (
-    <MenuItem
-      active={selected === title}
-      style={{
-        color: colors.grey[100],
-      }}
-      onClick={() => {
-        setSelected(title);
-        onClick(); // Call the onClick function to change view
-      }}
-      icon={icon}
-    >
-      <Typography>{title}</Typography>
-    </MenuItem>
-  );
-};
+const menuItems = [
+  { title: "Dashboard", icon: faHome, view: "dashboard" },
+  { title: "Users", icon: faCog, view: "users" },
+  { title: "Architects", icon: faUsers, view: "sign-up-req" },
+  { title: "Subscriptions", icon: faFileInvoiceDollar, view: "subscriptions" },
+  { title: "reviews", icon: faClipboardList, view: "reviews" },
+];
 
 const Sidebar = ({ setCurrentView }) => {
   const theme = useTheme();
@@ -42,36 +36,43 @@ const Sidebar = ({ setCurrentView }) => {
         "& .pro-sidebar-inner": {
           background: `${colors.primary[400]} !important`,
         },
-        "& .pro-icon-wrapper": {
-          backgroundColor: "transparent !important",
-        },
-        "& .pro-inner-item": {
-          padding: "5px 35px 5px 20px !important",
-        },
-        "& .pro-inner-item:hover": {
-          color: "#868dfb !important",
-        },
-        "& .pro-menu-item.active": {
-          color: "#6870fa !important",
+        "& .pro-icon-wrapper": { backgroundColor: "transparent !important" },
+        "& .pro-inner-item": { padding: "5px 35px 5px 20px !important" },
+        "& .pro-inner-item:hover": { color: "#868dfb !important" },
+        "& .pro-menu-item.active": { color: "#6870fa !important" },
+        "& .pro-sidebar": {
+          height: "100vh !important",
+          overflowY: "auto",
+          "&::-webkit-scrollbar": { width: "4px" },
+          "&::-webkit-scrollbar-track": { background: colors.primary[100] },
+          "&::-webkit-scrollbar-thumb": { background: colors.primary[300] },
         },
       }}
     >
       <ProSidebar collapsed={isCollapsed}>
         <Menu iconShape="square">
-          {/* LOGO AND MENU ICON */}
+          {/* Logo & Toggle Button */}
           <MenuItem
             onClick={() => setIsCollapsed(!isCollapsed)}
             icon={isCollapsed ? <MenuOutlinedIcon /> : undefined}
-            style={{
-              margin: "10px 0 20px 0",
-              color: colors.grey[100],
-            }}
+            style={{ margin: "10px 0 20px 0", color: colors.grey[100] }}
           >
             {!isCollapsed && (
-              <Box display="flex" justifyContent="space-between" alignItems="center" ml="15px">
-                <Typography variant="h3" color={colors.grey[100]}>
-                  ADMINIS
-                </Typography>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                ml="15px"
+              >
+                <img
+                  src={logo}
+                  alt="Logo"
+                  style={{
+                    width: "80px",
+                    height: "auto",
+                    borderRadius: "8px",
+                  }}
+                />
                 <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
                   <MenuOutlinedIcon />
                 </IconButton>
@@ -79,14 +80,15 @@ const Sidebar = ({ setCurrentView }) => {
             )}
           </MenuItem>
 
+          {/* Profile Section */}
           {!isCollapsed && (
             <Box mb="25px">
               <Box display="flex" justifyContent="center" alignItems="center">
                 <img
+                  src={profile}
                   alt="profile-user"
                   width="100px"
                   height="100px"
-                  src={`./assets/user.jpeg`}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box>
@@ -95,7 +97,6 @@ const Sidebar = ({ setCurrentView }) => {
                   variant="h2"
                   color={colors.grey[100]}
                   fontWeight="bold"
-                  sx={{ m: "10px 0 0 0" }}
                 >
                   Admin Name
                 </Typography>
@@ -105,50 +106,29 @@ const Sidebar = ({ setCurrentView }) => {
               </Box>
             </Box>
           )}
-          {/* Menu items */}
+
+          {/* Sidebar Items */}
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
-            <Item
-              title="Dashboard"
-              icon={<HomeOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-              onClick={() => setCurrentView("dashboard")}
-            />
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Data
-            </Typography>
-            <Item
-              title="Subscription Management"
-              icon={<PeopleOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-              onClick={() => setCurrentView("subscriptions")}
-            />
-            <Item
-              title="User Management"
-              icon={<ContactsOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-              onClick={() => setCurrentView("users")}
-            />
-            <Item
-              title="Reviews Management"
-              icon={<ReceiptOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-              onClick={() => setCurrentView("reviews")}
-            />
-            <Item
-              title="Sign Up"
-              icon={<ReceiptOutlinedIcon />} // Change to appropriate icon
-              selected={selected}
-              setSelected={setSelected}
-              onClick={() => setCurrentView("signup")}
-            />
+            {menuItems.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <MenuItem
+                  active={selected === item.title}
+                  style={{ color: colors.grey[100] }}
+                  onClick={() => {
+                    setSelected(item.title);
+                    setCurrentView(item.view);
+                  }}
+                  icon={<FontAwesomeIcon icon={item.icon} />}
+                >
+                  <Typography>{item.title}</Typography>
+                </MenuItem>
+              </motion.div>
+            ))}
           </Box>
         </Menu>
       </ProSidebar>

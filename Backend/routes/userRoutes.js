@@ -5,6 +5,7 @@ const {
   getUserById,
   updateUser,
   deleteUser,
+  getUserStats,
 } = require("../controllers/userController");
 
 const router = express.Router();
@@ -23,6 +24,8 @@ router.use((req, res, next) => {
 });
 
 // Routes that automatically use req.baseRole
+router.get("/stats", getUserStats);
+
 router.get("/", (req, res) => getUsers(req, res, req.baseRole));
 router.post("/", (req, res) => createUser(req, res, req.baseRole));
 router.get("/:id", (req, res) => getUserById(req, res, req.baseRole));

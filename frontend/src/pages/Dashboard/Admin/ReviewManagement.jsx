@@ -1,128 +1,144 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchReviews, deleteReview } from "../../../redux/slices/adminSlice";
-import { Box, Typography, useTheme } from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import {
+  fetchAllReviews,
+  deleteReview,
+} from "../../../redux/slices/adminSlice";
+import {
+  Box,
+  Typography,
+  Button,
+  useTheme,
+  MenuItem,
+  Select,
+} from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
-import Header from "../../../components/Header";
 
 const ReviewManagement = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const dispatch = useDispatch();
-  const { reviews = [], loading, error } = useSelector((state) => state.admin);
-  const [filter, setFilter] = useState("");
+  const { reviews, loading, error } = useSelector((state) => state.admin);
+  const [reviewType, setReviewType] = useState("all"); // New state for filtering
+
+  // Merge product and project reviews with a new "type" property
+  const mergedReviews = [
+    ...(reviews.productReviews || []).map((r) => ({ ...r, type: "Product" })),
+    ...(reviews.projectReviews || []).map((r) => ({ ...r, type: "Project" })),
+  ];
+
+  // Filter reviews based on selected review type
+  const filteredReviews =
+    reviewType === "all"
+      ? mergedReviews
+      : mergedReviews.filter((r) => r.type === reviewType);
 
   useEffect(() => {
-    dispatch(fetchReviews());
+    dispatch(fetchAllReviews());
   }, [dispatch]);
 
   const handleDelete = (id) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet avis ?")) {
-      dispatch(deleteReview(id));
+    if (window.confirm("Are you sure you want to delete this review?")) {
+      dispatch(deleteReview({ id }));
     }
   };
 
-  if (loading) return <p>Chargement en cours...</p>;
-  if (error) return <p>Erreur : {error}</p>;
-
-  // Define columns for the DataGrid
   const columns = [
-    { field: "id", headerName: "ID", flex: 1 }, // maybe I will remove it later
+    { field: "id", headerName: "ID", flex: 1 },
     {
-      field: "author",
-      headerName: "Auteur",
+      field: "client",
+      headerName: "Author",
       flex: 1,
       renderCell: ({ row }) => (
-        <Typography>{row.reviewerId?.pseudo || "Inconnu"}</Typography>
+        <Typography>{row.client?.pseudo || "Unknown"}</Typography>
       ),
     },
-    { field: "rating", headerName: "Évaluation", flex: 1 },
-    { field: "comment", headerName: "Commentaire", flex: 2 },
+    { field: "type", headerName: "Type", flex: 0.5 },
+    { field: "rating", headerName: "Rating", flex: 0.5 },
+    { field: "comment", headerName: "Comment", flex: 2 },
     {
       field: "date",
       headerName: "Date",
       flex: 1,
-      renderCell: ({ value }) => new Date(value).toLocaleDateString(),
+      renderCell: ({ row }) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
       field: "actions",
       headerName: "Actions",
+      flex: 1,
       renderCell: ({ row }) => (
-        <button className="btn-delete" onClick={() => handleDelete(row._id)}>
-          Supprimer
-        </button>
+        <Box>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => handleDelete(row.id)}
+          >
+            Delete
+          </Button>
+        </Box>
       ),
     },
   ];
 
-  // Map reviews to the format expected by DataGrid
-  const rows = reviews.map((review) => ({
-    id: review._id, // Unique identifier
-    reviewerId: review.reviewerId,
+  const rows = filteredReviews.map((review) => ({
+    id: review._id,
+    client: review.client,
     rating: review.rating,
     comment: review.comment,
     createdAt: review.createdAt,
+    type: review.type,
   }));
-
-  // Filter reviews based on the input
-  const filteredRows = rows.filter((row) => {
-    const reviewerName = row.reviewerId?.pseudo || ""; // Use the pseudo field
-    return reviewerName.toLowerCase().includes(filter.toLowerCase());
-  });
 
   return (
     <Box m="20px">
-      <Header
-        title="Reviews Management"
-        subtitle="List of reviews and ratings"
-      />
+      {/* Filter by Review Type */}
+      <Box mb={2}>
+        <Typography variant="h6" mb={1}>
+          Filter Reviews By:
+        </Typography>
+        <Select
+          value={reviewType}
+          onChange={(e) => setReviewType(e.target.value)}
+          fullWidth
+          variant="outlined"
+        >
+          <MenuItem value="all">All Reviews</MenuItem>
+          <MenuItem value="Product">Product Reviews</MenuItem>
+          <MenuItem value="Project">Project Reviews</MenuItem>
+        </Select>
+      </Box>
 
-      <Box
-        m="40px 0 0 0"
-        height="75vh"
-        sx={{
-          "& .MuiDataGrid-root": {
-            border: "none",
-          },
-          "& .MuiDataGrid-cell": {
-            borderBottom: "none",
-          },
-          "& .name-column--cell": {
-            color: colors.greenAccent[300],
-          },
-          "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: colors.blueAccent[700],
-            borderBottom: "none",
-          },
-          "& .MuiDataGrid-virtualScroller": {
-            backgroundColor: colors.primary[400],
-          },
-          "& .MuiDataGrid-footerContainer": {
-            borderTop: "none",
-            backgroundColor: colors.blueAccent[700],
-          },
-          "& .MuiCheckbox-root": {
-            color: `${colors.greenAccent[200]} !important`,
-          },
-          "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
-            color: `${colors.grey[100]} !important`,
-          },
-        }}
-      >
-        <DataGrid
-          checkboxSelection
-          rows={filteredRows} // Use the filtered reviews as rows
-          columns={columns} // Use the defined columns
-          components={{ Toolbar: GridToolbar }} // Ensure GridToolbar is included
-          componentsProps={{
-            toolbar: {
-              showQuickFilter: true, // Enable the quick filter
-              quickFilterProps: { placeholder: "Search..." }, // Placeholder for the quick filter
+      {/* Data Grid */}
+      {loading ? (
+        <Typography>Loading...</Typography>
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : (
+        <Box
+          height="75vh"
+          sx={{
+            "& .MuiDataGrid-root": { border: "none" },
+            "& .MuiDataGrid-cell": { borderBottom: "none" },
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: colors.blueAccent[700],
+              borderBottom: "none",
+            },
+            "& .MuiDataGrid-virtualScroller": {
+              backgroundColor: colors.primary[400],
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderTop: "none",
+              backgroundColor: colors.blueAccent[700],
+            },
+            "& .MuiCheckbox-root": {
+              color: `${colors.greenAccent[200]} !important`,
             },
           }}
-        />
-      </Box>
+        >
+          <DataGrid rows={rows} columns={columns} checkboxSelection />
+        </Box>
+      )}
     </Box>
   );
 };

@@ -8,6 +8,13 @@ const architectSchema = new mongoose.Schema(
     specialization: { type: [String] },
     portfolioURL: { type: String },
     certifications: { type: [String] },
+    patenteNumber: { type: String, required: true },
+    cin: { type: String, required: true },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "completed"],
+      default: "pending",
+    },
     education: {
       degree: { type: String },
       institution: String,

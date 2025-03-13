@@ -1,4 +1,4 @@
-import { Box, IconButton, useTheme } from "@mui/material";
+import { Box, IconButton, useTheme, Tooltip } from "@mui/material";
 import { useContext } from "react";
 import { ColorModeContext, tokens } from "../../../../theme";
 import InputBase from "@mui/material/InputBase";
@@ -30,22 +30,39 @@ const Topbar = () => {
 
       {/* ICONS */}
       <Box display="flex">
-        <IconButton onClick={colorMode.toggleColorMode}>
-          {theme.palette.mIconButtonode === "dark" ? ( //this will change the icon when the theme is changed
-            <DarkModeOutlinedIcon />
-          ) : (
-            <LightModeOutlinedIcon />
-          )}
-        </IconButton>
-        <IconButton>
-          <NotificationsOutlinedIcon />
-        </IconButton>
-        <IconButton>
-          <SettingsOutlinedIcon />
-        </IconButton>
-        <IconButton>
-          <PersonOutlinedIcon />
-        </IconButton>
+        <Tooltip
+          title={
+            theme.palette.mode === "dark"
+              ? "Switch to Light Mode"
+              : "Switch to Dark Mode"
+          }
+        >
+          <IconButton onClick={colorMode.toggleColorMode}>
+            {theme.palette.mode === "dark" ? (
+              <DarkModeOutlinedIcon />
+            ) : (
+              <LightModeOutlinedIcon />
+            )}
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Notifications">
+          <IconButton>
+            <NotificationsOutlinedIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Settings">
+          <IconButton>
+            <SettingsOutlinedIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Profile">
+          <IconButton>
+            <PersonOutlinedIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
     </Box>
   );

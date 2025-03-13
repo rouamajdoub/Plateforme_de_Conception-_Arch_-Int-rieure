@@ -8,7 +8,6 @@ import EditSubscriptionModal from "../../../components/subs/EditSubscription";
 import { Box, Typography, useTheme } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
-import Header from "../../../components/Header";
 const SubscriptionManagement = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -107,10 +106,7 @@ const SubscriptionManagement = () => {
   }));
   return (
     <Box m="20px">
-      <Header
-        title="Gestion des Abonnements"
-        subtitle="List of subscriptions and plans"
-      />
+     
       <Box
         m="40px 0 0 0"
         height="75vh"

@@ -1,15 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-//---------------------------------------Subscriptions---------------------------------------
-// Récupérer les abonnements
+const BASE_URL = "http://localhost:5000/api";
+
+// ----------------- SUBSCRIPTIONS -----------------
 export const fetchSubscriptions = createAsyncThunk(
   "admin/fetchSubscriptions",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/subscriptions"
-      );
+      const response = await axios.get(`${BASE_URL}/subscriptions`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -17,30 +16,25 @@ export const fetchSubscriptions = createAsyncThunk(
   }
 );
 
-// Supprimer un abonnement
 export const deleteSubscription = createAsyncThunk(
   "admin/deleteSubscription",
   async (id, { rejectWithValue, dispatch }) => {
     try {
-      await axios.delete(`http://localhost:5000/api/subscriptions/${id}`);
-      dispatch(fetchSubscriptions()); // Rafraîchir la liste après suppression
-      return id; // Retourner l'ID supprimé
+      await axios.delete(`${BASE_URL}/subscriptions/${id}`);
+      dispatch(fetchSubscriptions());
+      return id;
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
   }
 );
 
-// Mettre à jour un abonnement
 export const updateSubscription = createAsyncThunk(
   "admin/updateSubscription",
   async ({ id, data }, { rejectWithValue, dispatch }) => {
     try {
-      const response = await axios.put(
-        `http://localhost:5000/api/subscriptions/${id}`,
-        data
-      );
-      dispatch(fetchSubscriptions()); // Rafraîchir la liste après mise à jour
+      const response = await axios.put(`${BASE_URL}/subscriptions/${id}`, data);
+      dispatch(fetchSubscriptions());
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -48,16 +42,12 @@ export const updateSubscription = createAsyncThunk(
   }
 );
 
-//---------------------------------------Reviews---------------------------------------
-// Récupérer les avis
-export const fetchReviews = createAsyncThunk(
-  "admin/fetchReviews",
+// ----------------- REVIEWS -----------------
+export const fetchAllReviews = createAsyncThunk(
+  "admin/fetchAllReviews",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/marketplace/product-reviews"
-      );
-      console.log("Fetched reviews:", response.data); // Ajoutez ceci
+      const response = await axios.get(`${BASE_URL}/reviews`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -65,39 +55,92 @@ export const fetchReviews = createAsyncThunk(
   }
 );
 
-// Supprimer un avis
 export const deleteReview = createAsyncThunk(
   "admin/deleteReview",
-  async (id, { rejectWithValue, dispatch }) => {
+  async ({ id }, { rejectWithValue, dispatch }) => {
     try {
-      await axios.delete(`http://localhost:5000/api/projects/reviews/${id}`);
-      dispatch(fetchReviews()); // Rafraîchir la liste après suppression
-      return id; // Retourner l'ID supprimé
+      await axios.delete(`${BASE_URL}/reviews/${id}`);
+      dispatch(fetchAllReviews());
+      return id;
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
   }
 );
 
-//-----------------------------------------Users---------------------------------------
-// Récupérer les utilisateurs
+// ----------------- USERS -----------------
 export const fetchUsers = createAsyncThunk(
   "admin/fetchUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get("http://localhost:5000/api/users");
+      const response = await axios.get(`${BASE_URL}/users`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
   }
 );
+
 export const deleteUser = createAsyncThunk(
   "admin/deleteUser",
   async (id, { rejectWithValue, dispatch }) => {
     try {
-      await axios.delete(`http://localhost:5000/api/users/${id}`);
-      dispatch(fetchUsers()); // Refresh the user list after deletion
+      await axios.delete(`${BASE_URL}/users/${id}`);
+      dispatch(fetchUsers());
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const fetchUserStats = createAsyncThunk(
+  "admin/fetchUserStats",
+  async () => {
+    const response = await axios.get(`${BASE_URL}/users/stats`);
+    return response.data;
+  }
+);
+
+// ----------------- ARCHITECTS -----------------
+export const fetchArchitectRequests = createAsyncThunk(
+  "admin/fetchArchitectRequests",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/arch/architects/requests`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const approveArchitect = createAsyncThunk(
+  "admin/approveArchitect",
+  async (id, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await axios.patch(
+        `${BASE_URL}/arch/architects/requests/${id}`,
+        {
+          status: "approved",
+        }
+      );
+      dispatch(fetchArchitectRequests()); // Refresh the list
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const rejectArchitect = createAsyncThunk(
+  "admin/rejectArchitect",
+  async (id, { rejectWithValue, dispatch }) => {
+    try {
+      await axios.patch(`${BASE_URL}/arch/architects/requests/${id}`, {
+        status: "rejected",
+      });
+      dispatch(fetchArchitectRequests()); // Refresh the list after deletion
       return id;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -110,13 +153,20 @@ const adminSlice = createSlice({
   initialState: {
     users: [],
     subscriptions: [],
-    reviews: [],
+    reviews: {
+      productReviews: [],
+      projectReviews: [],
+    },
+    architects: [],
+
+    userStats: [], // Initialize userStats
     loading: false,
     error: null,
   },
+  reducers: {},
   extraReducers: (builder) => {
     builder
-      // Gestion des abonnements
+      // Subscriptions
       .addCase(fetchSubscriptions.pending, (state) => {
         state.loading = true;
       })
@@ -141,16 +191,16 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
-      // Gestion des avis
-      .addCase(fetchReviews.pending, (state) => {
+      // Reviews
+      .addCase(fetchAllReviews.pending, (state) => {
         state.loading = true;
       })
-      .addCase(fetchReviews.fulfilled, (state, action) => {
+      .addCase(fetchAllReviews.fulfilled, (state, action) => {
         state.loading = false;
-        state.reviews = action.payload;
+        state.reviews.productReviews = action.payload.productReviews || [];
+        state.reviews.projectReviews = action.payload.projectReviews || [];
       })
-      .addCase(fetchReviews.rejected, (state, action) => {
+      .addCase(fetchAllReviews.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -159,7 +209,10 @@ const adminSlice = createSlice({
       })
       .addCase(deleteReview.fulfilled, (state, action) => {
         state.loading = false;
-        state.reviews = state.reviews.filter(
+        state.reviews.productReviews = state.reviews.productReviews.filter(
+          (review) => review._id !== action.payload
+        );
+        state.reviews.projectReviews = state.reviews.projectReviews.filter(
           (review) => review._id !== action.payload
         );
       })
@@ -167,8 +220,7 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
-      // Gestion des utilisateurs
+      // Users
       .addCase(fetchUsers.pending, (state) => {
         state.loading = true;
       })
@@ -188,6 +240,56 @@ const adminSlice = createSlice({
         state.users = state.users.filter((user) => user._id !== action.payload);
       })
       .addCase(deleteUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // User Stats
+      .addCase(fetchUserStats.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUserStats.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userStats = action.payload; // Store user stats
+      })
+      .addCase(fetchUserStats.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload; // Correct error handling
+      })
+      // Architect Requests
+      .addCase(fetchArchitectRequests.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchArchitectRequests.fulfilled, (state, action) => {
+        state.loading = false;
+        state.architects = action.payload;
+      })
+      .addCase(fetchArchitectRequests.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(approveArchitect.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(approveArchitect.fulfilled, (state, action) => {
+        state.loading = false;
+        state.architects = state.architects.map((arch) =>
+          arch._id === action.payload._id ? action.payload : arch
+        );
+      })
+      .addCase(approveArchitect.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(rejectArchitect.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(rejectArchitect.fulfilled, (state, action) => {
+        state.loading = false;
+        state.architects = state.architects.filter(
+          (arch) => arch._id !== action.payload
+        );
+      })
+      .addCase(rejectArchitect.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

@@ -49,7 +49,6 @@ exports.deleteProject = async (req, res) => {
   }
 };
 
-// Create a new Project Review (this can be moved to reviewController)
 exports.createProjectReview = async (req, res) => {
   try {
     const { client, comment, rating } = req.body; // Make sure to include projectId

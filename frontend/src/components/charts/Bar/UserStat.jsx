@@ -8,7 +8,7 @@ const UserStat = ({ data }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
-  if (!data || data.length === 0) return <p>Chargement des données...</p>;
+  if (!data || data.length === 0) return <p>Loading...</p>;
 
   // Count the number of users by role
   const roleCounts = data.reduce((acc, user) => {
@@ -23,14 +23,14 @@ const UserStat = ({ data }) => {
 
   return (
     <div style={{ height: 400 }}>
-      <h2>Répartition des Utilisateurs par Rôle</h2>
+      <h2>User Distribution by Role</h2>
       <ResponsiveBar
         data={chartData}
         keys={["count"]}
         indexBy="role"
         margin={{ top: 50, right: 50, bottom: 50, left: 60 }}
         padding={0.3}
-        colors={["rgba(54, 162, 235, 0.6)"]} // You can adjust the color scheme as needed
+        colors={["rgba(54, 162, 235, 0.6)"]} // I will adjust the color later
         theme={{
           axis: {
             domain: {
@@ -63,7 +63,7 @@ const UserStat = ({ data }) => {
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 0,
-          legend: "Rôle",
+          legend: "Role",
           legendPosition: "middle",
           legendOffset: 32,
         }}
@@ -71,7 +71,7 @@ const UserStat = ({ data }) => {
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 0,
-          legend: "Nombre d'utilisateurs",
+          legend: "Number of Users",
           legendPosition: "middle",
           legendOffset: -40,
         }}
