@@ -74,9 +74,10 @@
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
+    "@tailwindcss/postcss": "^4.0.14",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
     "source-map-loader": "^5.0.0",
-    "tailwindcss": "^4.0.12"
+    "tailwindcss": "^4.0.14"
   }
 }
