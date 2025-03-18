@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../../redux/slices/authSlice"; // Import Redux action
+import { loginUser } from "../../redux/slices/authSlice";
 import "../../styles/Auth.css";
-
+import GoogleAuth from "./GoogleAuth";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  // Access Redux state
   const { user, loading, error } = useSelector((state) => state.auth);
 
   const handleSubmit = (e) => {
@@ -18,14 +16,12 @@ const Login = () => {
     dispatch(loginUser({ email, password }));
   };
 
-  // Redirect user after login
   useEffect(() => {
     if (user) {
-      const userRole = user.role;
-      if (userRole === "client") {
-        window.location.href = "http://localhost:3001"; // ✅ Redirect to Next.js showcase
+      if (user.role === "client") {
+        navigate("/admin_dashboard"); // Redirect to Next.js showcase
       } else {
-        navigate("/dashboard"); // ✅ Redirect to React dashboard
+        navigate("/arch_Dashboard"); // Redirect to React dashboard
       }
     }
   }, [user, navigate]);
@@ -57,6 +53,7 @@ const Login = () => {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+      <GoogleAuth />
       <p className="registre-link">
         Don't have an account? <a href="/signup">Sign Up</a>
       </p>

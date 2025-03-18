@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "react-pro-sidebar/dist/css/styles.css";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
@@ -12,7 +13,6 @@ import {
   faFileInvoiceDollar,
   faCog,
 } from "@fortawesome/free-solid-svg-icons";
-import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../../../theme";
 import { motion } from "framer-motion";
 

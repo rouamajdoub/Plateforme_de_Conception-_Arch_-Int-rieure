@@ -1,0 +1,64 @@
+/* Table container */
+.TableContainer {
+  background: transparent !important; /* Make container background transparent */
+  border-radius: 0.7rem !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important; /* Add shadow */
+  border: 2px  black !important; /* Add bold border */
+}
+
+/* Table */
+.Table {
+  width: 100%;
+  background: transparent !important; /* Make table background transparent */
+}
+
+/* Table rows and cells */
+.MuiTableRow-root {
+  background: transparent !important; /* Make row background transparent */
+}
+
+.MuiTableRow-root > * {
+  padding: 10px;
+  background: transparent !important; /* Make cell background transparent */
+  color: black !important; /* Change text color to black */
+}
+
+.MuiTableRow-root.MuiTableRow-head > * {
+  font-weight: bold !important;
+  background: transparent !important; /* Make header background transparent */
+  color: black !important; /* Change header text color to black */
+}
+
+.Table td,
+.Table th {
+  border: none !important;
+  background: transparent !important; /* Make cell background transparent */
+}
+
+/* Status and Details */
+.status {
+  padding: 8px;
+  border-radius: 9px;
+}
+
+.Details {
+  color: #00b5ff !important; /* Keep details color as is */
+}
+
+/* Responsive styles */
+@media screen and (max-width: 1200px) {
+  .Table {
+    width: 170%;
+    margin-top: 2rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .Table {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 23rem;
+  }
+}

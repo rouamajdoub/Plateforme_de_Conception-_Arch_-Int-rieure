@@ -10,6 +10,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const reviewRoutes = require("./routes/reviews");
 const architectRoutes = require("./routes/architectRoutes"); // Adjust path as necessary
+const statsRoutes = require("./routes/statsRoutes");
 
 const authRoutes = require("./routes/authRoutes");
 //--------------------------------------------------------------------------------
@@ -46,6 +47,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/arch", architectRoutes);
+app.use("/api/stats", statsRoutes);
 
 //-----------------------------------------------------
 app.get("/", (req, res) => {

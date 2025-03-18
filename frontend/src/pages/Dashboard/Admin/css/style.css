@@ -1,17 +1,9 @@
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-.section-title {
-  @apply  text-3xl md:text-[54px] md:leading-[60px] font-bold tracking-tighter bg-gradient-to-b from-black to-[#001E80] text-transparent bg-clip-text;
-}
-
 body {
-  color: #010D3E;
+  color: #010d3e;
 }
 
-  .custom-background {
-    background: radial-gradient(ellipse 200% 100% at bottom left, #183EC2, #EAEEFE 100%);
-    overflow-x: clip;
-    height: 100vh; /* Ensure it covers the full height */
-  }
+.custom-background {
+  background: #cfc7ba;
+  overflow-x: clip;
+  height: 100vh; /* Ensure it covers the full height */
+}

@@ -7,7 +7,9 @@ const {
   requestPasswordReset,
   resetPassword,
   verifyEmail,
+  googleLogin, // ➜ Add Google Login Controller
 } = require("../controllers/authController");
+
 const { protect } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
@@ -18,18 +20,20 @@ router.post("/register", register);
 // Connexion
 router.post("/login", login);
 
-// Profil 
+// Connexion avec Google OAuth
+router.post("/google-login", googleLogin); // ➜ New Google Login Route
+
+// Profil (Protégé)
 router.get("/profile", protect, getProfile);
 
-// Déconnexion
+// Déconnexion (Protégé)
 router.post("/logout", protect, logout);
 
-// Demander une réinitialisation de mot de passe
+// Réinitialisation de mot de passe
 router.post("/request-password-reset", requestPasswordReset);
-
-// Réinitialiser le mot de passe
 router.post("/reset-password/:token", resetPassword);
 
 // Vérification de l'email
 router.get("/verify-email/:token", verifyEmail);
+
 module.exports = router;

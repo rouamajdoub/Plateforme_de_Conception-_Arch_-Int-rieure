@@ -1,13 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// URL de base de ton API
+// Base API URL
 const BASE_URL = "http://localhost:5000/api/auth";
 
-// Récupérer le token du sessionStorage (si existant)
-const storedUser = JSON.parse(sessionStorage.getItem("user")) || null;
+// Retrieve user from localStorage (if exists)
+const storedUser = JSON.parse(localStorage.getItem("user")) || null;
+const storedToken = localStorage.getItem("token") || null;
 
-// 🔹 Inscription
+// 🔹 User Registration
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (userData, { rejectWithValue }) => {
@@ -16,42 +17,66 @@ export const registerUser = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || "Inscription échouée"
+        error.response?.data?.error || "Registration failed"
       );
     }
   }
 );
 
-// 🔹 Connexion (Login)
+// 🔹 User Login (Classic)
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${BASE_URL}/login`, credentials);
-      const user = response.data;
+      const { user, token } = response.data;
 
-      // Stocker les infos de l'utilisateur dans sessionStorage
-      sessionStorage.setItem("user", JSON.stringify(user));
+      // Store user info and token in localStorage
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", token);
 
-      return user;
+      return { user, token };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || "Login failed");
+    }
+  }
+);
+
+// 🔹 Google Login
+export const loginWithGoogle = createAsyncThunk(
+  "auth/loginWithGoogle",
+  async (googleData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/google-login`, googleData);
+      const { user, token } = response.data;
+
+      // Store user info and token in localStorage
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", token);
+
+      return { user, token };
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || "Connexion échouée"
+        error.response?.data?.error || "Google login failed"
       );
     }
   }
 );
 
-// 🔹 Déconnexion (Logout)
+// 🔹 Logout
 export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
       await axios.post(`${BASE_URL}/logout`);
-      sessionStorage.removeItem("user"); // Supprimer du sessionStorage
+
+      // Remove user and token from localStorage
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+
       return null;
     } catch (error) {
-      return rejectWithValue("Déconnexion échouée");
+      return rejectWithValue("Logout failed");
     }
   }
 );
@@ -60,41 +85,62 @@ const authSlice = createSlice({
   name: "auth",
   initialState: {
     user: storedUser,
+    token: storedToken,
     loading: false,
     error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Inscription
+      // Registration
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Connexion
+
+      // Login
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Déconnexion
+
+      // Google Login
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Logout
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
+        state.token = null;
       });
   },
 });

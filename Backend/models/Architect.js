@@ -26,6 +26,8 @@ const architectSchema = new mongoose.Schema(
         level: { type: String },
       },
     ],
+    profileViews: { type: Number, default: 0 },
+    profileViewsTimestamps: [{ type: Date }],
     location: {
       country: { type: String },
       region: { type: String },

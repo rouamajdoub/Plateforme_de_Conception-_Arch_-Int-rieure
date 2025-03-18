@@ -1,0 +1,15 @@
+.CustomerReview {
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+  width: 100%; /* Ensure full width */
+  max-width: 600px; /* Optional: Set a max width */
+  padding: 20px; /* Add padding for aesthetics */
+  border-radius: 8px; /* Optional: To match the design */
+  overflow: hidden; /* Hide overflow content */
+  background-color: transparent; /* Match the background */
+}
+.CustomerReview h3 {
+  margin: 0; /* Remove default margin */
+  padding-bottom: 10px; /* Add some padding for spacing */
+  text-align: center; /* Center align the header if desired */
+}

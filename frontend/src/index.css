@@ -36,3 +36,6 @@ html,
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+.section-title {
+  @apply  text-3xl md:text-[54px] md:leading-[60px] font-bold tracking-tighter bg-gradient-to-b from-black to-[#001E80] text-transparent bg-clip-text;
+}

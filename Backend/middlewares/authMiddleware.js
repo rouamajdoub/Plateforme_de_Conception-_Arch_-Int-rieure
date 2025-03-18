@@ -1,6 +1,4 @@
-// middleware/auth.js
-
-const authService = require("../services/authService");
+const jwt = require("jsonwebtoken");
 const {
   AuthenticationError,
   AuthorizationError,
@@ -19,8 +17,8 @@ exports.protect = async (req, res, next) => {
 
     const token = authHeader.replace("Bearer ", "");
 
-    // Verify token
-    const decoded = authService.verifyToken(token);
+    // Verify token and decode
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Ensure you have JWT_SECRET in your .env file
 
     // Set user in request
     req.user = decoded;
