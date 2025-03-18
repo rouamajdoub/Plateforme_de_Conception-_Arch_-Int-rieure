@@ -11,7 +11,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const reviewRoutes = require("./routes/reviews");
 const architectRoutes = require("./routes/architectRoutes"); // Adjust path as necessary
 const statsRoutes = require("./routes/statsRoutes");
-
+const quoteRoutes = require("./routes/QuoteRoutes"); // Adjust the path as needed
 const authRoutes = require("./routes/authRoutes");
 //--------------------------------------------------------------------------------
 const app = express();
@@ -48,6 +48,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/arch", architectRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/quotes-invoices", quoteRoutes);
 
 //-----------------------------------------------------
 app.get("/", (req, res) => {

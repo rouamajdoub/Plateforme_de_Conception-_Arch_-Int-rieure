@@ -6,7 +6,7 @@ import {
   rejectArchitect,
 } from "../../../redux/slices/adminSlice";
 import { Box, Typography, Button, useTheme } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
 
 const ArchitectRequests = () => {
@@ -105,13 +105,13 @@ const ArchitectRequests = () => {
 
   const rows = architects.map((arch) => ({
     id: arch._id,
-    name: arch.pseudo, // Ensure backend sends this
+    name: arch.pseudo,
     email: arch.email,
     experience: arch.experience || "N/A",
     companyName: arch.companyName || "N/A",
     patenteNumber: arch.patenteNumber || "N/A",
     cin: arch.cin || "N/A",
-    paymentProcess: arch.paymentStatus || "pending", // Adjust according to backend
+    paymentProcess: arch.paymentStatus || "pending",
     status: arch.status,
     createdAt: arch.createdAt,
   }));
@@ -148,7 +148,18 @@ const ArchitectRequests = () => {
             },
           }}
         >
-          <DataGrid rows={rows} columns={columns} checkboxSelection />
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            checkboxSelection
+            components={{ Toolbar: GridToolbar }}
+            componentsProps={{
+              toolbar: {
+                showQuickFilter: true,
+                quickFilterProps: { debounceMs: 500 },
+              },
+            }}
+          />
         </Box>
       )}
     </Box>
