@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { updateSubscription } from "../../redux/slices/adminSlice";
+import { updateSubscription } from "../../../../redux/slices/adminSlice";
 import {
   Dialog,
   DialogTitle,

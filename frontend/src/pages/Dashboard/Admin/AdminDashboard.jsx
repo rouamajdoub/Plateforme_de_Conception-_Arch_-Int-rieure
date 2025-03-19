@@ -1,85 +1,138 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Box, Grid, Paper, CircularProgress, Typography } from "@mui/material";
+import {
+  Box,
+  Grid,
+  Paper,
+  CircularProgress,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 
 // Global components
 import Topbar from "./global_admin/Topbar";
 import Sidebar from "./global_admin/Sidebar";
 import Header from "../../../components/Header";
 
-// Charts (replace with your actual chart components)
+// Charts
 import UserStatisticsChart from "../../../components/charts/Bar/UserStat";
 import ReviewManagementChart from "../../../components/charts/Bar/ReviewChart";
 import UserStatsChart from "../../../components/charts/line/UserStatsChart";
 
-// Management pages (for example purposes)
-import ReviewManagement from "./ReviewManagement";
-import UserManagement from "./UserManagement";
-import SubscriptionManagement from "./SubscriptionManagement";
-import ArchiSignUpReq from "./ArchiSignUpReq";
-//-----------css--
+// Management pages
+import ReviewManagement from "./pages/ReviewManagement";
+import UserManagement from "./pages/UserManagement";
+import SubscriptionManagement from "./pages/SubscriptionManagement";
+import ArchiSignUpReq from "./pages/ArchiSignUpReq";
+
+// CSS
 import "./css/style.css";
 
-// Redux actions from adminSlice
+// Redux actions
 import {
   fetchUsers,
   fetchAllReviews,
   fetchSubscriptions,
   fetchUserStats,
+  fetchArchitectRequests,
 } from "../../../redux/slices/adminSlice";
 
 const AdminDashboard = () => {
   const dispatch = useDispatch();
-  const { users, reviews, userStats, loading, error } = useSelector(
-    (state) => state.admin
-  );
+  const { users, reviews, userStats, architectRequests, loading, error } =
+    useSelector((state) => state.admin);
   const [currentView, setCurrentView] = useState("dashboard");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Track sidebar state
 
   useEffect(() => {
     dispatch(fetchUsers());
     dispatch(fetchAllReviews());
     dispatch(fetchSubscriptions());
-    dispatch(fetchUserStats()); // Fetch user stats here
+    dispatch(fetchUserStats());
+    dispatch(fetchArchitectRequests());
   }, [dispatch]);
 
-  const Header = ({ title }) => (
-    <Typography variant="h1" className="section-title">
-      {title}
-    </Typography>
+  const renderArchitectRequests = () => (
+    <div className="table-container">
+      <Typography variant="h6" gutterBottom>
+        Architect Sign-Up Requests
+      </Typography>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Country</TableCell>
+              <TableCell>Phone</TableCell>
+              <TableCell>Status</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {architectRequests?.length > 0 ? (
+              architectRequests.map((req) => (
+                <TableRow key={req._id}>
+                  <TableCell>{req.name}</TableCell>
+                  <TableCell>{req.email}</TableCell>
+                  <TableCell>{req.country}</TableCell>
+                  <TableCell>{req.phone}</TableCell>
+                  <TableCell>{req.status}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  No requests found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
   );
-  const renderDashboard = () => (
-    <Grid container spacing={3} sx={{ mt: 2 }}>
-      <Grid item xs={12} md={4}>
-        <Paper elevation={3} sx={{ p: 2, backgroundColor: "transparent" }}>
-          <UserStatisticsChart data={users} />
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <Paper elevation={3} sx={{ p: 2, backgroundColor: "transparent" }}>
-          <ReviewManagementChart
-            productReviews={reviews?.productReviews || []}
-          />
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <Paper elevation={3} sx={{ p: 2, backgroundColor: "transparent" }}>
-          <UserStatsChart data={userStats} />
-        </Paper>
-      </Grid>
-    </Grid>
+
+  const renderStatistics = () => (
+    <div className="stats-container">
+      <div className="stat-card">
+        <UserStatisticsChart data={users} />
+      </div>
+      <div className="stat-card">
+        <ReviewManagementChart productReviews={reviews?.productReviews || []} />
+      </div>
+      <div className="stat-card">
+        <UserStatsChart data={userStats} />
+      </div>
+    </div>
   );
 
   return (
-    <Box className="custom-background" sx={{ display: "flex" }}>
-      <Sidebar setCurrentView={setCurrentView} />
-      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+    <Box className="custom-background">
+      <Sidebar
+        setCurrentView={setCurrentView}
+        setIsCollapsed={setIsSidebarCollapsed} // Pass the collapsed state
+      />
+      <Box
+        className={`dashboard-container ${
+          isSidebarCollapsed ? "sidebar-collapsed" : ""
+        }`}
+      >
         <Topbar />
-        <Box sx={{ p: 3 }}>
+        <Box>
           <Header title="Admin Dashboard" />
           {loading && <CircularProgress />}
           {error && <Typography color="error">{error}</Typography>}
-          {currentView === "dashboard" && renderDashboard()}
+          {currentView === "dashboard" && (
+            <>
+              {renderArchitectRequests()}
+              {renderStatistics()}
+            </>
+          )}
           {currentView === "reviews" && <ReviewManagement />}
           {currentView === "users" && <UserManagement />}
           {currentView === "subscriptions" && <SubscriptionManagement />}

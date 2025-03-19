@@ -14,15 +14,16 @@ export const registerUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${BASE_URL}/register`, userData);
+      console.log("Backend Response:", response.data); // Log the response
       return response.data;
     } catch (error) {
+      console.error("Registration Error:", error.response?.data); // Log the error
       return rejectWithValue(
         error.response?.data?.error || "Registration failed"
       );
     }
   }
 );
-
 // 🔹 User Login (Classic)
 export const loginUser = createAsyncThunk(
   "auth/loginUser",

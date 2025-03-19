@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchSubscriptions,
   deleteSubscription,
-} from "../../../redux/slices/adminSlice";
-import EditSubscriptionModal from "../../../components/subs/EditSubscription";
+} from "../../../../redux/slices/adminSlice";
+import EditSubscriptionModal from "../Edit/EditSubscription";
 import { Box, Typography, useTheme } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { tokens } from "../../../theme";
+import { tokens } from "../../../../theme";
 const SubscriptionManagement = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -106,7 +106,6 @@ const SubscriptionManagement = () => {
   }));
   return (
     <Box m="20px">
-     
       <Box
         m="40px 0 0 0"
         height="75vh"

@@ -48,6 +48,7 @@ const Sidebar = ({ setCurrentView }) => {
           "&::-webkit-scrollbar-thumb": { background: colors.primary[300] },
         },
       }}
+      className={isCollapsed ? "sidebar-collapsed" : ""} // Add class based on collapsed state
     >
       <ProSidebar collapsed={isCollapsed}>
         <Menu iconShape="square">

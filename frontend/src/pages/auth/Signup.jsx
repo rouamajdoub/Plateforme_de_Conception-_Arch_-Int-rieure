@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { registerUser } from "../../redux/slices/authSlice";
-import "../../styles/Auth.css";
+import SubscriptionStep from "./SubscriptionStep"; // Import the SubscriptionStep component
+import "./styles/Auth.css";
 
 const Signup = () => {
   const {
@@ -12,10 +13,11 @@ const Signup = () => {
   } = useForm();
   const dispatch = useDispatch();
   const [step, setStep] = useState(1);
-  const [userType, setUserType] = useState("client");
+  const [userType, setUserType] = useState(null); // Track selected role
+  const [subscription, setSubscription] = useState(null); // Track selected subscription
 
   const onSubmit = (data) => {
-    const formData = { ...data, role: userType };
+    const formData = { ...data, role: userType, subscription }; // Include subscription in form data
     console.log("Registration Data:", formData); // Log the form data
 
     // Handle step navigation
@@ -87,18 +89,26 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => setUserType("client")}
-                className="btn"
+                className={`btn role-btn ${
+                  userType === "client" ? "selected-client" : ""
+                }`}
               >
                 Sign up as Client
               </button>
               <button
                 type="button"
                 onClick={() => setUserType("architect")}
-                className="btn"
+                className={`btn role-btn ${
+                  userType === "architect" ? "selected-architect" : ""
+                }`}
               >
                 Sign up as Architect
               </button>
-              <button type="submit" className="btn">
+              <button
+                type="submit"
+                className="btn next-btn"
+                disabled={!userType} // Disable "Next" if no role is selected
+              >
                 Next
               </button>
             </div>
@@ -233,26 +243,10 @@ const Signup = () => {
         )}
 
         {step === 3 && userType === "architect" && (
-          <div className="form-step">
-            <h2>Step 3: Choose Subscription</h2>
-            <select
-              {...register("subscriptionPlan", {
-                required: "Subscription plan is required",
-              })}
-              className="select-box"
-            >
-              <option value="">Select a plan</option>
-              <option value="free">Free</option>
-              <option value="pro">Pro - 120 TND/Year</option>
-              <option value="business">Business - 200 TND/Year</option>
-            </select>
-            {errors.subscriptionPlan && (
-              <p className="error-message">{errors.subscriptionPlan.message}</p>
-            )}
-            <button type="submit" className="btn">
-              Next
-            </button>
-          </div>
+          <SubscriptionStep
+            onNext={() => setStep(4)} // Move to the next step
+            onSelectSubscription={setSubscription} // Set the selected subscription
+          />
         )}
 
         {step === 4 && (

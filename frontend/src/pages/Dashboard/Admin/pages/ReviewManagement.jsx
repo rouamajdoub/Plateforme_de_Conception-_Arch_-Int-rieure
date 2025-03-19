@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllReviews,
   deleteReview,
-} from "../../../redux/slices/adminSlice";
+} from "../../../../redux/slices/adminSlice";
 import {
   Box,
   Typography,
@@ -13,7 +13,7 @@ import {
   Select,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { tokens } from "../../../theme";
+import { tokens } from "../../../../theme";
 
 const ReviewManagement = () => {
   const theme = useTheme();

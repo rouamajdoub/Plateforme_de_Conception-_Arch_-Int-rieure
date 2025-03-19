@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import "./Sidebar.css";
 import Logo from "../../img/logo.png";
@@ -30,10 +30,7 @@ const menuItems = [
   { title: "Notifications", icon: faBell, view: "notifications" },
 ];
 
-const Sidebar = () => {
-  const [selected, setSelected] = useState(0);
-  const [expanded, setExpanded] = useState(true);
-
+const Sidebar = ({ expanded, setExpanded, selectedItem, setSelectedItem }) => {
   return (
     <>
       <motion.div
@@ -57,20 +54,24 @@ const Sidebar = () => {
           />
         </div>
 
-        {/* Menu Items */}
-        <div className="menu">
-          {menuItems.map((item, index) => (
-            <motion.div
-              className={selected === index ? "menuItem active" : "menuItem"}
-              key={index}
-              onClick={() => setSelected(index)}
-              whileHover={expanded ? { scale: 1.1 } : {}}
-              transition={{ duration: 0.2 }}
-            >
-              <FontAwesomeIcon icon={item.icon} />
-              {expanded && <span>{item.title}</span>}
-            </motion.div>
-          ))}
+        {/* Scrollable Menu Items */}
+        <div className="menu-scrollable">
+          <div className="menu">
+            {menuItems.map((item, index) => (
+              <motion.div
+                className={
+                  selectedItem === item.view ? "menuItem active" : "menuItem"
+                }
+                key={index}
+                onClick={() => setSelectedItem(item.view)} // Update selected item
+                whileHover={expanded ? { scale: 1.1 } : {}}
+                transition={{ duration: 0.2 }}
+              >
+                <FontAwesomeIcon icon={item.icon} />
+                {expanded && <span>{item.title}</span>}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </motion.div>
     </>

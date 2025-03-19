@@ -12,7 +12,6 @@
 }
 
 .App {
-  /* padding: 0.5rem 3.5rem; */
   color: var(--black);
   background: linear-gradient(
     106.37deg,
@@ -33,20 +32,21 @@
   width: 97%;
   background: var(--glass);
   border-radius: 2rem;
-  gap: 16px;
-  grid-template-columns: 11rem auto 20rem;
+  gap: 16px; /* Add gap between grid items */
   overflow: hidden;
+  transition: grid-template-columns 0.3s ease-in-out; /* Smooth transition */
 }
 
 @media screen and (max-width: 1200px) {
   .AppGlass {
-    grid-template-columns: 10% 50% auto;
+    grid-template-columns: 10% auto; /* 2 columns for smaller screens */
     overflow-y: scroll;
   }
 }
 
 @media screen and (max-width: 768px) {
   .AppGlass {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Single column for mobile */
+    gap: 8px; /* Reduce gap for smaller screens */
   }
 }

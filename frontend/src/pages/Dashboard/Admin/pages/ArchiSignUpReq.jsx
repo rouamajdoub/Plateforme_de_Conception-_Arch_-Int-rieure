@@ -4,10 +4,10 @@ import {
   fetchArchitectRequests,
   approveArchitect,
   rejectArchitect,
-} from "../../../redux/slices/adminSlice";
+} from "../../../../redux/slices/adminSlice";
 import { Box, Typography, Button, useTheme } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { tokens } from "../../../theme";
+import { tokens } from "../../../../theme";
 
 const ArchitectRequests = () => {
   const theme = useTheme();

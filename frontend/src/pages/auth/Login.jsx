@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../redux/slices/authSlice";
-import "../../styles/Auth.css";
+import "./styles/Auth.css";
 import GoogleAuth from "./GoogleAuth";
 const Login = () => {
   const [email, setEmail] = useState("");
