@@ -5,6 +5,7 @@ import MainDash from "./content/MainDash/MainDash";
 import RightSide from "./content/RightSide/RightSide";
 import Profile from "./pages/Profile/Profile";
 import Calendar from "./pages/Calendar/Calendar";
+import Project from "./pages/Project/Project";
 
 const Main = () => {
   const [expanded, setExpanded] = useState(true);
@@ -22,6 +23,8 @@ const Main = () => {
         return <Profile />;
       case "calendar":
         return <Calendar />;
+      case "projects":
+        return <Project />;
       // Add more cases for other pages
       default:
         return (

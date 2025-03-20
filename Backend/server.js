@@ -4,7 +4,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
-const projectsDatabaseRoutes = require("./routes/projects_dbRoutes");
+const projects = require("./routes/projects_dbRoutes");
 const marketplaceRoutes = require("./routes/marketplaceRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
@@ -13,6 +13,7 @@ const architectRoutes = require("./routes/architectRoutes"); // Adjust path as n
 const statsRoutes = require("./routes/statsRoutes");
 const quoteRoutes = require("./routes/QuoteRoutes"); // Adjust the path as needed
 const authRoutes = require("./routes/authRoutes");
+const eventRoutes = require("./routes/eventRoutes");
 //--------------------------------------------------------------------------------
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -37,7 +38,7 @@ app.use("/api/architects", userRoutes);
 //  subscription routes
 app.use("/api/subscriptions", subscriptionRoutes);
 //  projects  routes
-app.use("/api/projects", projectsDatabaseRoutes);
+app.use("/api/projects", projects);
 
 // routes de la marketplace
 app.use("/api/marketplace", marketplaceRoutes);
@@ -49,7 +50,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/arch", architectRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/quotes-invoices", quoteRoutes);
-
+app.use("/api/events", eventRoutes);
 //-----------------------------------------------------
 app.get("/", (req, res) => {
   res.send("Hello, Roua! Express & MongoDB are working 🚀");

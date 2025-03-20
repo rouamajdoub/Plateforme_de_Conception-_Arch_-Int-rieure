@@ -1,0 +1,13 @@
+/* Custom styles for FullCalendar buttons */
+.fc button {
+    background-color: var(--pink); /* Use your desired color */
+    color: white; /* Text color */
+    border: none; /* Remove border */
+    border-radius: 5px; /* Add border-radius for rounded corners */
+    padding: 10px; /* Add padding */
+    cursor: pointer; /* Change cursor to pointer */
+  }
+  
+  .fc button:hover {
+    background-color: var(--blue); /* Change color on hover */
+  }

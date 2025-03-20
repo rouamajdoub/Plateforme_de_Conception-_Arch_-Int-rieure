@@ -3,6 +3,7 @@ import axios from "axios";
 
 const API_URL_PROJECTS = "http://localhost:5000/api/projects";
 const API_URL_QUOTES_INVOICES = "http://localhost:5000/api/quotes-invoices";
+const API_URL_EVENTS = "http://localhost:5000/api/events";
 
 // Set up axios instance for authentication
 const axiosInstance = axios.create();
@@ -20,9 +21,13 @@ axiosInstance.interceptors.request.use(
 // ====== PROJECT ACTIONS ======
 export const fetchProjects = createAsyncThunk(
   "architect/fetchProjects",
-  async (_, { rejectWithValue }) => {
+  async (filters = {}, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(API_URL_PROJECTS);
+      const queryParams = new URLSearchParams(filters).toString();
+      const url = queryParams
+        ? `${API_URL_PROJECTS}?${queryParams}`
+        : API_URL_PROJECTS;
+      const response = await axiosInstance.get(url);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -179,14 +184,10 @@ export const generateQuotePDF = createAsyncThunk(
         { responseType: "blob" }
       );
 
-      // Create a URL for the blob
-      const pdfUrl = URL.createObjectURL(response.data);
+      const pdfBlob = response.data;
+      const pdfUrl = URL.createObjectURL(pdfBlob);
 
-      return {
-        quoteId,
-        pdfUrl,
-        pdfBlob: response.data,
-      };
+      return { quoteId, pdfUrl, pdfBlob };
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to generate PDF");
     }
@@ -319,19 +320,96 @@ export const generateInvoicePDF = createAsyncThunk(
   }
 );
 
+// ====== EVENT ACTIONS ======
+export const fetchEvents = createAsyncThunk(
+  "architect/fetchEvents",
+  async (filters = {}, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(filters)) {
+        if (value) queryParams.append(key, value);
+      }
+
+      const url =
+        Object.keys(filters).length > 0
+          ? `${API_URL_EVENTS}/filter?${queryParams}`
+          : API_URL_EVENTS;
+
+      const response = await axiosInstance.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to fetch events");
+    }
+  }
+);
+
+export const getEventById = createAsyncThunk(
+  "architect/getEventById",
+  async (eventId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`${API_URL_EVENTS}/${eventId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to fetch event");
+    }
+  }
+);
+
+export const addEvent = createAsyncThunk(
+  "architect/addEvent",
+  async (eventData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(API_URL_EVENTS, eventData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to create event");
+    }
+  }
+);
+
+export const updateEvent = createAsyncThunk(
+  "architect/updateEvent",
+  async (eventData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(
+        `${API_URL_EVENTS}/${eventData._id}`,
+        eventData
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to update event");
+    }
+  }
+);
+
+export const deleteEvent = createAsyncThunk(
+  "architect/deleteEvent",
+  async (eventId, { rejectWithValue }) => {
+    try {
+      await axiosInstance.delete(`${API_URL_EVENTS}/${eventId}`);
+      return eventId;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to delete event");
+    }
+  }
+);
+
 const architectSlice = createSlice({
   name: "architect",
   initialState: {
     projects: [],
     quotes: [],
     invoices: [],
+    events: [],
     currentQuote: null,
     currentInvoice: null,
+    currentEvent: null,
     pdfs: {}, // Store generated PDFs by ID
     loading: {
       projects: false,
       quotes: false,
       invoices: false,
+      events: false,
       currentItem: false,
       pdf: false,
     },
@@ -339,6 +417,7 @@ const architectSlice = createSlice({
       projects: null,
       quotes: null,
       invoices: null,
+      events: null,
       currentItem: null,
       pdf: null,
     },
@@ -347,6 +426,7 @@ const architectSlice = createSlice({
     clearCurrentItems: (state) => {
       state.currentQuote = null;
       state.currentInvoice = null;
+      state.currentEvent = null;
     },
     clearPDFs: (state) => {
       // Clean up object URLs to prevent memory leaks
@@ -550,6 +630,57 @@ const architectSlice = createSlice({
       .addCase(generateInvoicePDF.rejected, (state, action) => {
         state.loading.pdf = false;
         state.error.pdf = action.payload;
+      })
+
+      // Event reducers
+      .addCase(fetchEvents.pending, (state) => {
+        state.loading.events = true;
+        state.error.events = null;
+      })
+      .addCase(fetchEvents.fulfilled, (state, action) => {
+        state.loading.events = false;
+        state.events = action.payload.data;
+      })
+      .addCase(fetchEvents.rejected, (state, action) => {
+        state.loading.events = false;
+        state.error.events = action.payload;
+      })
+      .addCase(getEventById.pending, (state) => {
+        state.loading.currentItem = true;
+        state.error.currentItem = null;
+      })
+      .addCase(getEventById.fulfilled, (state, action) => {
+        state.loading.currentItem = false;
+        state.currentEvent = action.payload.data;
+      })
+      .addCase(getEventById.rejected, (state, action) => {
+        state.loading.currentItem = false;
+        state.error.currentItem = action.payload;
+      })
+      .addCase(addEvent.fulfilled, (state, action) => {
+        state.events.push(action.payload.data);
+      })
+      .addCase(updateEvent.fulfilled, (state, action) => {
+        const index = state.events.findIndex(
+          (e) => e._id === action.payload.data._id
+        );
+        if (index !== -1) state.events[index] = action.payload.data;
+
+        // Update current event if it's the one being updated
+        if (
+          state.currentEvent &&
+          state.currentEvent._id === action.payload.data._id
+        ) {
+          state.currentEvent = action.payload.data;
+        }
+      })
+      .addCase(deleteEvent.fulfilled, (state, action) => {
+        state.events = state.events.filter((e) => e._id !== action.payload);
+
+        // Clear current event if it's the one being deleted
+        if (state.currentEvent && state.currentEvent._id === action.payload) {
+          state.currentEvent = null;
+        }
       });
   },
 });

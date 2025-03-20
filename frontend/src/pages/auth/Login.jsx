@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../redux/slices/authSlice";
 import "./styles/Auth.css";
 import GoogleAuth from "./GoogleAuth";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,19 +20,19 @@ const Login = () => {
   useEffect(() => {
     if (user) {
       if (user.role === "client") {
-        navigate("/admin_dashboard"); // Redirect to Next.js showcase
+        navigate("/"); 
       } else {
-        navigate("/arch_Dashboard"); // Redirect to React dashboard
+        navigate("/arch_Dashboard"); 
       }
     }
   }, [user, navigate]);
 
   return (
-    <div className="wrapper">
+    <div className="signup-wrapper">
       <h2>Login</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
-        <div className="input-box">
+        <div className="form-group">
           <input
             type="email"
             placeholder="Email"
@@ -40,7 +41,7 @@ const Login = () => {
             required
           />
         </div>
-        <div className="input-box">
+        <div className="form-group">
           <input
             type="password"
             placeholder="Password"
@@ -49,7 +50,7 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit" className="btn" disabled={loading}>
+        <button type="submit" className="btn next-btn" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>

@@ -1,0 +1,48 @@
+/* Reuse Sidebar Styles for Project Component */
+.project-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  height: auto;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1); /* Transparent background */
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px); /* Glass effect */
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  color: #fff;
+  margin: 20px auto;
+  transition: all 0.3s ease-in-out;
+}
+
+.project-container .MuiAppBar-root {
+  background: rgba(255, 255, 255, 0.1); /* Transparent background for AppBar */
+  backdrop-filter: blur(15px); /* Glass effect */
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.project-container .MuiTabs-root {
+  color: #242d49;
+}
+
+.project-container .MuiTab-root {
+  color: #242d49; 
+    font-weight: 600;
+  
+  
+
+}
+
+.project-container .MuiTab-root.Mui-selected {
+  color: var(--pink);
+}
+
+.project-container .MuiTabs-indicator {
+  background-color: var(--pink);
+}
+
+.project-container .MuiBox-root {
+  padding: 1rem;
+}
