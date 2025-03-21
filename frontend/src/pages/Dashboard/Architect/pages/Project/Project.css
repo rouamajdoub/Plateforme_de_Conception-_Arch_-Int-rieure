@@ -46,3 +46,11 @@
 .project-container .MuiBox-root {
   padding: 1rem;
 }
+.column  {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  overflow-y: scroll;
+}
+.column::-webkit-scrollbar {
+  display: none;
+}

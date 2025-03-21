@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { AppBar, Tabs, Tab, Box } from "@mui/material";
-import KanbanBoard from "./KanbanBoard";
+import Kanbanproject from "./kanbanproject";
 import ProjectsTable from "./ProjectsTable";
 import "./Project.css";
 
@@ -20,7 +20,7 @@ const Project = () => {
         </Tabs>
       </AppBar>
       <Box p={3}>
-        {activeTab === "kanban" && <KanbanBoard />}
+        {activeTab === "kanban" && <Kanbanproject />}
         {activeTab === "table" && <ProjectsTable />}
       </Box>
     </Box>
