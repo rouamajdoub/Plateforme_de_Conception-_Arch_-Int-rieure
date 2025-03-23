@@ -527,6 +527,8 @@ const recordPayment = async (req, res) => {
 
 // ============== SHARED FUNCTIONS ==============
 
+
+
 // Generate PDF for quote or invoice
 const generatePDF = async (req, res) => {
   try {

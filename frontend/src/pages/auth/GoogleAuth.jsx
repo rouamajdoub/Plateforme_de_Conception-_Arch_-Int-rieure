@@ -1,7 +1,7 @@
 import React from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
-
+import "./styles/Login.css";
 const GoogleAuth = () => {
   const navigate = useNavigate();
 
@@ -35,7 +35,7 @@ const GoogleAuth = () => {
   };
 
   return (
-    <div>
+    <div className="google-auth">
       <h3>Login with Google</h3>
       <GoogleLogin
         onSuccess={handleSuccess}

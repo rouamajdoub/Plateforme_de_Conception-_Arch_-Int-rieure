@@ -9,6 +9,13 @@ import reportWebVitals from "./reportWebVitals";
 import { ColorModeContext, useMode } from "./theme";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
+const stripePromise = loadStripe(
+  "pk_test_51R5Jp1BBuj289C8gM9kKUJm1DGGcKVwkr911npX4LEliTtyW2w015OuLpR2X5mNMz6LPbtvEgt8xBJFqVC8Sbpg900VJ4i6uH7"
+);
+
 const clientId = process.env.GOOGLE_CLIENT_ID;
 
 const Root = () => {
@@ -19,7 +26,9 @@ const Root = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline /> {/* This will help with consistent baseline styling */}
         <GoogleOAuthProvider clientId={clientId}>
-          <App />
+          <Elements stripe={stripePromise}>
+            <App />
+          </Elements>
         </GoogleOAuthProvider>
       </ThemeProvider>
     </ColorModeContext.Provider>

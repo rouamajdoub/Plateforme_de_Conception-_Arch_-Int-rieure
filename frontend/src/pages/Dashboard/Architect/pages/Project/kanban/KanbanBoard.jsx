@@ -3,72 +3,93 @@ import { DragDropContext } from "react-beautiful-dnd";
 import Column from "./Column";
 
 export default function KanbanBoard() {
-  const [completed, setCompleted] = useState([]);
-  const [incomplete, setIncomplete] = useState([]);
+  const [toDo, setToDo] = useState([]);
+  const [inProgress, setInProgress] = useState([]);
+  const [done, setDone] = useState([]);
 
   useEffect(() => {
     fetch("https://jsonplaceholder.typicode.com/todos")
       .then((response) => response.json())
       .then((json) => {
-        setCompleted(json.filter((task) => task.completed));
-        setIncomplete(json.filter((task) => !task.completed));
+        const tasks = json.slice(0, 10); // Limit to 10 tasks for testing
+        setToDo(tasks.filter((task) => !task.completed));
+        setDone(tasks.filter((task) => task.completed));
       });
   }, []);
 
   const handleDragEnd = (result) => {
-    const { destination, source, draggableId } = result;
+    const { source, destination } = result;
 
-    console.log("Source:", source);
-    console.log("Destination:", destination);
-    console.log("Draggable ID:", draggableId);
-
-    if (!destination || source.droppableId === destination.droppableId) {
-      return; // Exit if there's no destination or if the task is dropped in the same column
+    // Exit if no destination or dropped in the same place
+    if (
+      !destination ||
+      (source.droppableId === destination.droppableId &&
+        source.index === destination.index)
+    ) {
+      return;
     }
 
-    // Remove item from source array
-    if (source.droppableId === "3") {
-      setCompleted(removeItemById(draggableId, completed));
+    // Helper function to reorder an array
+    const reorder = (list, startIndex, endIndex) => {
+      const newList = Array.from(list);
+      const [movedItem] = newList.splice(startIndex, 1);
+      newList.splice(endIndex, 0, movedItem);
+      return newList;
+    };
+
+    // Function to get the correct state and setter
+    const getColumnState = (droppableId) => {
+      switch (droppableId) {
+        case "1":
+          return { list: toDo, setList: setToDo };
+        case "2":
+          return { list: inProgress, setList: setInProgress };
+        case "3":
+          return { list: done, setList: setDone };
+        default:
+          return null;
+      }
+    };
+
+    const sourceColumn = getColumnState(source.droppableId);
+    const destinationColumn = getColumnState(destination.droppableId);
+
+    if (!sourceColumn || !destinationColumn) return;
+
+    if (source.droppableId === destination.droppableId) {
+      // REORDER TASKS WITHIN THE SAME COLUMN
+      sourceColumn.setList(
+        reorder(sourceColumn.list, source.index, destination.index)
+      );
     } else {
-      setIncomplete(removeItemById(draggableId, incomplete));
-    }
+      // MOVE TASK TO ANOTHER COLUMN
+      const movedTask = sourceColumn.list[source.index];
 
-    // Get the item
-    const task = findItemById(draggableId, [...incomplete, ...completed]);
-
-    if (!task) {
-      console.error("Task not found:", draggableId);
-      return; // Exit if the task is not found
-    }
-
-    // Add item to destination array
-    if (destination.droppableId === "3") {
-      setCompleted([{ ...task, completed: !task.completed }, ...completed]);
-    } else {
-      setIncomplete([{ ...task, completed: !task.completed }, ...incomplete]);
+      sourceColumn.setList(
+        sourceColumn.list.filter((_, idx) => idx !== source.index)
+      );
+      destinationColumn.setList([
+        ...destinationColumn.list.slice(0, destination.index),
+        movedTask,
+        ...destinationColumn.list.slice(destination.index),
+      ]);
     }
   };
 
-  function removeItemById(id, array) {
-    return array.filter((item) => item.id.toString() !== id); // Convert item.id to string
-  }
-
-  function findItemById(id, array) {
-    return array.find((item) => item.id.toString() === id); // Convert item.id to string
-  }
-
   return (
-    <>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <h2 style={{ textAlign: "center", color: "#242d49" }}>
-          Progress Board
-        </h2>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <Column title="To Do" tasks={incomplete} id={"1"} />
-          <Column title="In Progress" tasks={[]} id={"2"} />
-          <Column title="Done" tasks={completed} id={"3"} />
-        </div>
-      </DragDropContext>
-    </>
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <h2 style={{ textAlign: "center", color: "#242d49" }}>Progress Board</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "20px",
+        }}
+      >
+        <Column title="To Do" tasks={toDo} id={"1"} />
+        <Column title="In Progress" tasks={inProgress} id={"2"} />
+        <Column title="Done" tasks={done} id={"3"} />
+      </div>
+    </DragDropContext>
   );
 }

@@ -1,32 +1,60 @@
 const express = require("express");
-const marketplaceController = require("../controllers/marketplaceController");
-const reviewController = require("../controllers/reviewController");
 const router = express.Router();
+const marketplaceController = require("../controllers/marketplaceController");
+const { protect, restrictTo } = require("../middlewares/authMiddleware");
 
-// 🔹 Produits
-router.post("/products", marketplaceController.createProduct);
+// Apply auth middleware to all routes
+router.use(protect);
+
+// Product CRUD routes
+router.post(
+  "/products",
+  restrictTo("architect", "sponsor"), // Only architects and sponsors can create products
+  marketplaceController.createProduct
+);
+
 router.get("/products", marketplaceController.getAllProducts);
-router.get("/products/:id", marketplaceController.getProductById);
-router.put("/products/:id", marketplaceController.updateProduct);
-router.delete("/products/:id", marketplaceController.deleteProduct);
 
-// 🔹 Commandes
-router.post("/orders", marketplaceController.createOrder);
-router.get("/orders", marketplaceController.getAllOrders);
-router.get("/orders/:id", marketplaceController.getOrderById);
+router.get(
+  "/products/seller/:sellerId?",
+  marketplaceController.getProductsBySeller
+);
 
-// 🔹 Catégories
-router.post("/categories", marketplaceController.createCategory);
+router.get("/products/:productId", marketplaceController.getProductById);
+
+router.put(
+  "/products/:productId",
+  restrictTo("architect", "sponsor"),
+  marketplaceController.updateProduct
+);
+
+router.delete(
+  "/products/:productId",
+  restrictTo("architect", "sponsor"),
+  marketplaceController.deleteProduct
+);
+
+// Product Reviews routes
+router.get(
+  "/products/:productId/reviews",
+  marketplaceController.getProductReviews
+);
+
+// Order routes
+router.get(
+  "/orders",
+  restrictTo("architect", "sponsor"),
+  marketplaceController.getSellerOrders
+);
+
+// Category routes
 router.get("/categories", marketplaceController.getAllCategories);
 
-// 🔹 Avis produits
-router.post("/product-reviews", reviewController.createProductReview);
-router.get("/product-reviews", reviewController.getProductReviews);
-router.put("/product-reviews/:reviewId", reviewController.updateProductReview);
-router.delete(
-  "/product-reviews/:reviewId",
-  reviewController.deleteProductReview
+// Product Statistics
+router.get(
+  "/stats",
+  restrictTo("architect", "sponsor"),
+  marketplaceController.getSellerProductStats
 );
-router.get("/reviews", reviewController.getAllReviews); // Route to get all reviews
 
 module.exports = router;

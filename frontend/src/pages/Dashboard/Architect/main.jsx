@@ -6,6 +6,9 @@ import RightSide from "./content/RightSide/RightSide";
 import Profile from "./pages/Profile/Profile";
 import Calendar from "./pages/Calendar/Calendar";
 import Project from "./pages/Project/Project";
+import Market from "./pages/Market/Market";
+import Invoices from "./pages/Invoice/Invoices";
+import Quotes from "./pages/Quote/Quotes";
 
 const Main = () => {
   const [expanded, setExpanded] = useState(true);
@@ -25,7 +28,12 @@ const Main = () => {
         return <Calendar />;
       case "projects":
         return <Project />;
-      // Add more cases for other pages
+      case "market":
+        return <Market />;
+      case "invoices":
+        return <Invoices />;
+      case "quote":
+        return <Quotes />;
       default:
         return (
           <div className="main-dash-container">
@@ -40,15 +48,14 @@ const Main = () => {
       <div
         className="AppGlass"
         style={{
-          // Switch to 2 columns when a sidebar item is clicked
           gridTemplateColumns:
             selectedItem === "dashboard"
               ? expanded
-                ? "11rem auto 20rem" // 3 columns for dashboard
-                : "5rem auto 20rem" // Collapsed sidebar for dashboard
+                ? "11rem auto 20rem"
+                : "5rem auto 20rem"
               : expanded
-              ? "11rem auto" // 2 columns for other pages
-              : "5rem auto", // Collapsed sidebar for other pages
+              ? "11rem auto"
+              : "5rem auto",
         }}
       >
         <Sidebar
@@ -62,7 +69,7 @@ const Main = () => {
           <div className="right-side-container">
             <RightSide />
           </div>
-        )}{" "}
+        )}
       </div>
     </div>
   );

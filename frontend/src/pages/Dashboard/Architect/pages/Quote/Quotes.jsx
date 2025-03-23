@@ -20,53 +20,46 @@ import {
   Grid,
   Box,
 } from "@mui/material";
-import { Add, Edit, Delete, PictureAsPdf, Payment } from "@mui/icons-material";
+import { Add, Edit, Delete, PictureAsPdf, Receipt } from "@mui/icons-material";
 import {
-  fetchInvoices,
-  addInvoice,
-  updateInvoice,
-  deleteInvoice,
-  recordInvoicePayment,
-  generateInvoicePDF,
+  fetchQuotes,
+  addQuote,
+  updateQuote,
+  deleteQuote,
+  convertQuoteToInvoice,
+  generateQuotePDF,
   clearCurrentItems,
 } from "../../../../../redux/slices/architectSlice";
 
-const Invoices = () => {
+const Quotes = () => {
   const dispatch = useDispatch();
-  const { invoices, loading, currentInvoice } = useSelector(
+  const { quotes, loading, currentQuote } = useSelector(
     (state) => state.architect
   );
-  const [openInvoiceModal, setOpenInvoiceModal] = useState(false);
-  const [openPaymentModal, setOpenPaymentModal] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
   const [formData, setFormData] = useState({
     client: "",
     project: "",
     items: [{ description: "", quantity: 1, unitPrice: 0 }],
     taxRate: 15,
     discount: 0,
-    dueDate: "",
     notes: "",
     terms: "",
   });
-  const [paymentData, setPaymentData] = useState({
-    amount: "",
-    method: "bank_transfer",
-  });
 
   useEffect(() => {
-    dispatch(fetchInvoices());
+    dispatch(fetchQuotes());
     return () => dispatch(clearCurrentItems());
   }, [dispatch]);
 
-  const handleOpenInvoiceModal = (invoice = null) => {
-    if (invoice) {
+  const handleOpenModal = (quote = null) => {
+    if (quote) {
       setFormData({
-        ...invoice,
-        items: invoice.items.map((item) => ({
+        ...quote,
+        items: quote.items.map((item) => ({
           ...item,
           quantity: item.quantity.toString(),
         })),
-        dueDate: invoice.dueDate?.split("T")[0],
       });
     } else {
       setFormData({
@@ -75,19 +68,18 @@ const Invoices = () => {
         items: [{ description: "", quantity: 1, unitPrice: 0 }],
         taxRate: 15,
         discount: 0,
-        dueDate: "",
         notes: "",
         terms: "",
       });
     }
-    setOpenInvoiceModal(true);
+    setOpenModal(true);
   };
 
-  const handleCloseInvoiceModal = () => {
-    setOpenInvoiceModal(false);
+  const handleCloseModal = () => {
+    setOpenModal(false);
   };
 
-  const handleSubmitInvoice = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const processedData = {
       ...formData,
@@ -98,12 +90,12 @@ const Invoices = () => {
       })),
     };
 
-    if (currentInvoice) {
-      dispatch(updateInvoice({ ...processedData, _id: currentInvoice._id }));
+    if (currentQuote) {
+      dispatch(updateQuote({ ...processedData, _id: currentQuote._id }));
     } else {
-      dispatch(addInvoice(processedData));
+      dispatch(addQuote(processedData));
     }
-    handleCloseInvoiceModal();
+    handleCloseModal();
   };
 
   const handleAddItem = () => {
@@ -122,42 +114,20 @@ const Invoices = () => {
     setFormData({ ...formData, items: newItems });
   };
 
-  const handleRecordPayment = (invoiceId) => {
-    dispatch(
-      recordInvoicePayment({
-        invoiceId,
-        paymentData: {
-          amount: Number(paymentData.amount),
-          method: paymentData.method,
-        },
-      })
-    );
-    setOpenPaymentModal(false);
-  };
-
-  const getPaymentStatusBadge = (status) => {
-    const variants = {
-      unpaid: "error",
-      partial: "warning",
-      paid: "success",
-    };
-    return <Badge color={variants[status]} badgeContent={status} />;
-  };
-
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4">Invoices Management</Typography>
+        <Typography variant="h4">Quotes Management</Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => handleOpenInvoiceModal()}
+          onClick={() => handleOpenModal()}
         >
-          Create New Invoice
+          Create New Quote
         </Button>
       </Box>
 
-      {loading.invoices ? (
+      {loading.quotes ? (
         <Typography>Loading...</Typography>
       ) : (
         <TableContainer component={Paper}>
@@ -167,42 +137,43 @@ const Invoices = () => {
                 <TableCell>Client</TableCell>
                 <TableCell>Project</TableCell>
                 <TableCell>Total Amount</TableCell>
-                <TableCell>Due Date</TableCell>
-                <TableCell>Payment Status</TableCell>
+                <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {invoices.map((invoice) => (
-                <TableRow key={invoice._id}>
-                  <TableCell>{invoice.client?.name}</TableCell>
-                  <TableCell>{invoice.project?.title}</TableCell>
-                  <TableCell>${invoice.totalAmount?.toFixed(2)}</TableCell>
+              {quotes.map((quote) => (
+                <TableRow key={quote._id}>
+                  <TableCell>{quote.client?.name}</TableCell>
+                  <TableCell>{quote.project?.title}</TableCell>
+                  <TableCell>${quote.totalAmount?.toFixed(2)}</TableCell>
                   <TableCell>
-                    {new Date(invoice.dueDate).toLocaleDateString()}
+                    <Badge
+                      color={quote.status === "draft" ? "secondary" : "primary"}
+                      badgeContent={quote.status}
+                    />
                   </TableCell>
                   <TableCell>
-                    {getPaymentStatusBadge(invoice.paymentStatus)}
-                  </TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleOpenInvoiceModal(invoice)}>
+                    <IconButton onClick={() => handleOpenModal(quote)}>
                       <Edit />
                     </IconButton>
                     <IconButton
-                      color="info"
-                      onClick={() => setOpenPaymentModal(true)}
+                      color="success"
+                      onClick={() =>
+                        dispatch(convertQuoteToInvoice({ quoteId: quote._id }))
+                      }
                     >
-                      <Payment />
+                      <Receipt />
                     </IconButton>
                     <IconButton
                       color="error"
-                      onClick={() => dispatch(deleteInvoice(invoice._id))}
+                      onClick={() => dispatch(deleteQuote(quote._id))}
                     >
                       <Delete />
                     </IconButton>
                     <IconButton
                       color="info"
-                      onClick={() => dispatch(generateInvoicePDF(invoice._id))}
+                      onClick={() => dispatch(generateQuotePDF(quote._id))}
                     >
                       <PictureAsPdf />
                     </IconButton>
@@ -214,15 +185,14 @@ const Invoices = () => {
         </TableContainer>
       )}
 
-      {/* Invoice Form Modal */}
       <Dialog
-        open={openInvoiceModal}
-        onClose={handleCloseInvoiceModal}
+        open={openModal}
+        onClose={handleCloseModal}
         maxWidth="md"
         fullWidth
       >
         <DialogTitle>
-          {currentInvoice ? "Edit Invoice" : "Create Invoice"}
+          {currentQuote ? "Edit Quote" : "Create Quote"}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
@@ -321,20 +291,6 @@ const Invoices = () => {
                 margin="normal"
               />
             </Grid>
-            <Grid item xs={4}>
-              <TextField
-                fullWidth
-                label="Due Date"
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, dueDate: e.target.value })
-                }
-                margin="normal"
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -351,53 +307,9 @@ const Invoices = () => {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseInvoiceModal}>Cancel</Button>
-          <Button onClick={handleSubmitInvoice} variant="contained">
+          <Button onClick={handleCloseModal}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained">
             Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Payment Modal */}
-      <Dialog
-        open={openPaymentModal}
-        onClose={() => setOpenPaymentModal(false)}
-      >
-        <DialogTitle>Record Payment</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            label="Amount"
-            type="number"
-            value={paymentData.amount}
-            onChange={(e) =>
-              setPaymentData({ ...paymentData, amount: e.target.value })
-            }
-            margin="normal"
-            required
-          />
-          <TextField
-            fullWidth
-            label="Payment Method"
-            select
-            value={paymentData.method}
-            onChange={(e) =>
-              setPaymentData({ ...paymentData, method: e.target.value })
-            }
-            margin="normal"
-          >
-            <option value="bank_transfer">Bank Transfer</option>
-            <option value="credit_card">Credit Card</option>
-            <option value="cash">Cash</option>
-          </TextField>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenPaymentModal(false)}>Cancel</Button>
-          <Button
-            onClick={() => handleRecordPayment(currentInvoice?._id)}
-            variant="contained"
-          >
-            Record Payment
           </Button>
         </DialogActions>
       </Dialog>
@@ -405,4 +317,4 @@ const Invoices = () => {
   );
 };
 
-export default Invoices;
+export default Quotes;

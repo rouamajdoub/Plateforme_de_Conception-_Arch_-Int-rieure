@@ -1,5 +1,7 @@
 require("dotenv").config();
 const express = require("express");
+import Stripe from "stripe";
+import bodyParser from "body-parser";
 const cors = require("cors");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
@@ -16,6 +18,7 @@ const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 //--------------------------------------------------------------------------------
 const app = express();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const PORT = process.env.PORT || 5000;
 // -------------Enable CORS for all routes -----------------Fontens conx-----------------------
 app.use(
@@ -25,7 +28,7 @@ app.use(
     credentials: true,
   })
 );
-
+app.use(bodyParser.json());
 app.use(express.json());
 connectDB();
 //--------------------------------------------Routes --------------------
@@ -52,6 +55,37 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/quotes-invoices", quoteRoutes);
 app.use("/api/events", eventRoutes);
 //-----------------------------------------------------
+
+app.post("/api/create-checkout-session", async (req, res) => {
+  try {
+    const { products } = req.body; // Liste des produits à payer
+
+    const line_items = products.map((product) => ({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: product.name,
+          images: [product.image], // Image du produit
+        },
+        unit_amount: product.price * 100, // Convertir en cents
+      },
+      quantity: product.quantity,
+    }));
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items,
+      mode: "payment",
+      success_url: `${process.env.FRONTEND_URL}/success`,
+      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
+    });
+
+    res.json({ id: session.id });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/", (req, res) => {
   res.send("Hello, Roua! Express & MongoDB are working 🚀");
 });

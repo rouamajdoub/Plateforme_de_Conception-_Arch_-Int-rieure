@@ -1,0 +1,43 @@
+/* Table Styles */
+.ant-table {
+    background: var(--glass); /* Use the glass effect for the table background */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: var(--boxShadow); /* Apply shadow for depth */
+  }
+  
+  .ant-table-header {
+    background: var(--blue); /* Header background */
+    color: #fff; /* White text for contrast */
+  }
+  
+  .ant-table-header th {
+    font-weight: bold; /* Bold header text */
+  }
+  
+  .ant-table-tbody > tr:hover {
+    background: var(--light-blue); /* Light blue on row hover */
+  }
+  
+  .ant-table-tbody > tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.1); /* Slightly different background for odd rows */
+  }
+  
+  .ant-table-tbody > tr > td {
+    color: var(--black); /* Regular text color */
+  }
+  
+  .ant-table-pagination {
+    background: var(--glass); /* Glass effect for pagination */
+    border-radius: 10px; /* Rounded corners for pagination */
+    box-shadow: var(--smboxShadow); /* Subtle shadow for pagination */
+  }
+  
+  /* Button Styles inside Table */
+  .ant-btn {
+    background: var(--orange); /* Button background */
+    color: #fff; /* White text for contrast */
+  }
+  
+  .ant-btn:hover {
+    background: var(--yellow); /* Lighter on hover */
+  }
