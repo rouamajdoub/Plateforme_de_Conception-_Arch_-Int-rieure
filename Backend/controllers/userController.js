@@ -4,11 +4,10 @@ const Client = require("../models/Client");
 const Admin = require("../models/Admin");
 const Subscription = require("../models/Subscriptions");
 const jwt = require("jsonwebtoken");
+const asyncHandler = require("express-async-handler");
 
 exports.createUser = async (req, res) => {
   try {
-    console.log("📌 Requête reçue :", req.body); // 🔎 Voir les données envoyées avant d'être enregistrées
-
     let newUser;
 
     switch (req.body.role.toLowerCase()) {
@@ -58,19 +57,28 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+ 
 // 🔍 Récupérer un utilisateur par ID
-exports.getUserById = async (req, res) => {
+exports.getUserById = asyncHandler(async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const { id } = req.params;
+
+    // find user by auth0 id
+    const user = await User.findOne({ auth0Id: id });
+
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
-    res.json(user);
+
+    return res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.log("Error in getUserProfile: ", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
   }
-};
+});
 
 // ✏️ Mettre à jour un utilisateur par ID
 exports.updateUser = async (req, res) => {

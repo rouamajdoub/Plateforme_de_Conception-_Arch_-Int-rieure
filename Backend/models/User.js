@@ -1,24 +1,38 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
+
 const userSchema = new mongoose.Schema(
   {
-    pseudo: { type: String, required: true, trim: true },
-    nomDeFamille: { type: String, required: true, trim: true },
-    prenom: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true, minlength: 8, select: false },
+    pseudo: { type: String, trim: true },
+    nomDeFamille: { type: String, trim: true },
+    prenom: { type: String, trim: true },
+    email: { type: String, unique: true, lowercase: true },
+    password: { type: String, minlength: 8, select: false },
+    profilePicture: { type: String },
     phoneNumber: { type: String },
+    auth0Id: { type: String, unique: true },
+    authMethod: {
+      type: String,
+      enum: ["auth0", "local"],
+      required: true,
+    },
     role: {
       type: String,
       enum: ["admin", "architect", "client"],
       default: "client",
-      required: true,
     },
-    pays: { type: String },
-    region: { type: String },
+    location: {
+      country: { type: String },
+      region: { type: String },
+      city: { type: String },
+      coordinates: {
+        type: { type: String, enum: ["Point"] },
+        coordinates: { type: [Number] },
+      },
+    },
     isVerified: { type: Boolean, default: false },
+    emailToken: { type: String },
 
     // Terms & Conditions
     contentTerm: { type: Boolean, default: false },
@@ -26,12 +40,11 @@ const userSchema = new mongoose.Schema(
     infoTerm: { type: Boolean, default: false },
     majorTerm: { type: Boolean, default: false },
     exterieurParticipantTerm: { type: Boolean, default: false },
+
     authTokens: [
       {
-        token: {
-          type: String,
-          required: true,
-        },
+        token: { type: String },
+        createdAt: { type: Date, default: Date.now },
       },
     ],
     resetPasswordToken: String,
@@ -40,27 +53,44 @@ const userSchema = new mongoose.Schema(
   { timestamps: true, discriminatorKey: "role" }
 );
 
-//------------------------------------les fct-------------------------------
-
 // Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password") || !this.password) return next();
+
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
+// Compare password method
 userSchema.methods.comparePassword = async function (password) {
+  if (!this.password) return false;
   return await bcrypt.compare(password, this.password);
 };
 
-// Generate Auth Token Method
+// Fixed token storage and comparison method
 userSchema.methods.generateAuthToken = async function () {
-  const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
-  this.authTokens.push({ token });
+  const token = jwt.sign(
+    { id: this._id, role: this.role },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+
+  // Store the raw token (no hashing needed as JWT is already secure)
+  this.authTokens.push({ token, createdAt: Date.now() });
+
+  // Cleanup old tokens (older than 30 days)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  this.authTokens = this.authTokens.filter((t) => t.createdAt > thirtyDaysAgo);
+
   await this.save();
   return token;
+};
+
+// Compare token method (direct comparison, no bcrypt)
+userSchema.methods.compareToken = function (token) {
+  return this.authTokens.some((tokenObj) => tokenObj.token === token);
 };
 
 // Remove password and auth tokens from user object

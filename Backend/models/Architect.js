@@ -3,6 +3,12 @@ const User = require("./User");
 
 const architectSchema = new mongoose.Schema(
   {
+    authMethod: {
+      type: String,
+      default: "local",
+      enum: ["local"],
+      required: true,
+    },
     companyName: { type: String },
     experienceYears: { type: Number },
     specialization: { type: [String] },

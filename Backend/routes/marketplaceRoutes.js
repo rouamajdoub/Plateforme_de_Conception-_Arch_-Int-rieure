@@ -1,3 +1,4 @@
+// routes/marketplaceRoutes.js
 const express = require("express");
 const router = express.Router();
 const marketplaceController = require("../controllers/marketplaceController");
@@ -9,25 +10,20 @@ router.use(protect);
 // Product CRUD routes
 router.post(
   "/products",
-  restrictTo("architect", "sponsor"), // Only architects and sponsors can create products
+  restrictTo("architect", "sponsor"),
   marketplaceController.createProduct
 );
-
 router.get("/products", marketplaceController.getAllProducts);
-
 router.get(
   "/products/seller/:sellerId?",
   marketplaceController.getProductsBySeller
 );
-
 router.get("/products/:productId", marketplaceController.getProductById);
-
 router.put(
   "/products/:productId",
   restrictTo("architect", "sponsor"),
   marketplaceController.updateProduct
 );
-
 router.delete(
   "/products/:productId",
   restrictTo("architect", "sponsor"),
@@ -57,4 +53,4 @@ router.get(
   marketplaceController.getSellerProductStats
 );
 
-module.exports = router;
+module.exports = router; // Ensure this line is present

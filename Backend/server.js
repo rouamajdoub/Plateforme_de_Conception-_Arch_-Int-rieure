@@ -1,95 +1,137 @@
 require("dotenv").config();
 const express = require("express");
-import Stripe from "stripe";
-import bodyParser from "body-parser";
 const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
 const connectDB = require("./config/db");
-const userRoutes = require("./routes/userRoutes");
-const subscriptionRoutes = require("./routes/subscriptionRoutes");
-const projects = require("./routes/projects_dbRoutes");
-const marketplaceRoutes = require("./routes/marketplaceRoutes");
-const paymentRoutes = require("./routes/paymentRoutes");
-const dashboardRoutes = require("./routes/dashboardRoutes");
-const reviewRoutes = require("./routes/reviews");
-const architectRoutes = require("./routes/architectRoutes"); // Adjust path as necessary
-const statsRoutes = require("./routes/statsRoutes");
-const quoteRoutes = require("./routes/QuoteRoutes"); // Adjust the path as needed
-const authRoutes = require("./routes/authRoutes");
-const eventRoutes = require("./routes/eventRoutes");
-//--------------------------------------------------------------------------------
-const app = express();
+const User = require("./models/User");
+const asyncHandler = require("express-async-handler");
+const cookieParser = require("cookie-parser");
+const { auth } = require("express-openid-connect");
+const authRouter = require('./routes/authRouter'); // Adjust path as needed
+
+// Stripe setup
+const Stripe = require("stripe");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// Initialize Express app
+const app = express();
 const PORT = process.env.PORT || 5000;
-// -------------Enable CORS for all routes -----------------Fontens conx-----------------------
+
+// CORS configuration
 app.use(
   cors({
     origin: "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   })
 );
-app.use(bodyParser.json());
+
+// Middleware
 app.use(express.json());
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+
+// Auth0 Configuration
+const config = {
+  authRequired: false,
+  auth0Logout: true,
+  secret: process.env.SECRET,
+  baseURL: process.env.BASE_URL,
+  clientID: process.env.CLIENT_ID,
+  clientSecret: process.env.CLIENT_SECRET,
+
+  issuerBaseURL: process.env.ISSUER_BASE_URL,
+  authorizationParams: {
+    response_type: "code",
+    scope: "openid profile email",
+  },
+  routes: {
+    callback: "/api/auth/callback", // Add callback route
+    login: false,
+  },
+};
+app.use(auth(config)); // Auth0 authentication middleware
+
+// Connect to Database
 connectDB();
-//--------------------------------------------Routes --------------------
-// auth routes
+
+// Explicitly mount authentication routes
+const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes);
-// user routes
-app.use("/api/users", userRoutes);
-app.use("/api/clients", userRoutes);
-app.use("/api/architects", userRoutes);
-//  subscription routes
-app.use("/api/subscriptions", subscriptionRoutes);
-//  projects  routes
-app.use("/api/projects", projects);
 
-// routes de la marketplace
-app.use("/api/marketplace", marketplaceRoutes);
-//  routes de paiement
-app.use("/api/payments", paymentRoutes);
-// routes de la Dashboard
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/arch", architectRoutes);
-app.use("/api/stats", statsRoutes);
-app.use("/api/quotes-invoices", quoteRoutes);
-app.use("/api/events", eventRoutes);
-//-----------------------------------------------------
+// Auto Load other Routes from 'routes' folder
+const routeFiles = fs.readdirSync(path.join(__dirname, "routes"));
+routeFiles.forEach((file) => {
+  if (file.endsWith(".js") && file !== "authRoutes.js") {
+    console.log(`Loading route: ${file}`); 
 
-app.post("/api/create-checkout-session", async (req, res) => {
-  try {
-    const { products } = req.body; // Liste des produits à payer
+    const route = require(`./routes/${file}`);
+    let routeName = file.replace(".js", "").toLowerCase();
 
-    const line_items = products.map((product) => ({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: product.name,
-          images: [product.image], // Image du produit
-        },
-        unit_amount: product.price * 100, // Convertir en cents
-      },
-      quantity: product.quantity,
-    }));
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items,
-      mode: "payment",
-      success_url: `${process.env.FRONTEND_URL}/success`,
-      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
-    });
-
-    res.json({ id: session.id });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    // Handle special cases
+    if (routeName === "quoteroutes") routeName = "quotes-invoices";
+    if (routeName === "useroutes") routeName = "users";
+    if (routeName === "architectroutes") routeName = "architects";
+    app.use(`/api/${routeName}`, route);
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello, Roua! Express & MongoDB are working 🚀");
+
+
+const projectRoutes = require('./routes/projectsRoutes');
+app.use('/api/projects', projectRoutes);
+app.use('/api/auth', authRouter);
+
+
+// Auth0 callback handling
+app.get("/", async (req, res) => {
+  if (req.oidc.isAuthenticated()) {
+    // Check if Auth0 user exists in the DB
+    await ensureUserInDB(req.oidc.user);
+
+    // Redirect to the frontend
+    return res.redirect(process.env.FRONTEND_URL);
+  } else {
+    return res.send("Logged out");
+  }
 });
 
+// Function to check if user exists in the DB and create if not
+const ensureUserInDB = asyncHandler(async (user) => {
+  try {
+    const existingUser = await User.findOne({ auth0Id: user.sub });
+
+    if (!existingUser) {
+      // Create a new user document
+      const newUser = new User({
+        auth0Id: user.sub,
+        email: user.email,
+        prenom: user.given_name || "",
+        nomDeFamille: user.family_name || "",
+        pseudo: user.nickname || user.name,
+        profilePicture: user.picture,
+        role: "client",
+        isVerified: true,
+        authMethod: "auth0", // Add this line
+      });
+
+      await newUser.save();
+      console.log("User added to DB", user);
+    } else {
+      console.log("User already exists in DB", existingUser);
+    }
+  } catch (error) {
+    console.log("Error checking or adding user to DB", error.message);
+  }
+});
+
+// API status endpoint
+app.get("/api/status", (req, res) => {
+  res.status(200).json({ status: "Server is running" });
+});
+
+// Start the Server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

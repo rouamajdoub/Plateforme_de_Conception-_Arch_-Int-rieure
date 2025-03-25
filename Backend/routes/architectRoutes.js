@@ -1,11 +1,11 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const architectController = require('../controllers/architectController');
+const architectController = require("../controllers/architectController");
 
 // Get all architect requests
-router.get('/architects/requests', architectController.getArchitectRequests);
+router.get("/requests", architectController.getArchitectRequests);
 
 // Update architect status
-router.patch('/architects/requests/:id', architectController.updateArchitectStatus);
+router.patch("/requests/:id", architectController.updateArchitectStatus);
 
 module.exports = router;

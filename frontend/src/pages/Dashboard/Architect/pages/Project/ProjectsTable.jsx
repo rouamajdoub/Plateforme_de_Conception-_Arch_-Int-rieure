@@ -1,11 +1,10 @@
 import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import {
   fetchProjects,
   deleteProject,
-} from "../../../../../redux/slices/architectSlice";
+} from "../../../../../redux/slices/ProjectSlice";
 import {
-  Box,
   Table,
   TableBody,
   TableCell,
@@ -14,65 +13,68 @@ import {
   TableRow,
   Paper,
   IconButton,
-  CircularProgress,
-  Typography,
+  Tooltip,
 } from "@mui/material";
-import { Delete, Edit } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 
-const ProjectsTable = () => {
+const ProjectsTable = ({ onEdit }) => {
   const dispatch = useDispatch();
-
-  // Fetch projects from Redux store
-  const { projects, loading, error } = useSelector((state) => state.architect);
+  const { projects, status, error } = useSelector((state) => state.projects);
 
   useEffect(() => {
-    // Fetch projects when the component mounts
     dispatch(fetchProjects());
   }, [dispatch]);
 
-  // Handle project deletion
   const handleDelete = (projectId) => {
     if (window.confirm("Are you sure you want to delete this project?")) {
       dispatch(deleteProject(projectId));
     }
   };
 
-  if (loading.projects) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error.projects) {
-    console.log("Error:", error.projects); // Log the error object
-    return (
-      <Typography variant="h6" color="error" align="center" mt={4}>
-        Error: {error.projects.message || "An unknown error occurred"}
-      </Typography>
-    );
-  }
+  if (status === "loading") return <p>Loading projects...</p>;
+  if (status === "failed") return <p>Error: {error}</p>;
 
   return (
-    <TableContainer component={Paper}>
+    <TableContainer
+      component={Paper}
+      sx={{
+        mt: 3,
+        backgroundColor: "transparent", // Transparent background
+        boxShadow: "0px 4px 10px rgba(236, 222, 222, 0.77)", // Soft shadow
+        backdropFilter: "blur(10px)", // Glass effect
+        borderRadius: "12px", // Rounded corners
+        overflow: "hidden",
+      }}
+    >
       <Table>
         <TableHead>
-          <TableRow>
-            <TableCell>Title</TableCell>
-            <TableCell>Description</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Start Date</TableCell>
-            <TableCell>End Date</TableCell>
-            <TableCell>Actions</TableCell>
+          <TableRow sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}>
+            <TableCell>
+              <strong>Title</strong>
+            </TableCell>
+            <TableCell>
+              <strong>Category</strong>
+            </TableCell>
+            <TableCell>
+              <strong>Budget </strong>
+            </TableCell>
+            <TableCell>
+              <strong>Start Date</strong>
+            </TableCell>
+            <TableCell>
+              <strong>End Date</strong>
+            </TableCell>
+            <TableCell>
+              <strong>Actions</strong>
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {projects.map((project) => (
             <TableRow key={project._id}>
               <TableCell>{project.title}</TableCell>
-              <TableCell>{project.description}</TableCell>
-              <TableCell>{project.status}</TableCell>
+              <TableCell>{project.category}</TableCell>
+              <TableCell>{project.budget}</TableCell>
               <TableCell>
                 {new Date(project.startDate).toLocaleDateString()}
               </TableCell>
@@ -80,21 +82,19 @@ const ProjectsTable = () => {
                 {new Date(project.endDate).toLocaleDateString()}
               </TableCell>
               <TableCell>
-                <IconButton
-                  color="primary"
-                  onClick={() => {
-                    // Handle edit action (e.g., open a modal or navigate to edit page)
-                    console.log("Edit project:", project._id);
-                  }}
-                >
-                  <Edit />
-                </IconButton>
-                <IconButton
-                  color="error"
-                  onClick={() => handleDelete(project._id)}
-                >
-                  <Delete />
-                </IconButton>
+                <Tooltip title="Edit">
+                  <IconButton color="primary" onClick={() => onEdit(project)}>
+                    <Edit />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete">
+                  <IconButton
+                    color="error"
+                    onClick={() => handleDelete(project._id)}
+                  >
+                    <Delete />
+                  </IconButton>
+                </Tooltip>
               </TableCell>
             </TableRow>
           ))}

@@ -1,39 +1,28 @@
 const express = require("express");
+const router = express.Router();
 const {
   register,
   login,
   getProfile,
   logout,
-  requestPasswordReset,
-  resetPassword,
-  verifyEmail,
-  googleLogin, // ➜ Add Google Login Controller
-} = require("../controllers/authController");
+  googleLogin,
+  checkAuth,
+} = require("../controllers/authController"); // Ensure correct path
 
-const { protect } = require("../middlewares/authMiddleware");
+// Auth Status Check
+router.get("/check", checkAuth);
 
-const router = express.Router();
-
-// Inscription
+// Registration
 router.post("/register", register);
 
-// Connexion
+// Login routes
 router.post("/login", login);
+router.post("/google-login", googleLogin);
 
-// Connexion avec Google OAuth
-router.post("/google-login", googleLogin); // ➜ New Google Login Route
+// Profile (Protected)
+router.get("/profile/:id", getProfile);
 
-// Profil (Protégé)
-router.get("/profile", protect, getProfile);
-
-// Déconnexion (Protégé)
-router.post("/logout", protect, logout);
-
-// Réinitialisation de mot de passe
-router.post("/request-password-reset", requestPasswordReset);
-router.post("/reset-password/:token", resetPassword);
-
-// Vérification de l'email
-router.get("/verify-email/:token", verifyEmail);
+// Logout
+router.post("/logout", logout);
 
 module.exports = router;

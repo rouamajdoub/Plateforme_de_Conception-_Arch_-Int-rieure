@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL_PROJECTS = "http://localhost:5000/api/projects";
 const API_URL_QUOTES_INVOICES = "http://localhost:5000/api/quotes-invoices";
 const API_URL_EVENTS = "http://localhost:5000/api/events";
 
@@ -18,67 +17,6 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ====== PROJECT ACTIONS ======
-export const fetchProjects = createAsyncThunk(
-  "architect/fetchProjects",
-  async (filters = {}, { rejectWithValue }) => {
-    try {
-      const queryParams = new URLSearchParams(filters).toString();
-      const url = queryParams
-        ? `${API_URL_PROJECTS}?${queryParams}`
-        : API_URL_PROJECTS;
-      const response = await axiosInstance.get(url);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to fetch projects"
-      );
-    }
-  }
-);
-
-export const addProject = createAsyncThunk(
-  "architect/addProject",
-  async (projectData, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.post(API_URL_PROJECTS, projectData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to add project");
-    }
-  }
-);
-
-export const updateProject = createAsyncThunk(
-  "architect/updateProject",
-  async (projectData, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.put(
-        `${API_URL_PROJECTS}/${projectData._id}`,
-        projectData
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to update project"
-      );
-    }
-  }
-);
-
-export const deleteProject = createAsyncThunk(
-  "architect/deleteProject",
-  async (projectId, { rejectWithValue }) => {
-    try {
-      await axiosInstance.delete(`${API_URL_PROJECTS}/${projectId}`);
-      return projectId;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to delete project"
-      );
-    }
-  }
-);
 
 // ====== QUOTE ACTIONS ======
 export const fetchQuotes = createAsyncThunk(
@@ -440,32 +378,7 @@ const architectSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Project reducers
-      .addCase(fetchProjects.pending, (state) => {
-        state.loading.projects = true;
-        state.error.projects = null;
-      })
-      .addCase(fetchProjects.fulfilled, (state, action) => {
-        state.loading.projects = false;
-        state.projects = action.payload.data;
-      })
-      .addCase(fetchProjects.rejected, (state, action) => {
-        state.loading.projects = false;
-        state.error.projects = action.payload;
-      })
-      .addCase(addProject.fulfilled, (state, action) => {
-        state.projects.push(action.payload.data);
-      })
-      .addCase(updateProject.fulfilled, (state, action) => {
-        const index = state.projects.findIndex(
-          (p) => p._id === action.payload.data._id
-        );
-        if (index !== -1) state.projects[index] = action.payload.data;
-      })
-      .addCase(deleteProject.fulfilled, (state, action) => {
-        state.projects = state.projects.filter((p) => p._id !== action.payload);
-      })
-
+     
       // Quote reducers
       .addCase(fetchQuotes.pending, (state) => {
         state.loading.quotes = true;

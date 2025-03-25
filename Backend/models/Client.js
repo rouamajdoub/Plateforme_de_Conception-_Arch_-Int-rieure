@@ -4,8 +4,8 @@ const User = require("./User");
 const clientSchema = new mongoose.Schema(
   {
     location: {
-      country: { type: String, required: true },
-      region: { type: String, required: true },
+      country: { type: String },
+      region: { type: String },
       city: { type: String },
     },
     projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }],
@@ -14,7 +14,5 @@ const clientSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-
 
 module.exports = User.discriminator("client", clientSchema);
