@@ -1,333 +1,69 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL_QUOTES_INVOICES = "http://localhost:5000/api/quotes-invoices";
-const API_URL_EVENTS = "http://localhost:5000/api/events";
+const API_URL = "http://localhost:5000/api/profile";
+const getToken = () => localStorage.getItem("token");
 
-// Set up axios instance for authentication
-const axiosInstance = axios.create();
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-
-// ====== QUOTE ACTIONS ======
-export const fetchQuotes = createAsyncThunk(
-  "architect/fetchQuotes",
-  async (filters = {}, { rejectWithValue }) => {
+// Fetch architect profile
+export const fetchArchitectProfile = createAsyncThunk(
+  "architect/fetchProfile",
+  async (_, { rejectWithValue }) => {
     try {
-      const queryParams = new URLSearchParams();
-      for (const [key, value] of Object.entries(filters)) {
-        if (value) queryParams.append(key, value);
-      }
-
-      const response = await axiosInstance.get(
-        `${API_URL_QUOTES_INVOICES}/quotes?${queryParams}`
-      );
+      const response = await axios.get(`${API_URL}/me`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to fetch quotes");
+      return rejectWithValue(error.response?.data || "An error occurred");
     }
   }
 );
 
-export const getQuoteById = createAsyncThunk(
-  "architect/getQuoteById",
-  async (quoteId, { rejectWithValue }) => {
+// Update architect profile
+export const updateArchitectProfile = createAsyncThunk(
+  "architect/updateProfile",
+  async (profileData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(
-        `${API_URL_QUOTES_INVOICES}/quotes/${quoteId}`
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to fetch quote");
-    }
-  }
-);
-
-export const addQuote = createAsyncThunk(
-  "architect/addQuote",
-  async (quoteData, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.post(
-        `${API_URL_QUOTES_INVOICES}/quotes`,
-        quoteData
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to create quote");
-    }
-  }
-);
-
-export const updateQuote = createAsyncThunk(
-  "architect/updateQuote",
-  async (quoteData, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.patch(
-        `${API_URL_QUOTES_INVOICES}/quotes/${quoteData._id}`,
-        quoteData
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to update quote");
-    }
-  }
-);
-
-export const deleteQuote = createAsyncThunk(
-  "architect/deleteQuote",
-  async (quoteId, { rejectWithValue }) => {
-    try {
-      await axiosInstance.delete(
-        `${API_URL_QUOTES_INVOICES}/quotes/${quoteId}`
-      );
-      return quoteId;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to delete quote");
-    }
-  }
-);
-
-export const convertQuoteToInvoice = createAsyncThunk(
-  "architect/convertQuoteToInvoice",
-  async ({ quoteId, dueDate }, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.patch(
-        `${API_URL_QUOTES_INVOICES}/quotes/${quoteId}/convert`,
-        { dueDate }
-      );
+      const response = await axios.put(`${API_URL}/me`, profileData, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || "Failed to convert quote to invoice"
+        error.response?.data || "Failed to update profile"
       );
     }
   }
 );
 
-export const generateQuotePDF = createAsyncThunk(
-  "architect/generateQuotePDF",
-  async (quoteId, { rejectWithValue }) => {
+// Fetch architect stats
+export const fetchArchitectStats = createAsyncThunk(
+  "architect/fetchStats",
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(
-        `${API_URL_QUOTES_INVOICES}/quotes/${quoteId}/pdf`,
-        { responseType: "blob" }
-      );
-
-      const pdfBlob = response.data;
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-
-      return { quoteId, pdfUrl, pdfBlob };
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to generate PDF");
-    }
-  }
-);
-
-// ====== INVOICE ACTIONS ======
-export const fetchInvoices = createAsyncThunk(
-  "architect/fetchInvoices",
-  async (filters = {}, { rejectWithValue }) => {
-    try {
-      const queryParams = new URLSearchParams();
-      for (const [key, value] of Object.entries(filters)) {
-        if (value) queryParams.append(key, value);
-      }
-
-      const response = await axiosInstance.get(
-        `${API_URL_QUOTES_INVOICES}/invoices?${queryParams}`
-      );
+      const response = await axios.get(`${API_URL}/me/stats`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
       return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to load stats");
+    }
+  }
+);
+
+// Delete architect account
+export const deleteArchitectAccount = createAsyncThunk(
+  "architect/deleteAccount",
+  async (_, { rejectWithValue }) => {
+    try {
+      await axios.delete(`${API_URL}/me`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      return { success: true };
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || "Failed to fetch invoices"
+        error.response?.data || "Failed to delete account"
       );
-    }
-  }
-);
-
-export const getInvoiceById = createAsyncThunk(
-  "architect/getInvoiceById",
-  async (invoiceId, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.get(
-        `${API_URL_QUOTES_INVOICES}/invoices/${invoiceId}`
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to fetch invoice");
-    }
-  }
-);
-
-export const addInvoice = createAsyncThunk(
-  "architect/addInvoice",
-  async (invoiceData, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.post(
-        `${API_URL_QUOTES_INVOICES}/invoices`,
-        invoiceData
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to create invoice"
-      );
-    }
-  }
-);
-
-export const updateInvoice = createAsyncThunk(
-  "architect/updateInvoice",
-  async (invoiceData, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.patch(
-        `${API_URL_QUOTES_INVOICES}/invoices/${invoiceData._id}`,
-        invoiceData
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to update invoice"
-      );
-    }
-  }
-);
-
-export const deleteInvoice = createAsyncThunk(
-  "architect/deleteInvoice",
-  async (invoiceId, { rejectWithValue }) => {
-    try {
-      await axiosInstance.delete(
-        `${API_URL_QUOTES_INVOICES}/invoices/${invoiceId}`
-      );
-      return invoiceId;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to delete invoice"
-      );
-    }
-  }
-);
-
-export const recordInvoicePayment = createAsyncThunk(
-  "architect/recordInvoicePayment",
-  async ({ invoiceId, paymentData }, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.post(
-        `${API_URL_QUOTES_INVOICES}/invoices/${invoiceId}/payment`,
-        paymentData
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to record payment"
-      );
-    }
-  }
-);
-
-export const generateInvoicePDF = createAsyncThunk(
-  "architect/generateInvoicePDF",
-  async (invoiceId, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.get(
-        `${API_URL_QUOTES_INVOICES}/invoices/${invoiceId}/pdf`,
-        { responseType: "blob" }
-      );
-
-      // Create a URL for the blob
-      const pdfUrl = URL.createObjectURL(response.data);
-
-      return {
-        invoiceId,
-        pdfUrl,
-        pdfBlob: response.data,
-      };
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to generate PDF");
-    }
-  }
-);
-
-// ====== EVENT ACTIONS ======
-export const fetchEvents = createAsyncThunk(
-  "architect/fetchEvents",
-  async (filters = {}, { rejectWithValue }) => {
-    try {
-      const queryParams = new URLSearchParams();
-      for (const [key, value] of Object.entries(filters)) {
-        if (value) queryParams.append(key, value);
-      }
-
-      const url =
-        Object.keys(filters).length > 0
-          ? `${API_URL_EVENTS}/filter?${queryParams}`
-          : API_URL_EVENTS;
-
-      const response = await axiosInstance.get(url);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to fetch events");
-    }
-  }
-);
-
-export const getEventById = createAsyncThunk(
-  "architect/getEventById",
-  async (eventId, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.get(`${API_URL_EVENTS}/${eventId}`);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to fetch event");
-    }
-  }
-);
-
-export const addEvent = createAsyncThunk(
-  "architect/addEvent",
-  async (eventData, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.post(API_URL_EVENTS, eventData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to create event");
-    }
-  }
-);
-
-export const updateEvent = createAsyncThunk(
-  "architect/updateEvent",
-  async (eventData, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.put(
-        `${API_URL_EVENTS}/${eventData._id}`,
-        eventData
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to update event");
-    }
-  }
-);
-
-export const deleteEvent = createAsyncThunk(
-  "architect/deleteEvent",
-  async (eventId, { rejectWithValue }) => {
-    try {
-      await axiosInstance.delete(`${API_URL_EVENTS}/${eventId}`);
-      return eventId;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to delete event");
     }
   }
 );
@@ -335,268 +71,45 @@ export const deleteEvent = createAsyncThunk(
 const architectSlice = createSlice({
   name: "architect",
   initialState: {
-    projects: [],
-    quotes: [],
-    invoices: [],
-    events: [],
-    currentQuote: null,
-    currentInvoice: null,
-    currentEvent: null,
-    pdfs: {}, // Store generated PDFs by ID
-    loading: {
-      projects: false,
-      quotes: false,
-      invoices: false,
-      events: false,
-      currentItem: false,
-      pdf: false,
-    },
-    error: {
-      projects: null,
-      quotes: null,
-      invoices: null,
-      events: null,
-      currentItem: null,
-      pdf: null,
-    },
+    profile: null,
+    stats: null,
+    loading: false,
+    error: null,
   },
   reducers: {
-    clearCurrentItems: (state) => {
-      state.currentQuote = null;
-      state.currentInvoice = null;
-      state.currentEvent = null;
-    },
-    clearPDFs: (state) => {
-      // Clean up object URLs to prevent memory leaks
-      Object.values(state.pdfs).forEach((pdf) => {
-        if (pdf.pdfUrl) {
-          URL.revokeObjectURL(pdf.pdfUrl);
-        }
-      });
-      state.pdfs = {};
+    resetArchitectState: (state) => {
+      state.profile = null;
+      state.stats = null;
+      state.loading = false;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-     
-      // Quote reducers
-      .addCase(fetchQuotes.pending, (state) => {
-        state.loading.quotes = true;
-        state.error.quotes = null;
+      .addCase(fetchArchitectProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
-      .addCase(fetchQuotes.fulfilled, (state, action) => {
-        state.loading.quotes = false;
-        state.quotes = action.payload.data;
+      .addCase(fetchArchitectProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload;
       })
-      .addCase(fetchQuotes.rejected, (state, action) => {
-        state.loading.quotes = false;
-        state.error.quotes = action.payload;
+      .addCase(fetchArchitectProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
-      .addCase(getQuoteById.pending, (state) => {
-        state.loading.currentItem = true;
-        state.error.currentItem = null;
+      .addCase(updateArchitectProfile.fulfilled, (state, action) => {
+        state.profile = { ...state.profile, ...action.payload };
       })
-      .addCase(getQuoteById.fulfilled, (state, action) => {
-        state.loading.currentItem = false;
-        state.currentQuote = action.payload.data;
+      .addCase(fetchArchitectStats.fulfilled, (state, action) => {
+        state.stats = action.payload;
       })
-      .addCase(getQuoteById.rejected, (state, action) => {
-        state.loading.currentItem = false;
-        state.error.currentItem = action.payload;
-      })
-      .addCase(addQuote.fulfilled, (state, action) => {
-        state.quotes.push(action.payload.data);
-      })
-      .addCase(updateQuote.fulfilled, (state, action) => {
-        const index = state.quotes.findIndex(
-          (q) => q._id === action.payload.data._id
-        );
-        if (index !== -1) state.quotes[index] = action.payload.data;
-
-        // Update current quote if it's the one being updated
-        if (
-          state.currentQuote &&
-          state.currentQuote._id === action.payload.data._id
-        ) {
-          state.currentQuote = action.payload.data;
-        }
-      })
-      .addCase(deleteQuote.fulfilled, (state, action) => {
-        state.quotes = state.quotes.filter((q) => q._id !== action.payload);
-
-        // Clear current quote if it's the one being deleted
-        if (state.currentQuote && state.currentQuote._id === action.payload) {
-          state.currentQuote = null;
-        }
-      })
-      .addCase(convertQuoteToInvoice.fulfilled, (state, action) => {
-        // Remove from quotes
-        state.quotes = state.quotes.filter(
-          (q) => q._id !== action.payload.data._id
-        );
-
-        // Add to invoices
-        state.invoices.push(action.payload.data);
-
-        // Clear current quote if it's the one being converted
-        if (
-          state.currentQuote &&
-          state.currentQuote._id === action.payload.data._id
-        ) {
-          state.currentQuote = null;
-        }
-      })
-      .addCase(generateQuotePDF.pending, (state) => {
-        state.loading.pdf = true;
-        state.error.pdf = null;
-      })
-      .addCase(generateQuotePDF.fulfilled, (state, action) => {
-        state.loading.pdf = false;
-        state.pdfs[action.payload.quoteId] = {
-          pdfUrl: action.payload.pdfUrl,
-          pdfBlob: action.payload.pdfBlob,
-        };
-      })
-      .addCase(generateQuotePDF.rejected, (state, action) => {
-        state.loading.pdf = false;
-        state.error.pdf = action.payload;
-      })
-
-      // Invoice reducers
-      .addCase(fetchInvoices.pending, (state) => {
-        state.loading.invoices = true;
-        state.error.invoices = null;
-      })
-      .addCase(fetchInvoices.fulfilled, (state, action) => {
-        state.loading.invoices = false;
-        state.invoices = action.payload.data;
-      })
-      .addCase(fetchInvoices.rejected, (state, action) => {
-        state.loading.invoices = false;
-        state.error.invoices = action.payload;
-      })
-      .addCase(getInvoiceById.pending, (state) => {
-        state.loading.currentItem = true;
-        state.error.currentItem = null;
-      })
-      .addCase(getInvoiceById.fulfilled, (state, action) => {
-        state.loading.currentItem = false;
-        state.currentInvoice = action.payload.data;
-      })
-      .addCase(getInvoiceById.rejected, (state, action) => {
-        state.loading.currentItem = false;
-        state.error.currentItem = action.payload;
-      })
-      .addCase(addInvoice.fulfilled, (state, action) => {
-        state.invoices.push(action.payload.data);
-      })
-      .addCase(updateInvoice.fulfilled, (state, action) => {
-        const index = state.invoices.findIndex(
-          (i) => i._id === action.payload.data._id
-        );
-        if (index !== -1) state.invoices[index] = action.payload.data;
-
-        // Update current invoice if it's the one being updated
-        if (
-          state.currentInvoice &&
-          state.currentInvoice._id === action.payload.data._id
-        ) {
-          state.currentInvoice = action.payload.data;
-        }
-      })
-      .addCase(deleteInvoice.fulfilled, (state, action) => {
-        state.invoices = state.invoices.filter((i) => i._id !== action.payload);
-
-        // Clear current invoice if it's the one being deleted
-        if (
-          state.currentInvoice &&
-          state.currentInvoice._id === action.payload
-        ) {
-          state.currentInvoice = null;
-        }
-      })
-      .addCase(recordInvoicePayment.fulfilled, (state, action) => {
-        const index = state.invoices.findIndex(
-          (i) => i._id === action.payload.data._id
-        );
-        if (index !== -1) state.invoices[index] = action.payload.data;
-
-        // Update current invoice if it's the one being updated
-        if (
-          state.currentInvoice &&
-          state.currentInvoice._id === action.payload.data._id
-        ) {
-          state.currentInvoice = action.payload.data;
-        }
-      })
-      .addCase(generateInvoicePDF.pending, (state) => {
-        state.loading.pdf = true;
-        state.error.pdf = null;
-      })
-      .addCase(generateInvoicePDF.fulfilled, (state, action) => {
-        state.loading.pdf = false;
-        state.pdfs[action.payload.invoiceId] = {
-          pdfUrl: action.payload.pdfUrl,
-          pdfBlob: action.payload.pdfBlob,
-        };
-      })
-      .addCase(generateInvoicePDF.rejected, (state, action) => {
-        state.loading.pdf = false;
-        state.error.pdf = action.payload;
-      })
-
-      // Event reducers
-      .addCase(fetchEvents.pending, (state) => {
-        state.loading.events = true;
-        state.error.events = null;
-      })
-      .addCase(fetchEvents.fulfilled, (state, action) => {
-        state.loading.events = false;
-        state.events = action.payload.data;
-      })
-      .addCase(fetchEvents.rejected, (state, action) => {
-        state.loading.events = false;
-        state.error.events = action.payload;
-      })
-      .addCase(getEventById.pending, (state) => {
-        state.loading.currentItem = true;
-        state.error.currentItem = null;
-      })
-      .addCase(getEventById.fulfilled, (state, action) => {
-        state.loading.currentItem = false;
-        state.currentEvent = action.payload.data;
-      })
-      .addCase(getEventById.rejected, (state, action) => {
-        state.loading.currentItem = false;
-        state.error.currentItem = action.payload;
-      })
-      .addCase(addEvent.fulfilled, (state, action) => {
-        state.events.push(action.payload.data);
-      })
-      .addCase(updateEvent.fulfilled, (state, action) => {
-        const index = state.events.findIndex(
-          (e) => e._id === action.payload.data._id
-        );
-        if (index !== -1) state.events[index] = action.payload.data;
-
-        // Update current event if it's the one being updated
-        if (
-          state.currentEvent &&
-          state.currentEvent._id === action.payload.data._id
-        ) {
-          state.currentEvent = action.payload.data;
-        }
-      })
-      .addCase(deleteEvent.fulfilled, (state, action) => {
-        state.events = state.events.filter((e) => e._id !== action.payload);
-
-        // Clear current event if it's the one being deleted
-        if (state.currentEvent && state.currentEvent._id === action.payload) {
-          state.currentEvent = null;
-        }
+      .addCase(deleteArchitectAccount.fulfilled, (state) => {
+        state.profile = null;
+        state.stats = null;
       });
   },
 });
 
-export const { clearCurrentItems, clearPDFs } = architectSlice.actions;
+export const { resetArchitectState } = architectSlice.actions;
 export default architectSlice.reducer;

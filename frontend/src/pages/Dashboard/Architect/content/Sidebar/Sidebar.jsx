@@ -17,6 +17,7 @@ import {
 
 const menuItems = [
   { title: "Dashboard", icon: faTachometerAlt, view: "dashboard" },
+  { title: "Matching requests", icon: faBell, view: "client" },
   { title: "Calendar", icon: faCalendar, view: "calendar" },
   { title: "Projects", icon: faProjectDiagram, view: "projects" },
   { title: "Profile", icon: faUser, view: "profile" },

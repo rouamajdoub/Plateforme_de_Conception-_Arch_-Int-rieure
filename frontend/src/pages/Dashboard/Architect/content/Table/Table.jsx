@@ -1,4 +1,6 @@
-import * as React from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProjects } from "../../../../../redux/slices/ProjectSlice"; // Adjust path if needed
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -7,17 +9,6 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import "./Table.css";
-
-function createData(name, trackingId, date, status) {
-  return { name, trackingId, date, status };
-}
-
-const rows = [
-  createData("Lasania Chicken Fry", 18908424, "2 March 2022", "Approved"),
-  createData("Big Baza Bang", 18908424, "2 March 2022", "Pending"),
-  createData("Mouth Freshner", 18908424, "2 March 2022", "Approved"),
-  createData("Cupcake", 18908421, "2 March 2022", "Delivered"),
-];
 
 const makeStyle = (status) => {
   if (status === "Approved") {
@@ -39,90 +30,107 @@ const makeStyle = (status) => {
 };
 
 export default function BasicTable() {
+  const dispatch = useDispatch();
+  const { projects, status, error } = useSelector((state) => state.projects);
+
+  useEffect(() => {
+    dispatch(fetchProjects());
+  }, [dispatch]);
+
   return (
     <div className="Table">
-      <h3>Recent Orders</h3>
-      <TableContainer
-        component={Paper}
-        className="TableContainer" // Apply the transparent background class
-        style={{ background: "transparent", boxShadow: "none" }} // Override inline styles
-      >
-        <Table
-          sx={{ minWidth: 650, background: "transparent" }}
-          aria-label="simple table"
+      <h3>Recent Projects</h3>
+
+      {status === "loading" && <p>Loading...</p>}
+      {status === "failed" && <p>Error: {error}</p>}
+
+      {status === "succeeded" && (
+        <TableContainer
+          component={Paper}
+          className="TableContainer"
+          style={{ background: "transparent", boxShadow: "none" }}
         >
-          <TableHead>
-            <TableRow>
-              <TableCell style={{ background: "transparent", color: "black" }}>
-                Product
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{ background: "transparent", color: "black" }}
-              >
-                Tracking ID
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{ background: "transparent", color: "black" }}
-              >
-                Date
-              </TableCell>
-              <TableCell align="left" style={{ background: "transparent" }}>
-                Status
-              </TableCell>
-              <TableCell
-                align="left"
-                className="Details"
-                style={{ background: "transparent" }}
-              >
-                Details
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow
-                key={row.name}
-                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                style={{ background: "transparent" }}
-              >
+          <Table
+            sx={{ minWidth: 650, background: "transparent" }}
+            aria-label="simple table"
+          >
+            <TableHead>
+              <TableRow>
                 <TableCell
-                  component="th"
-                  scope="row"
                   style={{ background: "transparent", color: "black" }}
                 >
-                  {row.name}
+                  Project
                 </TableCell>
                 <TableCell
                   align="left"
                   style={{ background: "transparent", color: "black" }}
                 >
-                  {row.trackingId}
+                  Client
                 </TableCell>
                 <TableCell
                   align="left"
                   style={{ background: "transparent", color: "black" }}
                 >
-                  {row.date}
+                  Category
                 </TableCell>
                 <TableCell align="left" style={{ background: "transparent" }}>
-                  <span className="status" style={makeStyle(row.status)}>
-                    {row.status}
-                  </span>
+                  Status
                 </TableCell>
                 <TableCell
                   align="left"
                   className="Details"
                   style={{ background: "transparent" }}
                 >
-                  Details
+                  End Date
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {projects.map((project) => (
+                <TableRow
+                  key={project._id}
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  style={{ background: "transparent" }}
+                >
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    style={{ background: "transparent", color: "black" }}
+                  >
+                    {project.title}
+                  </TableCell>
+                  <TableCell
+                    align="left"
+                    style={{ background: "transparent", color: "black" }}
+                  >
+                    {project.clientName}
+                  </TableCell>
+                  <TableCell
+                    align="left"
+                    style={{ background: "transparent", color: "black" }}
+                  >
+                    {project.category}
+                  </TableCell>
+                  <TableCell align="left" style={{ background: "transparent" }}>
+                    <span className="status" style={makeStyle(project.status)}>
+                      {project.status}
+                    </span>
+                  </TableCell>
+                  <TableCell
+                    align="left"
+                    className="Details"
+                    style={{ background: "transparent", color: "black" }}
+                  >
+                    {project.endDate
+                      ? new Date(project.endDate).toLocaleDateString("en-CA")
+                      : "N/A"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </div>
   );
 }

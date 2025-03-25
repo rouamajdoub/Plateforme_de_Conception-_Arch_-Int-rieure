@@ -5,6 +5,8 @@ import adminReducer from "./slices/adminSlice";
 import architectReducer from "./slices/architectSlice";
 import marketplaceReducer from "./slices/marketplaceSlice";
 import projectReducer from "./slices/ProjectSlice";
+import eventReducer from "./slices/eventSlice";
+
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -12,6 +14,7 @@ const store = configureStore({
     architect: architectReducer,
     marketplace: marketplaceReducer,
     projects: projectReducer,
+    events: eventReducer,
   },
 });
 

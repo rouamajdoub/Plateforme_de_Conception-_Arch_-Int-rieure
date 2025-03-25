@@ -138,3 +138,133 @@ const CalenderS = () => {
 };
 
 export default CalenderS;
+/*
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchEvents } from "../../../../../redux/slices/eventSlice"; // Adjust import path
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import { useNavigate } from "react-router-dom";
+import "./CalenderS.css";
+
+const CalenderS = () => {
+  const dispatch = useDispatch();
+  const { events: reduxEvents, loading, error } = useSelector(
+    (state) => state.events
+  );
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [tooltip, setTooltip] = useState({
+    visible: false,
+    content: "",
+    x: 0,
+    y: 0,
+  });
+  const navigate = useNavigate();
+
+  // Convert Redux event dates to Date objects
+  const events = reduxEvents.map((event) => ({
+    ...event,
+    date: new Date(event.date),
+  }));
+
+  useEffect(() => {
+    dispatch(fetchEvents());
+  }, [dispatch]);
+
+  const onClickDay = (value) => {
+    const dayEvents = events.filter(
+      (ev) => ev.date.toDateString() === value.toDateString()
+    );
+
+    if (dayEvents.length > 0) {
+      navigate("/calendar");
+    }
+  };
+
+  const handleMouseEnter = (date, e, clientX, clientY) => {
+    const dayEvents = events.filter(
+      (ev) => ev.date.toDateString() === date.toDateString()
+    );
+
+    if (dayEvents.length > 0) {
+      const tooltipContent = dayEvents.map((ev) => ev.title).join(", ");
+      setTooltip({
+        visible: true,
+        content: tooltipContent,
+        x: clientX,
+        y: clientY,
+      });
+    }
+  };
+
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const dayEvents = events.filter(
+        (ev) => ev.date.toDateString() === date.toDateString()
+      );
+      
+      return (
+        <div
+          style={{
+            marginTop: 4,
+            display: "flex",
+            gap: 4,
+            justifyContent: "center",
+          }}
+          onMouseEnter={(e) => handleMouseEnter(date, e, e.clientX, e.clientY)}
+          onMouseLeave={() => setTooltip({ ...tooltip, visible: false })}
+        >
+          {dayEvents.map((_, index) => (
+            <span
+              key={index}
+              style={{
+                display: "inline-block",
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                backgroundColor: "#3b82f6", // Unified blue color
+              }}
+            ></span>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  if (loading) return <div>Loading calendar events...</div>;
+  if (error) return <div>Error loading events: {error}</div>;
+
+  return (
+    <div className="calenderS-container">
+      <h3 className="text-xl font-bold mb-4">Your Meetings & Reminders</h3>
+      <Calendar
+        onChange={setSelectedDate}
+        value={selectedDate}
+        onClickDay={onClickDay}
+        tileContent={tileContent}
+      />
+
+      {tooltip.visible && (
+        <div
+          className="tooltip"
+          style={{
+            position: "fixed",
+            left: tooltip.x + 10,
+            top: tooltip.y + 10,
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            color: "white",
+            padding: "8px",
+            borderRadius: "4px",
+            fontSize: "14px",
+            zIndex: 1000,
+          }}
+        >
+          {tooltip.content}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CalenderS; */

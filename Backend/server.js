@@ -1,15 +1,24 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
 const connectDB = require("./config/db");
 const User = require("./models/User");
 const asyncHandler = require("express-async-handler");
 const cookieParser = require("cookie-parser");
 const { auth } = require("express-openid-connect");
-const authRouter = require('./routes/authRouter'); // Adjust path as needed
-
+const userRoutes = require("./routes/userRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
+const projects = require("./routes/projectsRoutes");
+const marketplaceRoutes = require("./routes/marketplaceRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const kanbanRoutes = require("./routes/kanbanRoutes");
+const reviewRoutes = require("./routes/reviewsRoutes");
+const architectRoutes = require("./routes/architectRoutes");
+const statsRoutes = require("./routes/statsRoutes");
+const quoteRoutes = require("./routes/QuoteRoutes");
+const authRoutes = require("./routes/authRoutes");
+const eventRoutes = require("./routes/eventRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 // Stripe setup
 const Stripe = require("stripe");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -47,42 +56,39 @@ const config = {
     scope: "openid profile email",
   },
   routes: {
-    callback: "/api/auth/callback", // Add callback route
+    callback: "/api/auth/callback",
     login: false,
   },
 };
-app.use(auth(config)); // Auth0 authentication middleware
+app.use(auth(config));
 
 // Connect to Database
 connectDB();
 
-// Explicitly mount authentication routes
-const authRoutes = require("./routes/authRoutes");
+//--------------------------------------------Routes --------------------
+// auth routes
 app.use("/api/auth", authRoutes);
+// user routes
+app.use("/api/users", userRoutes);
+app.use("/api/clients", userRoutes);
+app.use("/api/architects", userRoutes);
+//  subscription routes
+app.use("/api/subscriptions", subscriptionRoutes);
+//  projects  routes
+app.use("/api/projects", projects);
 
-// Auto Load other Routes from 'routes' folder
-const routeFiles = fs.readdirSync(path.join(__dirname, "routes"));
-routeFiles.forEach((file) => {
-  if (file.endsWith(".js") && file !== "authRoutes.js") {
-    console.log(`Loading route: ${file}`); 
-
-    const route = require(`./routes/${file}`);
-    let routeName = file.replace(".js", "").toLowerCase();
-
-    // Handle special cases
-    if (routeName === "quoteroutes") routeName = "quotes-invoices";
-    if (routeName === "useroutes") routeName = "users";
-    if (routeName === "architectroutes") routeName = "architects";
-    app.use(`/api/${routeName}`, route);
-  }
-});
-
-
-
-const projectRoutes = require('./routes/projectsRoutes');
-app.use('/api/projects', projectRoutes);
-app.use('/api/auth', authRouter);
-
+// routes de la marketplace
+app.use("/api/marketplace", marketplaceRoutes);
+//  routes de paiement
+app.use("/api/payments", paymentRoutes);
+// routes de la kanban
+app.use("/api/kanban", kanbanRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/arch-req", architectRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api/quotes-invoices", quoteRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/profile", profileRoutes);
 
 // Auth0 callback handling
 app.get("/", async (req, res) => {
@@ -113,7 +119,7 @@ const ensureUserInDB = asyncHandler(async (user) => {
         profilePicture: user.picture,
         role: "client",
         isVerified: true,
-        authMethod: "auth0", // Add this line
+        authMethod: "auth0",
       });
 
       await newUser.save();

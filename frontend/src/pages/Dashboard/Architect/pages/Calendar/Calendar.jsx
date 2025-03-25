@@ -1,6 +1,10 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { addEvent, deleteEvent, fetchEvents } from "../../../../../redux/slices/architectSlice"; 
+import {
+  addEvent,
+  deleteEvent,
+  fetchEvents,
+} from "../../../../../redux/slices/eventSlice";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -12,10 +16,11 @@ import "./Calendar.css";
 
 const Calendar = () => {
   const dispatch = useDispatch();
-  const events = useSelector((state) => state.architect.events); // Récupère les événements depuis Redux
+  const events = useSelector((state) => state.architect.events) || []; // ✅ Évite undefined
 
   useEffect(() => {
-    dispatch(fetchEvents()); // Charge les événements au montage du composant
+    dispatch(fetchEvents());
+    console.log("Fetching events..."); // ✅ Vérification
   }, [dispatch]);
 
   const handleDateClick = (selected) => {
@@ -34,35 +39,60 @@ const Calendar = () => {
   };
 
   const handleEventClick = (selected) => {
-    if (window.confirm(`Are you sure you want to delete '${selected.event.title}'?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete '${selected.event.title}'?`
+      )
+    ) {
       dispatch(deleteEvent(selected.event.id));
     }
   };
 
   return (
     <Box m="20px">
-      <Typography variant="h1" sx={{ color: "var(--black)", fontWeight: "bold", marginBottom: "20px" }}>
+      <Typography
+        variant="h1"
+        sx={{ color: "var(--black)", fontWeight: "bold", marginBottom: "20px" }}
+      >
         Calendar
       </Typography>
       <Box display="flex" justifyContent="space-between">
         {/* Sidebar */}
         <Box flex="1 1 20%" p="15px">
-          <Typography variant="h4" sx={{ color: "var(--black)", fontWeight: "bold" }}>
+          <Typography
+            variant="h4"
+            sx={{ color: "var(--black)", fontWeight: "bold" }}
+          >
             Events
           </Typography>
           <List>
-            {events.map((event) => (
-              <ListItem key={event.id} sx={{ backgroundColor: "#ff919d", margin: "10px 0", borderRadius: "2px" }}>
+            {Array.isArray(events) && events.length > 0 ? (
+              events.map((event) => (
+                <ListItem
+                  key={event.id}
+                  sx={{
+                    backgroundColor: "#ff919d",
+                    margin: "10px 0",
+                    borderRadius: "2px",
+                  }}
+                >
                 <ListItemText
                   primary={event.title}
                   secondary={
                     <Typography>
-                      {formatDate(event.start, { year: "numeric", month: "short", day: "numeric" })}
+                      {formatDate(event.start, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </Typography>
                   }
                 />
               </ListItem>
-            ))}
+               ))
+            ) : (
+              <Typography>No events</Typography> // ✅ Message si pas d'événements
+            )}
           </List>
         </Box>
 
@@ -70,8 +100,17 @@ const Calendar = () => {
         <Box flex="1 1 100%" ml="15px">
           <FullCalendar
             height="75vh"
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-            headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay,listMonth" }}
+            plugins={[
+              dayGridPlugin,
+              timeGridPlugin,
+              interactionPlugin,
+              listPlugin,
+            ]}
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,timeGridWeek,timeGridDay,listMonth",
+            }}
             initialView="dayGridMonth"
             editable={true}
             selectable={true}

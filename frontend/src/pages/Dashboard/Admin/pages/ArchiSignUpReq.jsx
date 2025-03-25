@@ -17,18 +17,18 @@ const ArchitectRequests = () => {
   const { token } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(fetchArchitectRequests({ token }));
-  }, [dispatch, token]);
+    dispatch(fetchArchitectRequests());
+  }, [dispatch]);
 
   const handleApprove = (id) => {
     if (window.confirm("Approve this architect?")) {
-      dispatch(approveArchitect({ id, token }));
+      dispatch(approveArchitect(id));
     }
   };
 
   const handleReject = (id) => {
     if (window.confirm("Reject this architect?")) {
-      dispatch(rejectArchitect({ id, token }));
+      dispatch(rejectArchitect(id));
     }
   };
 
@@ -39,33 +39,34 @@ const ArchitectRequests = () => {
       headerName: "Architect Name",
       flex: 1.5,
       valueGetter: (params) =>
-        `${params.row.prenom || ""} ${params.row.nomDeFamille || ""}`.trim() ||
-        "N/A",
+        `${params?.row?.prenom || ""} ${
+          params?.row?.nomDeFamille || ""
+        }`.trim() || "N/A",
     },
     { field: "email", headerName: "Email", flex: 1.5 },
     {
       field: "experienceYears",
       headerName: "Experience (Years)",
       flex: 1,
-      valueGetter: (params) => params.row.experienceYears || "N/A",
+      valueGetter: (params) => params?.row?.experienceYears || "N/A",
     },
     {
       field: "companyName",
       headerName: "Company Name",
       flex: 1.5,
-      valueGetter: (params) => params.row.companyName || "N/A",
+      valueGetter: (params) => params?.row?.companyName || "N/A",
     },
     {
       field: "patenteNumber",
       headerName: "Patente Number",
       flex: 1,
-      valueGetter: (params) => params.row.patenteNumber || "N/A",
+      valueGetter: (params) => params?.row?.patenteNumber || "N/A",
     },
     {
       field: "cin",
       headerName: "CIN",
       flex: 1,
-      valueGetter: (params) => params.row.cin || "N/A",
+      valueGetter: (params) => params?.row?.cin || "N/A",
     },
     {
       field: "paymentStatus",
@@ -74,11 +75,11 @@ const ArchitectRequests = () => {
       renderCell: (params) => (
         <Typography
           sx={{
-            color: params.row.paymentStatus === "completed" ? "green" : "red",
+            color: params?.row?.paymentStatus === "completed" ? "green" : "red",
             fontWeight: "bold",
           }}
         >
-          {params.row.paymentStatus || "pending"}
+          {params?.row?.paymentStatus || "pending"}
         </Typography>
       ),
     },
@@ -89,11 +90,11 @@ const ArchitectRequests = () => {
       renderCell: (params) => (
         <Typography
           sx={{
-            color: params.row.status === "approved" ? "green" : "red",
+            color: params?.row?.status === "approved" ? "green" : "red",
             fontWeight: "bold",
           }}
         >
-          {params.row.status}
+          {params?.row?.status || "pending"}
         </Typography>
       ),
     },
@@ -102,7 +103,7 @@ const ArchitectRequests = () => {
       headerName: "Date Requested",
       flex: 1,
       valueGetter: (params) =>
-        params.row.createdAt
+        params?.row?.createdAt
           ? new Date(params.row.createdAt).toLocaleDateString()
           : "N/A",
     },
@@ -116,16 +117,16 @@ const ArchitectRequests = () => {
             variant="contained"
             color="success"
             sx={{ mr: 1 }}
-            onClick={() => handleApprove(params.row._id)}
-            disabled={params.row.status === "approved"}
+            onClick={() => handleApprove(params?.row?._id)}
+            disabled={params?.row?.status === "approved"}
           >
             Approve
           </Button>
           <Button
             variant="contained"
             color="error"
-            onClick={() => handleReject(params.row._id)}
-            disabled={params.row.status === "rejected"}
+            onClick={() => handleReject(params?.row?._id)}
+            disabled={params?.row?.status === "rejected"}
           >
             Reject
           </Button>
@@ -144,7 +145,7 @@ const ArchitectRequests = () => {
         <Typography>Loading...</Typography>
       ) : error ? (
         <Typography color="error">
-          Error: {error.message || JSON.stringify(error)}
+          Error: {error?.message || JSON.stringify(error)}
         </Typography>
       ) : (
         <Box
@@ -163,16 +164,12 @@ const ArchitectRequests = () => {
               borderTop: "none",
               backgroundColor: colors.blueAccent[700],
             },
-            "& .MuiCheckbox-root": {
-              color: `${colors.greenAccent[200]} !important`,
-            },
           }}
         >
           <DataGrid
-            rows={architects}
+            rows={architects?.filter((arch) => arch) || []}
             columns={columns}
-            getRowId={(row) => row._id}
-            checkboxSelection
+            getRowId={(row) => row?._id || Math.random()}
             components={{ Toolbar: GridToolbar }}
             componentsProps={{
               toolbar: {

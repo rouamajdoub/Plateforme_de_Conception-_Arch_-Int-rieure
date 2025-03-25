@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+/*import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Table,
@@ -214,7 +214,6 @@ const Invoices = () => {
         </TableContainer>
       )}
 
-      {/* Invoice Form Modal */}
       <Dialog
         open={openInvoiceModal}
         onClose={handleCloseInvoiceModal}
@@ -358,7 +357,6 @@ const Invoices = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Payment Modal */}
       <Dialog
         open={openPaymentModal}
         onClose={() => setOpenPaymentModal(false)}
@@ -406,3 +404,4 @@ const Invoices = () => {
 };
 
 export default Invoices;
+*/

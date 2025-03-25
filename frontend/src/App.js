@@ -5,6 +5,7 @@ import Login from "./pages/auth/Login.jsx";
 import Signup from "./pages/auth/Signup.jsx";
 import Dashboard from "./pages/Dashboard/Admin/AdminDashboard.jsx";
 import ArchitectDashboard from "./pages/Dashboard/Architect/Main.jsx";
+import Calender from "./pages/Dashboard/Architect/pages/Calendar/Calendar.jsx";
 function App() {
   return (
     <>
@@ -14,6 +15,7 @@ function App() {
         <Route path="/architect" element={<ArchitectDashboard />} />
         <Route path="/admin_dashboard" element={<Dashboard />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/calender" element={<Calender />} />
 
         <Route path="*" element={<Dashboard />} />
       </Routes>

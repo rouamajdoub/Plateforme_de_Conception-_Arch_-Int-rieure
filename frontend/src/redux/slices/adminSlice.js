@@ -107,7 +107,7 @@ export const fetchArchitectRequests = createAsyncThunk(
   "admin/fetchArchitectRequests",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/arch/architects/requests`);
+      const response = await axios.get(`${BASE_URL}/arch-req/requests`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -120,7 +120,7 @@ export const approveArchitect = createAsyncThunk(
   async (id, { rejectWithValue, dispatch }) => {
     try {
       const response = await axios.patch(
-        `${BASE_URL}/arch/architects/requests/${id}`,
+        `${BASE_URL}/arch-req/requests/${id}`,
         {
           status: "approved",
         }
@@ -137,7 +137,7 @@ export const rejectArchitect = createAsyncThunk(
   "admin/rejectArchitect",
   async (id, { rejectWithValue, dispatch }) => {
     try {
-      await axios.patch(`${BASE_URL}/arch/architects/requests/${id}`, {
+      await axios.patch(`${BASE_URL}/arch-req/requests/${id}`, {
         status: "rejected",
       });
       dispatch(fetchArchitectRequests()); // Refresh the list after deletion

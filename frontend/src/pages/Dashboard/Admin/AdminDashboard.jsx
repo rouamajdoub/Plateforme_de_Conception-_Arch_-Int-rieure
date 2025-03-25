@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
-  Grid,
-  Paper,
   CircularProgress,
   Typography,
   Table,

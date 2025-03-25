@@ -9,6 +9,7 @@ import Project from "./pages/Project/Project";
 import Market from "./pages/Market/Market";
 import Invoices from "./pages/Invoice/Invoices";
 import Quotes from "./pages/Quote/Quotes";
+import Matching from "./pages/Matching/Matching";
 
 const Main = () => {
   const [expanded, setExpanded] = useState(true);
@@ -34,6 +35,8 @@ const Main = () => {
         return <Invoices />;
       case "quote":
         return <Quotes />;
+      case "client":
+        return <Matching />;
       default:
         return (
           <div className="main-dash-container">
