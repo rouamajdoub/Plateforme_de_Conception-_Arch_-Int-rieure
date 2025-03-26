@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   registerUser,
   selectAuthStatus,
@@ -17,6 +18,7 @@ const Signup = () => {
     formState: { errors },
     reset,
   } = useForm();
+  const navigate = useNavigate();
 
   const dispatch = useDispatch();
   const authStatus = useSelector(selectAuthStatus);
@@ -27,21 +29,27 @@ const Signup = () => {
   const [subscription, setSubscription] = useState(null);
 
   useEffect(() => {
-    // Reset status when component unmounts
+    if (authStatus === "succeeded") {
+      const timer = setTimeout(() => {
+        navigate("/login");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [authStatus, navigate]);
+
+  useEffect(() => {
     return () => {
       dispatch(resetStatus());
     };
   }, [dispatch]);
 
   const onSubmit = (data) => {
-    // Prepare form data with user type and subscription
     const formData = {
       ...data,
       role: userType,
       subscription: userType === "architect" ? subscription : null,
     };
 
-    // Dispatch registration action
     dispatch(registerUser(formData));
   };
 
@@ -91,10 +99,26 @@ const Signup = () => {
     dispatch(resetStatus());
   };
 
+  const renderStepIndicator = () => (
+    <div className="step-indicator">
+      {[...Array(userType === "architect" ? 4 : 2)].map((_, index) => {
+        const stepNumber = index + 1;
+        return (
+          <div
+            key={stepNumber}
+            className={`step-circle ${stepNumber === step ? "active" : ""}`}
+          >
+            {stepNumber}
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="signup-wrapper">
+      {userType && renderStepIndicator()} {/* Render step indicator here */}
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Step 1: Basic Details */}
         {step === 1 && (
           <div className="form-step">
             <h2>Step 1: Basic Details</h2>
@@ -138,7 +162,7 @@ const Signup = () => {
                 {...register("email", {
                   required: "Email is required",
                   pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
                     message: "Invalid email address",
                   },
                 })}
@@ -172,6 +196,7 @@ const Signup = () => {
                 className={`btn role-btn ${
                   userType === "client" ? "selected-client" : ""
                 }`}
+                aria-label="Sign up as Client"
               >
                 Sign up as Client
               </button>
@@ -181,6 +206,7 @@ const Signup = () => {
                 className={`btn role-btn ${
                   userType === "architect" ? "selected-architect" : ""
                 }`}
+                aria-label="Sign up as Architect"
               >
                 Sign up as Architect
               </button>
@@ -196,7 +222,6 @@ const Signup = () => {
           </div>
         )}
 
-        {/* Step 2: Location/Professional Details */}
         {step === 2 && userType === "client" && (
           <div className="form-step">
             <h2>Step 2: Location Details</h2>
@@ -333,7 +358,6 @@ const Signup = () => {
           </div>
         )}
 
-        {/* Step 3: Subscription for Architect */}
         {step === 3 && userType === "architect" && (
           <SubscriptionStep
             onNext={() => setStep(4)}
@@ -341,7 +365,6 @@ const Signup = () => {
           />
         )}
 
-        {/* Step 4: Confirmation */}
         {step === 4 && userType === "architect" && (
           <div className="form-step">
             <h2>Step 4: Confirmation</h2>
@@ -352,10 +375,8 @@ const Signup = () => {
           </div>
         )}
 
-        {/* Registration Status */}
         {renderRegistrationStatus()}
 
-        {/* Reset Form Button (only show when registration is successful or failed) */}
         {(authStatus === "succeeded" || authStatus === "failed") && (
           <button type="button" onClick={resetForm} className="btn reset-btn">
             Start Over

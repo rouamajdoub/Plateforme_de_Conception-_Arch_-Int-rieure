@@ -19,7 +19,7 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      navigate(user.role === "client" ? "/" : "/arch_Dashboard");
+      navigate(user.role === "client" ? "/home" : "/architect");
     }
   }, [user, navigate]);
 
@@ -65,7 +65,6 @@ const Login = () => {
         <p className="register-link">
           Already have an account? <a href="/signup">Sign in</a>
         </p>
-
       </div>
     </div>
   );

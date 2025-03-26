@@ -1,0 +1,63 @@
+/* ----------------------Header.css ---------------------------------*/
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 40px;
+  background-color: #eaeefe;
+  color: #4a4a4a;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.title-visiona {
+  font-size: 24px;
+  font-weight: bold;
+  color: #7263f3;
+}
+
+.page-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #555;
+}
+
+.nav-list {
+  display: flex;
+  gap: 20px; /* Space between nav items */
+  list-style: none; /* Remove bullet points */
+  padding: 0; /* Remove padding */
+  margin: 0; /* Remove margin */
+  text-decoration: none; /* Remove underline from links */
+  align-items: center;
+}
+.nav-list li {
+  list-style: none;
+}
+.nav-item {
+  display: inline-block;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: #4a4a4a;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+  color: #7263f3;
+  background-color: rgba(114, 99, 243, 0.1);
+}
+.nav-item.active {
+  color: #7263f3;
+  border-bottom: 2px solid #7263f3;
+  font-weight: bold;
+}
+
+/*-------------------------------------------------------------------------------------*/

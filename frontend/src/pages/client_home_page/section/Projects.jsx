@@ -1,5 +1,16 @@
 import React from "react";
+import Navbar from "../Global/Navbar"
+const Projects = () => {
+  return (
+  <>
+    <Navbar />
 
-export const Projects = () => {
-  return <div>Projects</div>;
+  
+  
+  </>
+  
+
+);
 };
+
+export default Projects;

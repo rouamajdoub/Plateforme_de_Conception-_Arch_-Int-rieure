@@ -1,11 +1,12 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import HomePage from "./pages/client_home_page/page/Home.jsx";
 import Login from "./pages/auth/Login.jsx";
 import Signup from "./pages/auth/Signup.jsx";
 import Dashboard from "./pages/Dashboard/Admin/AdminDashboard.jsx";
 import ArchitectDashboard from "./pages/Dashboard/Architect/Main.jsx";
 import Calender from "./pages/Dashboard/Architect/pages/Calendar/Calendar.jsx";
+import HomePage from "./pages/client_home_page/Home.jsx";
+
 function App() {
   return (
     <>
@@ -17,7 +18,7 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/calender" element={<Calender />} />
 
-        <Route path="*" element={<Dashboard />} />
+        <Route path="*" element={<HomePage />} />
       </Routes>
     </>
   );
