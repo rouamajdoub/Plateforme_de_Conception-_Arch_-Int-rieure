@@ -28,8 +28,7 @@ const architectSchema = new mongoose.Schema(
     },
     softwareProficiency: [
       {
-        name: String,
-        level: { type: String },
+        type: [String],
       },
     ],
     profileViews: { type: Number, default: 0 },

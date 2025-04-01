@@ -7,99 +7,128 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Register a new user (client or architect)
 exports.register = asyncHandler(async (req, res) => {
-  const {
-    pseudo,
-    nomDeFamille,
-    prenom,
-    email,
-    password,
-    phoneNumber,
-    role,
-    pays,
-    region,
-    city,
-    cin,
-    patenteNumber,
-    companyName,
-    experienceYears,
-    specialization,
-    portfolioURL,
-    certifications,
-    education,
-    softwareProficiency,
-    coordinates,
-    website,
-    socialMedia,
-  } = req.body;
-
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    return res.status(400).json({ error: "Email déjà utilisé" });
-  }
-
-  if (role === "architect") {
-    if (!cin || !patenteNumber) {
-      return res.status(400).json({
-        error: "CIN and Patente Number are required for architects.",
-      });
-    }
-    if (!password || password.length < 8) {
-      return res
-        .status(400)
-        .json({ error: "Password must be at least 8 characters long." });
-    }
-  }
-
-  const userData = {
-    pseudo,
-    nomDeFamille,
-    prenom,
-    email,
-    password,
-    phoneNumber,
-    role,
-    authMethod: "local",
-    contentTerm: req.body.contentTerm || false,
-    cgvAndCguTerm: req.body.cgvAndCguTerm || false,
-    infoTerm: req.body.infoTerm || false,
-    majorTerm: req.body.majorTerm || false,
-    exterieurParticipantTerm: req.body.exterieurParticipantTerm || false,
-    isVerified: true, // Auto-verify all users
-  };
-
-  if (role === "client") {
-    userData.location = { country: pays, region, city };
-  } else if (role === "architect") {
-    userData.cin = cin;
-    userData.patenteNumber = patenteNumber;
-    userData.companyName = companyName;
-    userData.experienceYears = experienceYears;
-    userData.specialization = specialization || [];
-    userData.portfolioURL = portfolioURL;
-    userData.certifications = certifications || [];
-    userData.education = education;
-    userData.softwareProficiency = softwareProficiency || [];
-    userData.website = website;
-    userData.socialMedia = socialMedia;
-    userData.status = "pending";
-    userData.location = {
-      country: pays,
+  try {
+    const {
+      pseudo,
+      nomDeFamille,
+      prenom,
+      email,
+      password,
+      phoneNumber,
+      role,
+      pays,
       region,
       city,
-      coordinates: {
-        type: "Point",
-        coordinates: coordinates || [0, 0],
-      },
+      cin,
+      patenteNumber,
+      companyName,
+      experienceYears,
+      specialization,
+      portfolioURL,
+      certifications,
+      education,
+      softwareProficiency,
+      coordinates,
+      website,
+      socialMedia,
+    } = req.body;
+
+    console.log("Registration request body:", req.body);
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email déjà utilisé" });
+    }
+
+    if (role === "architect") {
+      if (!cin || !patenteNumber) {
+        return res.status(400).json({
+          error: "CIN and Patente Number are required for architects.",
+        });
+      }
+      if (!password || password.length < 8) {
+        return res
+          .status(400)
+          .json({ error: "Password must be at least 8 characters long." });
+      }
+    }
+
+    const userData = {
+      pseudo,
+      nomDeFamille,
+      prenom,
+      email,
+      password,
+      phoneNumber: phoneNumber || "",
+      role,
+      authMethod: "local",
+      contentTerm: req.body.contentTerm || false,
+      cgvAndCguTerm: req.body.cgvAndCguTerm || false,
+      infoTerm: req.body.infoTerm || false,
+      majorTerm: req.body.majorTerm || false,
+      exterieurParticipantTerm: req.body.exterieurParticipantTerm || false,
+      isVerified: true, // Auto-verify all users
     };
+
+    if (role === "client") {
+      userData.location = {
+        country: pays || req.body.location?.country || "",
+        region: region || req.body.location?.region || "",
+        city: city || req.body.location?.city || "",
+      };
+    } else if (role === "architect") {
+      userData.cin = cin;
+      userData.patenteNumber = patenteNumber;
+      userData.companyName = companyName || "";
+      userData.experienceYears = experienceYears || 0;
+      userData.specialization = Array.isArray(specialization)
+        ? specialization
+        : [specialization || ""];
+      userData.portfolioURL = portfolioURL || "";
+      userData.certifications = Array.isArray(certifications)
+        ? certifications
+        : certifications
+        ? [certifications]
+        : [];
+      userData.education = education || "";
+      userData.softwareProficiency = Array.isArray(softwareProficiency)
+        ? softwareProficiency
+        : softwareProficiency
+        ? [softwareProficiency]
+        : [];
+      userData.website = website || "";
+      userData.socialMedia = socialMedia || {};
+      userData.status = "pending";
+      userData.location = {
+        country: pays || "",
+        region: region || "",
+        city: city || "",
+        coordinates: coordinates
+          ? {
+              type: "Point",
+              coordinates: coordinates,
+            }
+          : {
+              type: "Point",
+              coordinates: [0, 0],
+            },
+      };
+    }
+
+    const user = new User(userData);
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Compte créé avec succès.",
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "An error occurred during registration",
+    });
   }
-
-  const user = new User(userData);
-  await user.save();
-
-  res.status(201).json({
-    success: true,
-    message: "Compte créé avec succès.",
-  });
 });
 
 // Google Login
@@ -207,8 +236,10 @@ exports.getProfile = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Find user by auth0Id
-    const user = await User.findOne({ auth0Id: id });
+    // Find user by ID or auth0Id
+    const user = await User.findOne({
+      $or: [{ _id: id }, { auth0Id: id }],
+    });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

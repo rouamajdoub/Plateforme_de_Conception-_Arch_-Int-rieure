@@ -8,7 +8,6 @@ import {
   selectAuthError,
   resetStatus,
 } from "../../redux/slices/authSlice";
-import SubscriptionStep from "./SubscriptionStep";
 import "./styles/Auth.css";
 
 const Signup = () => {
@@ -17,25 +16,29 @@ const Signup = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm();
   const navigate = useNavigate();
-
   const dispatch = useDispatch();
   const authStatus = useSelector(selectAuthStatus);
   const authError = useSelector(selectAuthError);
 
   const [step, setStep] = useState(1);
   const [userType, setUserType] = useState(null);
-  const [subscription, setSubscription] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
     if (authStatus === "succeeded") {
-      const timer = setTimeout(() => {
-        navigate("/login");
-      }, 3000);
-      return () => clearTimeout(timer);
+      if (userType === "architect") {
+        setIsSubmitted(true);
+      } else {
+        const timer = setTimeout(() => {
+          navigate("/login");
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [authStatus, navigate]);
+  }, [authStatus, navigate, userType]);
 
   useEffect(() => {
     return () => {
@@ -44,19 +47,48 @@ const Signup = () => {
   }, [dispatch]);
 
   const onSubmit = (data) => {
-    const formData = {
-      ...data,
-      role: userType,
-      subscription: userType === "architect" ? subscription : null,
-    };
+    // Map the data to match the expected backend structure
+    let formData = { ...data, role: userType };
 
+    // For client, convert location.country to pays and structure correctly
+    if (userType === "client") {
+      formData = {
+        ...formData,
+        pays: data.location?.country,
+        region: data.location?.region,
+        city: data.location?.city || "",
+      };
+      // Remove the nested location object since we're flattening it
+      delete formData.location;
+    }
+    // For architect, ensure all required fields are properly formatted
+    else if (userType === "architect") {
+      formData = {
+        ...formData,
+        // Convert any arrays from comma-separated strings
+        certifications: data.certifications
+          ? data.certifications.split(",").map((item) => item.trim())
+          : [],
+        softwareProficiency: data.softwareProficiency
+          ? data.softwareProficiency.split(",").map((item) => item.trim())
+          : [],
+        // Ensure numeric fields are numbers
+        experienceYears: parseInt(data.experienceYears, 10),
+        // Add default values for required location info
+        pays: "",
+        region: "",
+        city: "",
+        // Ensure coordinates has a default value
+        coordinates: [0, 0],
+      };
+    }
+
+    console.log("Submitting registration data:", formData);
     dispatch(registerUser(formData));
   };
 
   const handleNextStep = () => {
-    if (userType === "architect" && step < 4) {
-      setStep(step + 1);
-    } else if (userType === "client" && step < 2) {
+    if ((userType === "client" || userType === "architect") && step < 2) {
       setStep(step + 1);
     }
   };
@@ -69,17 +101,6 @@ const Signup = () => {
         </div>
       );
     }
-
-    if (authStatus === "succeeded") {
-      return (
-        <div className="registration-status text-green-600">
-          {userType === "architect"
-            ? "Your registration is pending admin approval. Please check your email regularly for updates."
-            : "Registration successful! You can now log in."}
-        </div>
-      );
-    }
-
     if (authStatus === "failed") {
       return (
         <div className="registration-status text-red-600">
@@ -87,7 +108,6 @@ const Signup = () => {
         </div>
       );
     }
-
     return null;
   };
 
@@ -95,33 +115,29 @@ const Signup = () => {
     reset();
     setStep(1);
     setUserType(null);
-    setSubscription(null);
+    setIsSubmitted(false);
     dispatch(resetStatus());
   };
 
-  const renderStepIndicator = () => (
-    <div className="step-indicator">
-      {[...Array(userType === "architect" ? 4 : 2)].map((_, index) => {
-        const stepNumber = index + 1;
-        return (
-          <div
-            key={stepNumber}
-            className={`step-circle ${stepNumber === step ? "active" : ""}`}
-          >
-            {stepNumber}
-          </div>
-        );
-      })}
-    </div>
-  );
-
   return (
     <div className="signup-wrapper">
-      {userType && renderStepIndicator()} {/* Render step indicator here */}
       <form onSubmit={handleSubmit(onSubmit)}>
         {step === 1 && (
           <div className="form-step">
             <h2>Step 1: Basic Details</h2>
+            <div className="form-group">
+              <select
+                {...register("role", { required: "Role is required" })}
+                onChange={(e) => setUserType(e.target.value)}
+              >
+                <option value="">Select Role</option>
+                <option value="client">Client</option>
+                <option value="architect">Architect</option>
+              </select>
+              {errors.role && (
+                <p className="error-message">{errors.role.message}</p>
+              )}
+            </div>
             <div className="form-group">
               <input
                 {...register("pseudo", {
@@ -192,26 +208,6 @@ const Signup = () => {
             <div className="form-buttons">
               <button
                 type="button"
-                onClick={() => setUserType("client")}
-                className={`btn role-btn ${
-                  userType === "client" ? "selected-client" : ""
-                }`}
-                aria-label="Sign up as Client"
-              >
-                Sign up as Client
-              </button>
-              <button
-                type="button"
-                onClick={() => setUserType("architect")}
-                className={`btn role-btn ${
-                  userType === "architect" ? "selected-architect" : ""
-                }`}
-                aria-label="Sign up as Architect"
-              >
-                Sign up as Architect
-              </button>
-              <button
-                type="button"
                 onClick={handleNextStep}
                 className="btn next-btn"
                 disabled={!userType}
@@ -250,6 +246,12 @@ const Signup = () => {
                   {errors.location.region.message}
                 </p>
               )}
+            </div>
+            <div className="form-group">
+              <input
+                {...register("location.city")}
+                placeholder="City (Optional)"
+              />
             </div>
             <button type="submit" className="btn">
               Finish Registration
@@ -325,8 +327,7 @@ const Signup = () => {
                 {...register("portfolioURL", {
                   required: "Portfolio URL is required",
                   pattern: {
-                    value:
-                      /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w.-]*)*\/?$/,
+                    value: /^(https?:\/\/)?([\w.-]+)(:[0-9]+)?(\/[^\s]*)?$/,
                     message: "Invalid URL format",
                   },
                 })}
@@ -352,25 +353,31 @@ const Signup = () => {
                 placeholder="Software Proficiency (comma separated)"
               />
             </div>
-            <button type="button" onClick={handleNextStep} className="btn">
-              Next
+            <div className="form-group">
+              <input {...register("pays")} placeholder="Country" />
+            </div>
+            <div className="form-group">
+              <input {...register("region")} placeholder="Region" />
+            </div>
+            <div className="form-group">
+              <input {...register("city")} placeholder="City" />
+            </div>
+            <button type="submit" className="btn">
+              Finish Registration
             </button>
           </div>
         )}
 
-        {step === 3 && userType === "architect" && (
-          <SubscriptionStep
-            onNext={() => setStep(4)}
-            onSelectSubscription={setSubscription}
-          />
-        )}
-
-        {step === 4 && userType === "architect" && (
+        {isSubmitted && userType === "architect" && (
           <div className="form-step">
-            <h2>Step 4: Confirmation</h2>
-            <p>Please review your information before submitting.</p>
-            <button type="submit" className="btn">
-              Submit Registration
+            <h2>Registration Successful</h2>
+            <p>
+              Your registration request has been sent successfully. Please wait
+              for admin approval. You will receive a confirmation email shortly.
+              Be sure to check your inbox!
+            </p>
+            <button type="button" onClick={resetForm} className="btn reset-btn">
+              Start Over
             </button>
           </div>
         )}

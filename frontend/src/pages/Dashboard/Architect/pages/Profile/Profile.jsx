@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchArchitectProfile } from "../../../../../redux/slices/architectSlice";
 import { Edit, Trash, CreditCard, File, Star } from "lucide-react";
+import Banner from "../../img/Beige_Modern_Elegant_Banner.png";
+import "./Profile.css"; // Import du fichier CSS
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -11,111 +13,129 @@ const Profile = () => {
     dispatch(fetchArchitectProfile());
   }, [dispatch]);
 
-  if (loading) return <p className="text-center text-gray-500">Loading...</p>;
+  // Log the profile data when it changes
+  useEffect(() => {
+    console.log(profile);
+  }, [profile]); // This will log whenever the profile changes
+
+  if (loading) return <p className="loading">Loading...</p>;
   if (error) {
     return (
-      <p className="text-center text-red-500">
-        Error: {error.message || JSON.stringify(error)}
-      </p>
+      <p className="error">Error: {error.message || JSON.stringify(error)}</p>
     );
   }
-  if (!profile) return <p className="text-center">No profile data found.</p>;
+  if (!profile) return <p className="no-data">No profile data found.</p>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="profile-container">
       {/* Profile Header */}
-      <div className="flex items-center space-x-6 bg-white shadow-md rounded-xl p-6">
-        <img
-          src={profile.profilePicture || "/default-avatar.png"}
-          alt={`${profile.prenom || "User"}'s Profile`}
-          className="w-20 h-20 rounded-full border-2 border-gray-300"
-        />
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">
+      <div className="p-header-container">
+        {/* Banner Image */}
+        <div className="banner">
+          <img src={Banner} alt="Banner" className="banner-image" />
+        </div>
+
+        {/* Profile Card */}
+        <div className="profile-card">
+          <img
+            src={profile.profilePicture || "/default-avatar.png"}
+            alt={`${profile.prenom || "User"}'s Profile`}
+            className="profile-image"
+          />
+          <div className="profile-info">
             {profile.prenom} {profile.nomDeFamille}
-          </h2>
-          <p className="text-gray-500">{profile.email}</p>
-          <p className="text-gray-500">
-            {profile.location?.country || "Unknown"},{" "}
-            {profile.location?.region || "Unknown"}
-          </p>
+            <p className="profile-email">{profile.email}</p>
+            <p className="profile-location">
+              {profile.location?.country || "Unknown"},{" "}
+              {profile.location?.region || "Unknown"}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Profile Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <div className="profile-grid">
         {/* Personal Info */}
-        <div className="bg-white shadow-md rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900">Personal Info</h3>
-          <p className="text-gray-600">
+        <div className="info-card">
+          <h3>Personal Info</h3>
+          <p>
             <strong>Phone:</strong> {profile.phoneNumber || "N/A"}
           </p>
-          <p className="text-gray-600">
-            <strong>Architect ID:</strong>{" "}
-            {profile.architectId?.toString() || "N/A"}
+          <p>
+            <strong>Experience:</strong> {profile.experienceYears || "N/A"}{" "}
+            years
           </p>
-          <p className="text-gray-600">
+          <p>
+            <strong>Company:</strong> {profile.companyName || "N/A"}
+          </p>
+          <p>
+            <strong>Specialty:</strong> {profile.specialty || "N/A"}
+          </p>
+          <p>
+            <strong>Certification:</strong> {profile.certification || "N/A"}
+          </p>
+          <p>
             <strong>Verified:</strong> {profile.isVerified ? "✅ Yes" : "❌ No"}
           </p>
         </div>
 
         {/* Subscription Info */}
-        <div className="bg-white shadow-md rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900">Subscription</h3>
-          <p className="text-gray-600">
+        <div className="info-card">
+          <h3>Subscription</h3>
+          <p>
             <strong>Plan:</strong> {profile.subscription?.plan || "Free"}
           </p>
-          <p className="text-gray-600">
-            <strong>Expires on:</strong>
+          <p>
+            <strong>Expires on:</strong>{" "}
             {profile.subscription?.expiryDate
               ? new Date(profile.subscription.expiryDate).toLocaleDateString()
               : "N/A"}
           </p>
-          <button className="mt-3 bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+          <button className="btn btn-blue">
             <CreditCard size={16} /> Manage Subscription
           </button>
         </div>
       </div>
 
       {/* Portfolio & Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <div className="profile-grid">
         {/* Portfolio */}
-        <div className="bg-white shadow-md rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900">Portfolio</h3>
+        <div className="info-card">
+          <h3>Portfolio</h3>
           {profile.portfolio?.length ? (
-            <div className="grid grid-cols-3 gap-2 mt-2">
+            <div className="portfolio-grid">
               {profile.portfolio.slice(0, 3).map((img, index) => (
                 <img
                   key={index}
                   src={img}
                   alt={`Portfolio ${index + 1}`}
-                  className="w-full h-24 object-cover rounded-lg"
+                  className="portfolio-image"
                 />
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No portfolio images available.</p>
+            <p className="no-data">No portfolio images available.</p>
           )}
         </div>
 
         {/* Statistics */}
-        <div className="bg-white shadow-md rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900">Statistics</h3>
-          <div className="flex justify-between text-gray-700 mt-2">
-            <div className="flex items-center space-x-2">
-              <File size={20} className="text-blue-500" />
+        <div className="info-card">
+          <h3>Statistics</h3>
+          <div className="stats-container">
+            <div className="stat-item">
+              <File size={20} className="icon-blue" />
               <p>
                 <strong>{profile.stats?.projects || 0}</strong> Projects
               </p>
             </div>
-            <div className="flex items-center space-x-2">
-              <Star size={20} className="text-yellow-500" />
+            <div className="stat-item">
+              <Star size={20} className="icon-yellow" />
               <p>
                 <strong>{profile.stats?.reviews || 0}</strong> Reviews
               </p>
             </div>
-            <div className="flex items-center space-x-2">
-              <CreditCard size={20} className="text-green-500" />
+            <div className="stat-item">
+              <CreditCard size={20} className="icon-green" />
               <p>
                 <strong>${profile.stats?.earnings || 0}</strong> Earnings
               </p>
@@ -125,11 +145,11 @@ const Profile = () => {
       </div>
 
       {/* Actions */}
-      <div className="flex justify-between mt-6">
-        <button className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+      <div className="profile-actions">
+        <button className="btn btn-blue">
           <Edit size={16} /> Edit Profile
         </button>
-        <button className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+        <button className="btn btn-red">
           <Trash size={16} /> Delete Account
         </button>
       </div>

@@ -10,8 +10,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: url("../img/123.png") no-repeat center center
-    fixed;
+  background: url("../img/123.png") no-repeat center center fixed;
   background-size: cover;
 }
 
@@ -51,7 +50,36 @@ body {
   outline: none;
   transition: border-color 0.3s ease;
 }
+/* Styles for select elements */
+.form-group select {
+  width: 100%;
+  height: 50px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 40px;
+  font-size: 16px;
+  color: #fff;
+  padding: 10px 20px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
 
+/* Placeholder color for select */
+.form-group select option {
+  background: transparent;
+  color: #000; /* Light color for options */}
+
+/* Change border color on focus */
+.form-group select:focus {
+  border-color: #4caf50; /* Change border color on focus */
+}
+
+/* Error message styling for select */
+.error-message {
+  color: #e74c3c;
+  margin: 10px 0;
+  text-align: center;
+}
 .form-group input::placeholder {
   color: rgba(255, 255, 255, 0.7);
 }
@@ -72,6 +100,8 @@ body {
   gap: 10px; /* Add spacing between buttons */
   margin-top: 20px;
 }
+
+/*--------------------------------------------------------*/
 
 .btn {
   width: 100%;
@@ -117,73 +147,6 @@ body {
   background: rgba(255, 255, 255, 0.1); /* Disabled state */
   cursor: not-allowed;
 }
-/* Subscription Step Styles */
-.subscription-step {
-  text-align: center;
-  padding: 20px;
-}
-
-.subscription-step h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
-  color: #4caf50; /* Green color for headers */
-}
-
-.subscription-cards {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.subscription-card {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  padding: 20px;
-  width: 280px;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.3s ease;
-}
-
-.subscription-card:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-5px);
-}
-
-.subscription-card.selected {
-  background: #4caf50; /* Green for selected card */
-  border-color: #4caf50;
-  color: #fff;
-}
-
-.subscription-card h3 {
-  font-size: 20px;
-  margin-bottom: 10px;
-}
-
-.subscription-card .price {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 15px;
-}
-
-.subscription-card .price span {
-  font-size: 14px;
-  font-weight: normal;
-}
-
-.subscription-card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  text-align: left;
-}
-
-.subscription-card ul li {
-  font-size: 14px;
-  margin-bottom: 10px;
-}
 
 .next-btn {
   margin-top: 20px;
@@ -203,7 +166,6 @@ body {
   background: rgba(255, 255, 255, 0.1); /* Disabled state */
   cursor: not-allowed;
 }
-
 
 /*-----------------------*/
 .step-indicator {
