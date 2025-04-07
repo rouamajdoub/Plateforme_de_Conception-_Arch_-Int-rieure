@@ -1,47 +1,48 @@
 import React from "react";
 import { useTheme, Box, Typography } from "@mui/material";
 import { ResponsiveBar } from "@nivo/bar";
-import { tokens } from "../../../theme"; // Adjust the import path as necessary
+import { tokens } from "../../../../../../theme";
 
-const UserStat = ({ data }) => {
+const ReviewChart = ({ productReviews }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
-  if (!data || data.length === 0) return <Typography>Loading...</Typography>;
+  if (!productReviews || productReviews.length === 0)
+    return <Typography>Loading...</Typography>;
 
-  // Count the number of users by role
-  const roleCounts = data.reduce((acc, user) => {
-    acc[user.role] = (acc[user.role] || 0) + 1;
+  // Aggregate product reviews count by productId
+  const productCounts = productReviews.reduce((acc, review) => {
+    const productId = review.productId;
+    if (productId) {
+      acc[productId] = (acc[productId] || 0) + 1;
+    }
     return acc;
   }, {});
 
-  const chartData = Object.keys(roleCounts).map((role) => ({
-    role,
-    count: roleCounts[role],
+  // Prepare data for the bar chart
+  const chartData = Object.keys(productCounts).map((productId) => ({
+    product: productId,
+    count: productCounts[productId],
   }));
 
   return (
     <Box
       sx={{
         width: "100%", // Take up full width of the parent container
-        height: "100%", // Take up full height of the parent container
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Typography
-        variant="h4"
-        gutterBottom
-        sx={{ color: "black", fontWeight: "bold" }}
-      >
-        User Distribution by Role
-      </Typography>
+         // Take up full height of the parent container
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+              }}
+            >
+              <Typography variant="h4" gutterBottom sx={{ color: "black", fontWeight: "bold" }}>
+          Most Popular Products by Reviews
+              </Typography>
       <Box
         sx={{
           width: "100%",
-          height: "200px", // Adjusted height to fit the container
+          height: "200px", // Adjust height as needed
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -50,14 +51,14 @@ const UserStat = ({ data }) => {
         <ResponsiveBar
           data={chartData}
           keys={["count"]}
-          indexBy="role"
-          margin={{ top: 20, right: 20, bottom: 50, left: 50 }} // Adjusted margins
+          indexBy="product"
+          margin={{ top: 20, right: 20, bottom: 50, left: 50 }} // Adjust margins
           padding={0.3}
-          colors={["rgba(54, 162, 235, 0.6)"]} // Adjust the color later
+          colors={[colors.blueAccent[400]]}
           theme={{
             text: {
               fill: "black", // Set text color to black
-              fontSize: 12,
+              fontSize: 14,
             },
             axis: {
               domain: {
@@ -90,7 +91,7 @@ const UserStat = ({ data }) => {
             tickSize: 5,
             tickPadding: 5,
             tickRotation: 0,
-            legend: "Role",
+            legend: "Product ID",
             legendPosition: "middle",
             legendOffset: 32,
           }}
@@ -98,7 +99,7 @@ const UserStat = ({ data }) => {
             tickSize: 5,
             tickPadding: 5,
             tickRotation: 0,
-            legend: "Number of Users",
+            legend: "Review Count",
             legendPosition: "middle",
             legendOffset: -40,
           }}
@@ -114,4 +115,4 @@ const UserStat = ({ data }) => {
   );
 };
 
-export default UserStat;
+export default ReviewChart;

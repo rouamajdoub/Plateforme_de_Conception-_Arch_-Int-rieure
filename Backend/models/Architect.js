@@ -80,6 +80,10 @@ const architectSchema = new mongoose.Schema(
       privacy: { type: Boolean, default: false },
       lastUpdated: Date,
     },
+    //for stipe
+    customerId: { type: String },
+    priceId: { type: String },
+    hasAccess: { type: Boolean, default: false },
     emailVerified: { type: Boolean, default: false },
     status: {
       type: String,
@@ -89,6 +93,7 @@ const architectSchema = new mongoose.Schema(
     documents: [{ type: String }],
     isActive: { type: Boolean, default: true },
   },
+
   { timestamps: true }
 );
 

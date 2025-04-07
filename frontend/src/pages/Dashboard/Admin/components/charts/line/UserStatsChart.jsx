@@ -1,7 +1,7 @@
 import React from "react";
 import { useTheme, Box, Typography } from "@mui/material";
 import { ResponsiveLine } from "@nivo/line";
-import { tokens } from "../../../theme";
+import { tokens } from "../../../../../../theme";
 
 const UserStatsChart = ({ data }) => {
   const theme = useTheme();

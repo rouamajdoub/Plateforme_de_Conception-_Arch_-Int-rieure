@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const User = require("./models/User");
+const bodyParser = require("body-parser");
 const asyncHandler = require("express-async-handler");
 const cookieParser = require("cookie-parser");
 const { auth } = require("express-openid-connect");
@@ -20,8 +21,7 @@ const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 // Stripe setup
-const Stripe = require("stripe");
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const webhookRoutes = require("./Stripe/webhook/route"); // Adjust the path if necessary
 
 // Initialize Express app
 const app = express();
@@ -39,6 +39,7 @@ app.use(
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
+app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Auth0 Configuration
@@ -89,6 +90,8 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/quotes-invoices", quoteRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/profile", profileRoutes);
+// ---------------------------Stripe webhook route--------------------
+app.use(webhookRoutes);
 
 // Auth0 callback handling
 app.get("/", async (req, res) => {

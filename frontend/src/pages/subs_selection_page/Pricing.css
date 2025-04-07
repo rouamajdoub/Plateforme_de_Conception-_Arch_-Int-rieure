@@ -1,0 +1,152 @@
+.pricing-section {
+  padding-top: 4rem; /* pt-8 */
+  padding-bottom: 5rem; /* pb-20 */
+  background: radial-gradient(
+    ellipse 200% 100% at bottom left,
+    #183ec2,
+    #eaeefe 100%
+  );
+  overflow-x: clip; /* Prevent horizontal overflow */
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto; /* Center the container */
+  display: flex; /* Add flex display */
+  flex-direction: column; /* Stack children vertically */
+  align-items: center; /* Center align children */
+}
+
+.section-heading {
+  text-align: center;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.section-description {
+  margin-top: 1.25rem;
+  color: #010d3e;
+}
+
+.pricing-tiers {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  align-items: flex-end; /* Align cards at the bottom */
+  margin-top: 2.5rem;
+}
+
+.pricing-card {
+  background-color: white; /* Default white background */
+  color: #000;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+  display: flex; /* Add flex to the card */
+  flex-direction: column; /* Stack card content vertically */
+  justify-content: space-between; /* Space out content evenly */
+}
+
+.pricing-card.inverse {
+  background-color: black; /* Black background for inverse cards */
+  color: white; /* White text for inverse cards */
+}
+
+.pricing-card:hover {
+  transform: scale(1.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: darkgray;
+}
+
+.popular-badge {
+  display: inline-flex;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.popular-text {
+  background: linear-gradient(to right, #dd7ddf, #e1cd86);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.monthly-price {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.price-label {
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.pricing-button {
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 0.75rem;
+  width: 100%;
+  margin-top: 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.pricing-button:hover {
+  background-color: #a1b1e7;
+}
+
+.inverse {
+  background-color: black;
+  color: white;
+}
+
+.inverse-button {
+  background-color: white;
+  color: black;
+}
+
+.feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkmark {
+  font-size: 1.5rem;
+}

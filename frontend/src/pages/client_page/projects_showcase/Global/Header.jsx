@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import "../style.css";
-
+import Logo from "../../img/logo.png"
 const Header = ({ onNavClick }) => {
   const location = useLocation();
   const pathname = location.pathname;
@@ -18,7 +18,7 @@ const Header = ({ onNavClick }) => {
   return (
     <header className="header">
       <Link to="/" className="logo" onClick={onNavClick}>
-        <img src="../img/logo.png" alt="logo" width={45} height={45} />
+        <img src={Logo} alt="logo" width={45} height={45} />
       </Link>
 
       <h2 className="page-name">{getPageName()}</h2>
@@ -48,13 +48,7 @@ const Header = ({ onNavClick }) => {
           >
             My Favorites
           </Link>
-          <Link
-            to="/"
-            className={`nav-item ${pathname === "/" ? "active" : ""}`}
-            onClick={onNavClick}
-          >
-            Home
-          </Link>
+          
         </li>
       </ul>
     </header>

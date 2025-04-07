@@ -13,14 +13,14 @@ import {
 } from "@mui/material";
 
 // Global components
-import Topbar from "./global_admin/Topbar";
-import Sidebar from "./global_admin/Sidebar";
-import Header from "../../../components/Header";
+import Topbar from "./components/Topbar";
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
 
 // Charts
-import UserStatisticsChart from "../../../components/charts/Bar/UserStat";
-import ReviewManagementChart from "../../../components/charts/Bar/ReviewChart";
-import UserStatsChart from "../../../components/charts/line/UserStatsChart";
+import UserStatisticsChart from "./components/charts/Bar/UserStat";
+import ReviewManagementChart from "./components/charts/Bar/ReviewChart";
+import UserStatsChart from "./components/charts/line/UserStatsChart";
 
 // Management pages
 import ReviewManagement from "./pages/ReviewManagement";

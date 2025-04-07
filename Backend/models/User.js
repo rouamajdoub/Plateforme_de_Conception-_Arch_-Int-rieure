@@ -40,6 +40,7 @@ const userSchema = new mongoose.Schema(
     infoTerm: { type: Boolean, default: false },
     majorTerm: { type: Boolean, default: false },
     exterieurParticipantTerm: { type: Boolean, default: false },
+   
 
     authTokens: [
       {
