@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProjects } from "../../../../../redux/slices/ProjectSlice"; // Adjust path if needed
+import { fetchAllProjects } from "../../../../../redux/slices/ProjectSlice"; // Adjust path if needed
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -34,7 +34,7 @@ export default function BasicTable() {
   const { projects, status, error } = useSelector((state) => state.projects);
 
   useEffect(() => {
-    dispatch(fetchProjects());
+    dispatch(fetchAllProjects());
   }, [dispatch]);
 
   return (

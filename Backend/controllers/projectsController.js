@@ -15,11 +15,16 @@ exports.createProject = async (req, res) => {
       startDate,
       endDate,
       coverImage,
+      tags,
+      isPublic,
+      showroomStatus,
+      images,
+      videos,
     } = req.body;
 
     const architectId = req.user._id;
 
-    // 🔎 Vérifier que le client existe dans la bonne collection
+    // 🔎 Verify that the client exists in the correct collection
     let isValidClient = false;
 
     if (clientType === "visionaClient") {
@@ -38,7 +43,7 @@ exports.createProject = async (req, res) => {
 
     const project = new Project({
       clientId,
-      clientType, // à ne pas oublier dans le model
+      clientType,
       architectId,
       title,
       shortDescription,
@@ -48,6 +53,11 @@ exports.createProject = async (req, res) => {
       startDate,
       endDate,
       coverImage,
+      tags: tags || [],
+      isPublic: isPublic !== undefined ? isPublic : false,
+      showroomStatus: showroomStatus || "normal",
+      images: images || [],
+      videos: videos || [],
     });
 
     await project.save();
@@ -62,6 +72,27 @@ exports.updateProject = async (req, res) => {
   try {
     const { projectId } = req.params;
     const updateData = req.body;
+
+    // Check if client type is being updated and verify the client exists
+    if (updateData.clientId && updateData.clientType) {
+      let isValidClient = false;
+
+      if (updateData.clientType === "visionaClient") {
+        isValidClient = await mongoose
+          .model("User")
+          .findById(updateData.clientId);
+      } else if (updateData.clientType === "architectClient") {
+        isValidClient = await mongoose
+          .model("ArchitectClient")
+          .findById(updateData.clientId);
+      }
+
+      if (!isValidClient) {
+        return res
+          .status(400)
+          .json({ message: "Invalid client ID or client type." });
+      }
+    }
 
     // Ensure the architect can only update their own projects
     const project = await Project.findOneAndUpdate(
@@ -112,13 +143,25 @@ exports.getProjectById = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    const project = await Project.findById(projectId)
-      .populate("clientId", "name email")
-      .populate("architectId", "name email");
+    const project = await Project.findById(projectId);
 
     if (!project) {
       return res.status(404).json({ message: "Project not found!" });
     }
+
+    // Populate client data based on clientType
+    if (project.clientType === "visionaClient") {
+      await project.populate("clientId", "name email");
+    } else if (project.clientType === "architectClient") {
+      await project.populate({
+        path: "clientId",
+        model: "ArchitectClient",
+        select: "name email phone",
+      });
+    }
+
+    // Populate architect data
+    await project.populate("architectId", "name email");
 
     res.json(project);
   } catch (error) {
@@ -129,11 +172,27 @@ exports.getProjectById = async (req, res) => {
 // **Get all projects**
 exports.getAllProjects = async (req, res) => {
   try {
-    const projects = await Project.find()
-      .populate("clientId", "name email")
-      .populate("architectId", "name email");
+    const projects = await Project.find();
 
-    res.json(projects);
+    // Process each project to populate the correct client type
+    const populatedProjects = await Promise.all(
+      projects.map(async (project) => {
+        if (project.clientType === "visionaClient") {
+          await project.populate("clientId", "name email");
+        } else if (project.clientType === "architectClient") {
+          await project.populate({
+            path: "clientId",
+            model: "ArchitectClient",
+            select: "name email phone",
+          });
+        }
+
+        await project.populate("architectId", "name email");
+        return project;
+      })
+    );
+
+    res.json(populatedProjects);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -171,13 +230,29 @@ exports.searchProjects = async (req, res) => {
       if (maxBudget) filter.budget.$lte = parseFloat(maxBudget);
     }
 
-    const projects = await Project.find(filter)
-      .populate("clientId", "name email")
-      .populate("architectId", "name email");
+    const projects = await Project.find(filter);
+
+    // Process each project to populate the correct client type
+    const populatedProjects = await Promise.all(
+      projects.map(async (project) => {
+        if (project.clientType === "visionaClient") {
+          await project.populate("clientId", "name email");
+        } else if (project.clientType === "architectClient") {
+          await project.populate({
+            path: "clientId",
+            model: "ArchitectClient",
+            select: "name email phone",
+          });
+        }
+
+        await project.populate("architectId", "name email");
+        return project;
+      })
+    );
 
     res.json({
-      count: projects.length,
-      projects,
+      count: populatedProjects.length,
+      projects: populatedProjects,
       searchParams: req.query,
     });
   } catch (error) {
@@ -273,11 +348,67 @@ exports.getProjectsByArchitect = async (req, res) => {
   try {
     const architectId = req.user._id; // Get the logged-in architect's ID
 
-    const projects = await Project.find({ architectId })
-      .populate("clientId", "name email")
-      .populate("architectId", "name email");
+    const projects = await Project.find({ architectId });
 
-    res.json(projects);
+    // Process each project to populate the correct client type
+    const populatedProjects = await Promise.all(
+      projects.map(async (project) => {
+        if (project.clientType === "visionaClient") {
+          await project.populate("clientId", "name email");
+        } else if (project.clientType === "architectClient") {
+          await project.populate({
+            path: "clientId",
+            model: "ArchitectClient",
+            select: "name email phone",
+          });
+        }
+
+        await project.populate("architectId", "name email");
+        return project;
+      })
+    );
+
+    res.json(populatedProjects);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// **Get all projects for a specific client**
+exports.getProjectsByClient = async (req, res) => {
+  try {
+    const { clientId, clientType } = req.params;
+
+    if (!clientId || !clientType) {
+      return res.status(400).json({
+        message: "Client ID and client type are required",
+      });
+    }
+
+    const projects = await Project.find({
+      clientId,
+      clientType,
+    });
+
+    // Process each project to populate the correct client type
+    const populatedProjects = await Promise.all(
+      projects.map(async (project) => {
+        if (project.clientType === "visionaClient") {
+          await project.populate("clientId", "name email");
+        } else if (project.clientType === "architectClient") {
+          await project.populate({
+            path: "clientId",
+            model: "ArchitectClient",
+            select: "name email phone",
+          });
+        }
+
+        await project.populate("architectId", "name email");
+        return project;
+      })
+    );
+
+    res.json(populatedProjects);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
