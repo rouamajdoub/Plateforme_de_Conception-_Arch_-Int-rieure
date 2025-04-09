@@ -2,67 +2,64 @@ const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema(
   {
+    //for the architect dash
     clientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    architectId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    title: { type: String, required: true },
-    shortDescription: { type: String, required: true }, // ✅ Quick summary for showroom
-    description: { type: String, required: true },
-    category: { type: String, required: true }, // ✅ Type of project (e.g., "Interior Design")
+    clientType: {
+      type: String,
+      enum: ["visionaClient", "architectClient"],
+      required: true,
+    },
 
+    architectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    title: { type: String, required: true },
+    shortDescription: { type: String, required: true },
+    description: { type: String, required: true },
+    category: { type: String, required: true },
     status: {
       type: String,
       enum: ["pending", "in_progress", "completed", "canceled"],
       default: "pending",
     },
-
     budget: { type: Number },
     startDate: { type: Date },
     endDate: { type: Date },
-
-    // 🔹 Showroom Visibility
-    isPublic: { type: Boolean, default: false }, // ✅ Controls if project is in showroom
+    isPublic: { type: Boolean, default: false },
     showroomStatus: {
       type: String,
       enum: ["featured", "trending", "normal"],
       default: "normal",
-    }, // ✅ Public status
-
-    // 🔹 Media & Presentation
-    coverImage: { type: String, required: true }, // ✅ Main image for showroom
-    images: [{ type: String }], // Additional images for project gallery
-    videos: [{ type: String }], // ✅ Video URLs (optional)
-
-    // 🔹 Engagement & Analytics
-    views: { type: Number, default: 0 }, // ✅ Number of times project is viewed
-    likes: {
-      type: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-      ],
-      default: [], // Explicitly set default to an empty array
     },
-    shares: { type: Number, default: 0 }, // ✅ Number of times shared
-    tags: [{ type: String }], // ✅ Keywords for search (e.g., "modern, luxury, apartment")
+    coverImage: { type: String, required: true },
+    images: [{ type: String }],
+    videos: [{ type: String }],
 
-    // 🔹 Needs Sheet & Matching
+    //for the stats and interactions
+    views: { type: Number, default: 0 },
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    shares: { type: Number, default: 0 },
+    progressPercentage: { type: Number, default: 0 },
+    // for search
+    tags: [{ type: String }],
+
+    //for the interactions
     needsSheet: { type: mongoose.Schema.Types.ObjectId, ref: "NeedsSheet" },
     matches: [{ type: mongoose.Schema.Types.ObjectId, ref: "Match" }],
-
-    // 🔹 Quotes & Invoices
     quotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Quote" }],
     invoices: [{ type: mongoose.Schema.Types.ObjectId, ref: "Invoice" }],
-
-    // 🔹 Reviews & Ratings
     reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
-    rating: { type: Number, default: 0 }, // ✅ Average rating from reviews
-
-    // 🔹 Milestones & Progress Tracking
+    rating: { type: Number, default: 0 },
     milestones: [
       {
         title: { type: String, required: true },
@@ -74,9 +71,6 @@ const projectSchema = new mongoose.Schema(
         dueDate: { type: Date },
       },
     ],
-    progressPercentage: { type: Number, default: 0 },
-
-    // 🔹 Communication
     messages: [
       {
         from: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -91,8 +85,6 @@ const projectSchema = new mongoose.Schema(
         link: { type: String },
       },
     ],
-
-    // 🔹 Payment & Security
     paymentStatus: {
       type: String,
       enum: ["pending", "paid", "partially_paid"],
@@ -102,4 +94,13 @@ const projectSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+// Virtual field for architect name
+projectSchema.virtual("architectName", {
+  ref: "User", // The model to use
+  localField: "architectId", // Find architectId in the project
+  foreignField: "_id", // Find the _id in the User model
+  justOne: true, // Only need one result
+});
+
+// Exporting the model
 module.exports = mongoose.model("Project", projectSchema);

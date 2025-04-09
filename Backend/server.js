@@ -11,7 +11,6 @@ const userRoutes = require("./routes/userRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const projects = require("./routes/projectsRoutes");
 const marketplaceRoutes = require("./routes/marketplaceRoutes");
-const paymentRoutes = require("./routes/paymentRoutes");
 const kanbanRoutes = require("./routes/kanbanRoutes");
 const reviewRoutes = require("./routes/reviewsRoutes");
 const architectRoutes = require("./routes/architectRoutes");
@@ -20,8 +19,11 @@ const quoteRoutes = require("./routes/QuoteRoutes");
 const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const profileRoutes = require("./routes/profileRoutes");
-// Stripe setup
-const webhookRoutes = require("./Stripe/webhook/route"); // Adjust the path if necessary
+const clientRoutes = require("./routes/clientRoutes");
+
+// --------------------Stripe -----------------------
+const webhookRoutes = require("./Stripe/webhook/route");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 // Initialize Express app
 const app = express();
@@ -67,33 +69,28 @@ app.use(auth(config));
 connectDB();
 
 //--------------------------------------------Routes --------------------
-// auth routes
 app.use("/api/auth", authRoutes);
-// user routes
 app.use("/api/users", userRoutes);
 app.use("/api/clients", userRoutes);
 app.use("/api/architects", userRoutes);
-//  subscription routes
 app.use("/api/subscriptions", subscriptionRoutes);
-//  projects  routes
-app.use("/api/projects", projects);
-
-// routes de la marketplace
-app.use("/api/marketplace", marketplaceRoutes);
-//  routes de paiement
-app.use("/api/payments", paymentRoutes);
-// routes de la kanban
-app.use("/api/kanban", kanbanRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/arch-req", architectRoutes);
+//archi dash
 app.use("/api/stats", statsRoutes);
+app.use("/api/marketplace", marketplaceRoutes);
 app.use("/api/quotes-invoices", quoteRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/client-arch", clientRoutes);
+app.use("/api/projects", projects);
+app.use("/api/kanban", kanbanRoutes);
+
 // ---------------------------Stripe webhook route--------------------
 app.use(webhookRoutes);
+app.use("/api/payments", paymentRoutes);
 
-// Auth0 callback handling
+// ------------------------------Auth0 callback handling---------------------------------------
 app.get("/", async (req, res) => {
   if (req.oidc.isAuthenticated()) {
     // Check if Auth0 user exists in the DB

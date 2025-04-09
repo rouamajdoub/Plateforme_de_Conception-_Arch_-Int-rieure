@@ -1,6 +1,7 @@
 const User = require("../models/User");
+const { sendApprovalEmail } = require("../utils/emailService");
 
-// Get all architect requests
+// all arch req
 exports.getArchitectRequests = async (req, res) => {
   try {
     const requests = await User.find({
@@ -13,7 +14,7 @@ exports.getArchitectRequests = async (req, res) => {
   }
 };
 
-// Approve or reject a request
+// Approve or reject
 exports.updateArchitectStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -27,7 +28,7 @@ exports.updateArchitectStatus = async (req, res) => {
     const updatedUser = await User.findOneAndUpdate(
       {
         _id: id,
-        role: "architect", // Ensure we're only updating architects
+        role: "architect",
       },
       { status },
       {
@@ -40,9 +41,19 @@ exports.updateArchitectStatus = async (req, res) => {
       return res.status(404).json({ error: "Architect not found" });
     }
 
+    // ----Send email notification if status is approved---
+    if (status === "approved") {
+      const emailResult = await sendApprovalEmail(updatedUser);
+
+      if (!emailResult.success) {
+        console.warn("Email notification failed but user status was updated");
+      }
+    }
+
     res.json({
       message: `Architect status updated to ${status}`,
       user: updatedUser,
+      emailSent: status === "approved" ? true : undefined,
     });
   } catch (error) {
     console.error("Update error:", error);

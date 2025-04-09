@@ -8,6 +8,7 @@ import Calender from "./pages/Dashboard/Architect/pages/Calendar/Calendar.jsx";
 import Home from "./pages/client_page/projects_showcase/Home.jsx";
 import Main from "./pages/client_page/Home-Client/Main.jsx";
 import { Pricing } from "./pages/subs_selection_page/Pricing.jsx";
+//import PaymentSuccess from "./pages/subs_selection_page/PaymentSuccess.jsx";
 function App() {
   return (
     <>

@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+import { getClientById } from "./clientsSlice";
+
 // Base URL of your backend API
 const API_URL = "http://localhost:5000/api/projects";
 
@@ -15,6 +17,20 @@ export const fetchProjects = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching projects");
+    }
+  }
+);
+// Fetch projects by Architect ID
+export const fetchProjectsByArchitect = createAsyncThunk(
+  "projects/fetchProjectsByArchitect",
+  async (architectId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${API_URL}/architect/${architectId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching architect's projects"
+      );
     }
   }
 );
@@ -35,10 +51,16 @@ export const fetchProjectById = createAsyncThunk(
 // Create a new project
 export const createProject = createAsyncThunk(
   "projects/createProject",
-  async (projectData, { rejectWithValue }) => {
+  async (projectData, { rejectWithValue, dispatch }) => {
     try {
       const response = await axios.post(API_URL, projectData);
+
       console.log("✅ Create Project Response:", response.data); // Debugging
+      // Optionally fetch the client details after project creation
+      if (response.data.project.clientId) {
+        dispatch(getClientById(response.data.project.clientId));
+      }
+
       return response.data.project || response.data; // Ensure correct structure
     } catch (error) {
       console.error("❌ Create Project Error:", error.response?.data);
@@ -168,6 +190,18 @@ const projectSlice = createSlice({
         if (index !== -1) {
           state.projects[index] = action.payload.project;
         }
+      })
+      .addCase(fetchProjectsByArchitect.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProjectsByArchitect.fulfilled, (state, action) => {
+        state.loading = false;
+        state.projects = action.payload;
+      })
+      .addCase(fetchProjectsByArchitect.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
 
       // **Search Projects**

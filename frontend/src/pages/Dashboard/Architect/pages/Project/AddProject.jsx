@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,12 +9,25 @@ import {
   MenuItem,
   Checkbox,
   FormControlLabel,
+  Autocomplete,
+  CircularProgress,
+  Box,
+  Typography,
+  Divider,
 } from "@mui/material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { createProject } from "../../../../../redux/slices/ProjectSlice";
+import {
+  getClientById,
+  searchClients,
+} from "../../../../../redux/slices/clientsSlice";
 
 const AddProject = ({ open, onClose }) => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const { clients, loading: clientsLoading } = useSelector(
+    (state) => state.clients
+  );
 
   const [projectData, setProjectData] = useState({
     title: "",
@@ -27,7 +40,18 @@ const AddProject = ({ open, onClose }) => {
     coverImage: "",
     isPublic: false,
     showroomStatus: "normal",
+    clientId: "",
   });
+
+  const [clientSearchQuery, setClientSearchQuery] = useState("");
+  const [selectedClient, setSelectedClient] = useState(null);
+
+  // Fetch architect's clients when component mounts
+  useEffect(() => {
+    if (user && user._id) {
+      dispatch(getClientById(user._id));
+    }
+  }, [dispatch, user]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -37,7 +61,26 @@ const AddProject = ({ open, onClose }) => {
     });
   };
 
+  const handleClientSelect = (client) => {
+    setSelectedClient(client);
+    setProjectData({
+      ...projectData,
+      clientId: client ? client._id : "",
+    });
+  };
+
+  const handleClientSearch = (event, newValue) => {
+    setClientSearchQuery(newValue);
+    if (newValue && newValue.length > 2) {
+      dispatch(searchClients(newValue));
+    }
+  };
+
   const handleSubmit = () => {
+    if (!projectData.clientId) {
+      alert("Please select a client for this project");
+      return;
+    }
     dispatch(createProject(projectData));
     onClose(); // Close modal after submission
   };
@@ -46,6 +89,69 @@ const AddProject = ({ open, onClose }) => {
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Add New Project</DialogTitle>
       <DialogContent>
+        <Box sx={{ mb: 3, mt: 1 }}>
+          <Typography variant="subtitle1" fontWeight="bold">
+            Client Information
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+
+          <Autocomplete
+            id="client-select"
+            options={clients || []}
+            getOptionLabel={(option) => option.name || ""}
+            value={selectedClient}
+            onChange={(event, newValue) => handleClientSelect(newValue)}
+            loading={clientsLoading}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Select Client"
+                variant="outlined"
+                required
+                fullWidth
+                margin="dense"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {clientsLoading ? (
+                        <CircularProgress color="inherit" size={20} />
+                      ) : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+            renderOption={(props, option) => (
+              <li {...props}>
+                <Box>
+                  <Typography variant="body1">{option.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.email}
+                  </Typography>
+                </Box>
+              </li>
+            )}
+          />
+
+          {!clients?.length && (
+            <Typography
+              variant="caption"
+              color="error"
+              sx={{ mt: 1, display: "block" }}
+            >
+              You don't have any clients yet. Please add clients from the client
+              management page first.
+            </Typography>
+          )}
+        </Box>
+
+        <Typography variant="subtitle1" fontWeight="bold">
+          Project Details
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+
         <TextField
           fullWidth
           label="Title"
@@ -155,7 +261,12 @@ const AddProject = ({ open, onClose }) => {
         <Button onClick={onClose} color="secondary">
           Cancel
         </Button>
-        <Button onClick={handleSubmit} color="primary" variant="contained">
+        <Button
+          onClick={handleSubmit}
+          color="primary"
+          variant="contained"
+          disabled={!projectData.clientId}
+        >
           Add Project
         </Button>
       </DialogActions>

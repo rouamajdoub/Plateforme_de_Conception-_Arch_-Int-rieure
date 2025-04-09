@@ -211,6 +211,9 @@ exports.login = asyncHandler(async (req, res) => {
     });
   }
 
+  // Check if this is the architect's first login
+  const isFirstLogin = user.role === "architect" && !user.firstLogin;
+
   const token = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
@@ -218,6 +221,12 @@ exports.login = asyncHandler(async (req, res) => {
   );
 
   user.authTokens.push({ token });
+
+  // Only update firstLogin after successful authentication
+  if (isFirstLogin) {
+    user.firstLogin = true;
+  }
+
   await user.save();
 
   const userObject = user.toObject();
@@ -228,6 +237,7 @@ exports.login = asyncHandler(async (req, res) => {
     success: true,
     token,
     user: userObject,
+    isFirstLogin: isFirstLogin,
   });
 });
 

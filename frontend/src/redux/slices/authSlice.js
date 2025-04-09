@@ -1,17 +1,19 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
-axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+axios.defaults.baseURL =
+  process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
 const initialState = {
   user: null,
-  token: localStorage.getItem('token') || null,
+  token: localStorage.getItem("token") || null,
   isAuthenticated: false,
-  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
   authMethod: null, // 'local' | 'google' | 'auth0'
   error: null,
   architectStatus: null, // 'pending' | 'approved' | 'rejected'
   isLoading: false,
+  isFirstLogin: false, // Added this to track first login state
 };
 
 // Interceptor to add token to requests
@@ -19,7 +21,7 @@ const setupAuthInterceptor = (token) => {
   axios.interceptors.request.use(
     (config) => {
       if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
+        config.headers["Authorization"] = `Bearer ${token}`;
       }
       return config;
     },
@@ -28,144 +30,143 @@ const setupAuthInterceptor = (token) => {
 };
 
 export const registerUser = createAsyncThunk(
-  'auth/register',
+  "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/api/auth/register', userData);
+      const response = await axios.post("/api/auth/register", userData);
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || 'Registration failed'
+        error.response?.data?.error || "Registration failed"
       );
     }
   }
 );
 
 export const loginUser = createAsyncThunk(
-  'auth/login',
+  "auth/login",
   async ({ email, password }, { rejectWithValue, dispatch }) => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
-      const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
+      const response = await axios.post("/api/auth/login", { email, password });
+      const { token, user, isFirstLogin } = response.data;
+
+      localStorage.setItem("token", token);
       setupAuthInterceptor(token);
 
       // Additional verification for architects
-      if (user.role === 'architect' && user.status !== 'approved') {
+      if (user.role === "architect" && user.status !== "approved") {
         dispatch(fetchUserProfile(user._id));
       }
 
-      return { token, user };
+      return { token, user, isFirstLogin };
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.error || 'Login failed'
-      );
+      return rejectWithValue(error.response?.data?.error || "Login failed");
     }
   }
 );
 
 export const googleLogin = createAsyncThunk(
-  'auth/googleLogin',
+  "auth/googleLogin",
   async (googleToken, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/api/auth/google-login', {
+      const response = await axios.post("/api/auth/google-login", {
         token: googleToken,
       });
       const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
+
+      localStorage.setItem("token", token);
       setupAuthInterceptor(token);
 
       return { token, user };
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || 'Google login failed'
+        error.response?.data?.error || "Google login failed"
       );
     }
   }
 );
 
 export const logoutUser = createAsyncThunk(
-  'auth/logout',
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      await axios.post('/api/auth/logout');
-      localStorage.removeItem('token');
+      await axios.post("/api/auth/logout");
+      localStorage.removeItem("token");
       return null;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.error || 'Logout failed'
-      );
+      return rejectWithValue(error.response?.data?.error || "Logout failed");
     }
   }
 );
 
 export const checkAuthStatus = createAsyncThunk(
-  'auth/checkStatus',
+  "auth/checkStatus",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
         return { isAuthenticated: false, user: null };
       }
 
-      const response = await axios.get('/api/auth/check', {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await axios.get("/api/auth/check", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       return response.data;
     } catch (error) {
-      localStorage.removeItem('token');
+      localStorage.removeItem("token");
       return { isAuthenticated: false, user: null };
     }
   }
 );
 
 export const fetchUserProfile = createAsyncThunk(
-  'auth/fetchProfile',
+  "auth/fetchProfile",
   async (userId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`/api/auth/profile/${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || 'Failed to fetch profile'
+        error.response?.data?.error || "Failed to fetch profile"
       );
     }
   }
 );
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     resetStatus: (state) => {
-      state.status = 'idle';
+      state.status = "idle";
       state.error = null;
       state.isLoading = false;
     },
     clearError: (state) => {
       state.error = null;
-    }
+    },
+    clearFirstLoginFlag: (state) => {
+      state.isFirstLogin = false;
+    },
   },
   extraReducers(builder) {
     const handlePendingState = (state) => {
-      state.status = 'loading';
+      state.status = "loading";
       state.isLoading = true;
       state.error = null;
     };
 
     const handleRejectedState = (state, action) => {
-      state.status = 'failed';
+      state.status = "failed";
       state.isLoading = false;
-      state.error = action.payload || 'An error occurred';
+      state.error = action.payload || "An error occurred";
     };
 
     builder
       .addCase(registerUser.pending, handlePendingState)
       .addCase(registerUser.fulfilled, (state) => {
-        state.status = 'succeeded';
+        state.status = "succeeded";
         state.isLoading = false;
         state.error = null;
       })
@@ -173,26 +174,28 @@ const authSlice = createSlice({
 
       .addCase(loginUser.pending, handlePendingState)
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.status = 'succeeded';
+        state.status = "succeeded";
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        state.authMethod = 'local';
+        state.authMethod = "local";
         state.isLoading = false;
         state.error = null;
-        state.architectStatus = action.payload.user.role === 'architect' 
-          ? action.payload.user.status 
-          : null;
+        state.isFirstLogin = action.payload.isFirstLogin || false;
+        state.architectStatus =
+          action.payload.user.role === "architect"
+            ? action.payload.user.status
+            : null;
       })
       .addCase(loginUser.rejected, handleRejectedState)
 
       .addCase(googleLogin.pending, handlePendingState)
       .addCase(googleLogin.fulfilled, (state, action) => {
-        state.status = 'succeeded';
+        state.status = "succeeded";
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        state.authMethod = 'google';
+        state.authMethod = "google";
         state.isLoading = false;
         state.error = null;
       })
@@ -203,31 +206,33 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.authMethod = null;
-        state.status = 'idle';
+        state.status = "idle";
         state.error = null;
         state.architectStatus = null;
+        state.isFirstLogin = false;
       })
 
       .addCase(checkAuthStatus.fulfilled, (state, action) => {
         state.isAuthenticated = action.payload.isAuthenticated;
         state.user = action.payload.user || null;
         state.authMethod = action.payload.authMethod;
-        
-        if (action.payload.user?.role === 'architect') {
+
+        if (action.payload.user?.role === "architect") {
           state.architectStatus = action.payload.user.status;
         }
       })
 
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
         state.user = action.payload;
-        if (action.payload.role === 'architect') {
+        if (action.payload.role === "architect") {
           state.architectStatus = action.payload.status;
         }
       });
   },
 });
 
-export const { resetStatus, clearError } = authSlice.actions;
+export const { resetStatus, clearError, clearFirstLoginFlag } =
+  authSlice.actions;
 
 // Selectors
 export const selectCurrentUser = (state) => state.auth.user;
@@ -237,5 +242,8 @@ export const selectIsLoading = (state) => state.auth.isLoading;
 export const selectAuthError = (state) => state.auth.error;
 export const selectArchitectStatus = (state) => state.auth.architectStatus;
 export const selectAuthMethod = (state) => state.auth.authMethod;
+export const selectSubscriptionStatus = (state) =>
+  state.auth.user?.subscription?.status;
+export const selectIsFirstLogin = (state) => state.auth.isFirstLogin;
 
 export default authSlice.reducer;

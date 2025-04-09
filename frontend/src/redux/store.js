@@ -6,6 +6,7 @@ import architectReducer from "./slices/architectSlice";
 import marketplaceReducer from "./slices/marketplaceSlice";
 import projectReducer from "./slices/ProjectSlice";
 import eventReducer from "./slices/eventSlice";
+import clientsReducer from "./slices/clientsSlice";
 
 const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ const store = configureStore({
     marketplace: marketplaceReducer,
     projects: projectReducer,
     events: eventReducer,
+    clients: clientsReducer,
   },
 });
 

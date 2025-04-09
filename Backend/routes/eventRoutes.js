@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { protect } = require("../middlewares/authMiddleware"); // Assuming you have an auth middleware
+const { protect } = require("../middlewares/authMiddleware");
 const {
   getAllEvents,
   getFilteredEvents,
@@ -11,15 +11,10 @@ const {
 } = require("../controllers/eventController");
 
 router.get("/", protect, getAllEvents);
-
 router.get("/filter", protect, getFilteredEvents);
-
 router.get("/:id", protect, getEventById);
-
 router.post("/", protect, createEvent);
-
 router.put("/:id", protect, updateEvent);
-
 router.delete("/:id", protect, deleteEvent);
 
 module.exports = router;

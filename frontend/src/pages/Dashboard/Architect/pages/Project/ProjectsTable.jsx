@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   fetchProjects,
+  fetchProjectsByArchitect,
   deleteProject,
 } from "../../../../../redux/slices/ProjectSlice";
 import {
@@ -17,17 +18,23 @@ import {
   Button,
 } from "@mui/material";
 import { Edit, Delete, Add } from "@mui/icons-material";
-import AddProject from "./AddProject"; // Import new component
+import AddProject from "./AddProject";
 
 const ProjectsTable = ({ onEdit }) => {
   const dispatch = useDispatch();
-  const { projects, status, error } = useSelector((state) => state.projects);
 
-  const [open, setOpen] = useState(false); // Modal state
+  const { projects, status, error } = useSelector((state) => state.projects);
+  const { user } = useSelector((state) => state.auth); // Get logged-in user
+
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchProjects());
-  }, [dispatch]);
+    if (user?.role === "architect") {
+      dispatch(fetchProjectsByArchitect(user._id)); // 👈 Only fetch this architect's projects
+    } else {
+      dispatch(fetchProjects()); // For admins or other roles
+    }
+  }, [dispatch, user]);
 
   const handleDelete = (projectId) => {
     if (window.confirm("Are you sure you want to delete this project?")) {

@@ -3,7 +3,11 @@ import { motion } from "framer-motion";
 import "./Sidebar.css";
 import Logo from "../../img/logo.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faAngleLeft } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBars,
+  faAngleLeft,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   faTachometerAlt,
   faUser,
@@ -17,7 +21,9 @@ import {
 
 const menuItems = [
   { title: "Dashboard", icon: faTachometerAlt, view: "dashboard" },
-  { title: "Matching requests", icon: faBell, view: "client" },
+  { title: "Clients", icon: faUsers, view: "client" },
+
+  { title: "Matching requests", icon: faBell, view: "match" },
   { title: "Calendar", icon: faCalendar, view: "calendar" },
   { title: "Projects", icon: faProjectDiagram, view: "projects" },
   { title: "Profile", icon: faUser, view: "profile" },

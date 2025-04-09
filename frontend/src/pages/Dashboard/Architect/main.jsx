@@ -10,7 +10,7 @@ import Market from "./pages/Market/Market";
 import Invoices from "./pages/Invoice/Invoices";
 import Quotes from "./pages/Quote/Quotes";
 import Matching from "./pages/Matching/Matching";
-
+import Clients from "./pages/Clients/ClientManagement";
 const Main = () => {
   const [expanded, setExpanded] = useState(true);
   const [selectedItem, setSelectedItem] = useState("dashboard");
@@ -35,8 +35,10 @@ const Main = () => {
         return <Invoices />;
       case "quote":
         return <Quotes />;
-      case "client":
+      case "match":
         return <Matching />;
+      case "client":
+        return <Clients />;
       default:
         return (
           <div className="main-dash-container">

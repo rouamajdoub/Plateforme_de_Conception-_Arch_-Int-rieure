@@ -3,12 +3,16 @@ const User = require("./User");
 
 const architectSchema = new mongoose.Schema(
   {
+    //auth
     authMethod: {
       type: String,
       default: "local",
       enum: ["local"],
       required: true,
     },
+    firstLogin: { type: Boolean, default: false },
+
+    //business info
     companyName: { type: String },
     experienceYears: { type: Number },
     specialization: { type: [String] },
@@ -16,23 +20,20 @@ const architectSchema = new mongoose.Schema(
     certifications: { type: [String] },
     patenteNumber: { type: String, required: true },
     cin: { type: String, required: true },
-    paymentStatus: {
-      type: String,
-      enum: ["pending", "completed"],
-      default: "pending",
-    },
+
     education: {
       degree: { type: String },
       institution: String,
       graduationYear: Number,
     },
+
     softwareProficiency: [
       {
-        type: [String],
+        name: { type: String },
+        level: { type: String },
       },
     ],
-    profileViews: { type: Number, default: 0 },
-    profileViewsTimestamps: [{ type: Date }],
+
     location: {
       country: { type: String },
       region: { type: String },
@@ -50,19 +51,21 @@ const architectSchema = new mongoose.Schema(
         },
       },
     },
+
     website: { type: String },
     socialMedia: {
       linkedin: String,
       instagram: String,
     },
-    subscription: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Subscription",
-    },
+
+    //for the stats
     rating: {
       average: { type: Number, default: 0 },
       count: { type: Number, default: 0 },
     },
+    profileViews: { type: Number, default: 0 },
+    profileViewsTimestamps: [{ type: Date }],
+
     reviews: [
       {
         client: {
@@ -74,26 +77,52 @@ const architectSchema = new mongoose.Schema(
         date: { type: Date, default: Date.now },
       },
     ],
+
+    // clients
+    //i have 2 type of clients Platform-native clients aka "Visionaires" and "ArchitectClient"
+    clients: [{ type: mongoose.Schema.Types.ObjectId, ref: "ArchitectClient" }],
+    visionaClients: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }],
+
+    //subs
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+    },
+    subscriptionType: {
+      type: String,
+      enum: ["Free", "premium", "vip", "none"],
+      default: "none",
+    },
+
+    //stripe/payment
+    customerId: { type: String },
+    priceId: { type: String },
+    hasAccess: { type: Boolean, default: false },
+    emailVerified: { type: Boolean, default: false },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "completed"],
+      default: "pending",
+    },
+
+    //admin verification
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+
+    documents: [{ type: String }],
+    isActive: { type: Boolean, default: true },
+
     termsAccepted: {
       content: { type: Boolean, default: false },
       cgvCgu: { type: Boolean, default: false },
       privacy: { type: Boolean, default: false },
       lastUpdated: Date,
     },
-    //for stipe
-    customerId: { type: String },
-    priceId: { type: String },
-    hasAccess: { type: Boolean, default: false },
-    emailVerified: { type: Boolean, default: false },
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "pending",
-    },
-    documents: [{ type: String }],
-    isActive: { type: Boolean, default: true },
   },
-
   { timestamps: true }
 );
 

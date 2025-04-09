@@ -10,7 +10,9 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, loading, error } = useSelector((state) => state.auth);
+  const { user, isLoading, error, isFirstLogin } = useSelector(
+    (state) => state.auth
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -19,9 +21,15 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      navigate(user.role === "client" ? "/home" : "/architect");
+      // If architect and first login, redirect to subscription page
+      if (user.role === "architect" && isFirstLogin) {
+        navigate("/subs");
+      } else {
+        // Otherwise, redirect to appropriate dashboard
+        navigate(user.role === "client" ? "/home" : "/architect");
+      }
     }
-  }, [user, navigate]);
+  }, [user, isFirstLogin, navigate]);
 
   return (
     <div className="login-container">
@@ -57,13 +65,13 @@ const Login = () => {
               required
             />
           </div>
-          <button type="submit" className="btn next-btn" disabled={loading}>
-            {loading ? "Logging in..." : "Continue →"}
+          <button type="submit" className="btn next-btn" disabled={isLoading}>
+            {isLoading ? "Logging in..." : "Continue →"}
           </button>
         </form>
 
         <p className="register-link">
-          Already have an account? <a href="/signup">Sign in</a>
+          Don't have an account? <a href="/signup">Sign up</a>
         </p>
       </div>
     </div>
