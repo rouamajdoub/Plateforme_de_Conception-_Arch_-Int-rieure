@@ -1,9 +1,13 @@
 const express = require("express");
 const dashboardController = require("../controllers/TasksController");
+const { protect, restrictTo } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-// 🔹 Routes des Tâches (Kanban)
+// Apply authentication middleware to all routes
+router.use(protect);
+
+// Only authenticated users can access task routes
 router.post("/tasks", dashboardController.createTask);
 router.get("/tasks", dashboardController.getAllTasks);
 router.put("/tasks/:id", dashboardController.updateTask);

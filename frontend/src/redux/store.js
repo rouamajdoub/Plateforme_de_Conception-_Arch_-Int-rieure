@@ -7,7 +7,7 @@ import marketplaceReducer from "./slices/marketplaceSlice";
 import projectReducer from "./slices/ProjectSlice";
 import eventReducer from "./slices/eventSlice";
 import clientsReducer from "./slices/clientsSlice";
-
+import tasksReducer from "./slices/TaskSlice";
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -17,6 +17,7 @@ const store = configureStore({
     projects: projectReducer,
     events: eventReducer,
     clients: clientsReducer,
+    tasks: tasksReducer,
   },
 });
 

@@ -14,7 +14,7 @@ const taskSchema = new mongoose.Schema(
       enum: ["todo", "in-progress", "done"],
       default: "todo",
     },
-    dueDate: { type: Date }, // Date limite
+    dueDate: { type: Date },
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }

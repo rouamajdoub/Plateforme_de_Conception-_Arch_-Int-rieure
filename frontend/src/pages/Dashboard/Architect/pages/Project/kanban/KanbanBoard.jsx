@@ -1,24 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { DragDropContext } from "react-beautiful-dnd";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchTasks,
+  updateTaskStatus,
+  selectTasksByStatus,
+  selectTasksLoading,
+} from "../../../../../../redux/slices/TaskSlice"; // Adjust the import path as needed
 import Column from "./Column";
+import TaskForm from "./TaskForm";
+import { Button, Box, Typography } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add"; // If using Material UI icons
 
 export default function KanbanBoard() {
-  const [toDo, setToDo] = useState([]);
-  const [inProgress, setInProgress] = useState([]);
-  const [done, setDone] = useState([]);
+  const dispatch = useDispatch();
+  const [openTaskForm, setOpenTaskForm] = useState(false);
 
+  // Get tasks by status from Redux
+  const todoTasks = useSelector((state) => selectTasksByStatus(state, "todo"));
+  const inProgressTasks = useSelector((state) =>
+    selectTasksByStatus(state, "in-progress")
+  );
+  const doneTasks = useSelector((state) => selectTasksByStatus(state, "done"));
+  const loading = useSelector((state) => state.tasks.loading);
+
+  // Fetch tasks when component mounts
   useEffect(() => {
-    fetch("https://jsonplaceholder.typicode.com/todos")
-      .then((response) => response.json())
-      .then((json) => {
-        const tasks = json.slice(0, 10); // Limit to 10 tasks for testing
-        setToDo(tasks.filter((task) => !task.completed));
-        setDone(tasks.filter((task) => task.completed));
-      });
-  }, []);
+    dispatch(fetchTasks());
+  }, [dispatch]);
 
   const handleDragEnd = (result) => {
-    const { source, destination } = result;
+    const { source, destination, draggableId } = result;
 
     // Exit if no destination or dropped in the same place
     if (
@@ -29,67 +41,93 @@ export default function KanbanBoard() {
       return;
     }
 
-    // Helper function to reorder an array
-    const reorder = (list, startIndex, endIndex) => {
-      const newList = Array.from(list);
-      const [movedItem] = newList.splice(startIndex, 1);
-      newList.splice(endIndex, 0, movedItem);
-      return newList;
-    };
-
-    // Function to get the correct state and setter
-    const getColumnState = (droppableId) => {
+    // Map droppableId to status
+    const getStatus = (droppableId) => {
       switch (droppableId) {
         case "1":
-          return { list: toDo, setList: setToDo };
+          return "todo";
         case "2":
-          return { list: inProgress, setList: setInProgress };
+          return "in-progress";
         case "3":
-          return { list: done, setList: setDone };
+          return "done";
         default:
           return null;
       }
     };
 
-    const sourceColumn = getColumnState(source.droppableId);
-    const destinationColumn = getColumnState(destination.droppableId);
+    // Get the status of the destination column
+    const newStatus = getStatus(destination.droppableId);
 
-    if (!sourceColumn || !destinationColumn) return;
-
-    if (source.droppableId === destination.droppableId) {
-      // REORDER TASKS WITHIN THE SAME COLUMN
-      sourceColumn.setList(
-        reorder(sourceColumn.list, source.index, destination.index)
+    if (newStatus) {
+      // Update task status in Redux and backend
+      dispatch(
+        updateTaskStatus({
+          id: draggableId,
+          status: newStatus,
+        })
       );
-    } else {
-      // MOVE TASK TO ANOTHER COLUMN
-      const movedTask = sourceColumn.list[source.index];
-
-      sourceColumn.setList(
-        sourceColumn.list.filter((_, idx) => idx !== source.index)
-      );
-      destinationColumn.setList([
-        ...destinationColumn.list.slice(0, destination.index),
-        movedTask,
-        ...destinationColumn.list.slice(destination.index),
-      ]);
     }
   };
 
+  const handleOpenTaskForm = () => {
+    setOpenTaskForm(true);
+  };
+
+  const handleCloseTaskForm = () => {
+    setOpenTaskForm(false);
+  };
+
+  // Render loading state
+  if (
+    loading &&
+    todoTasks.length === 0 &&
+    inProgressTasks.length === 0 &&
+    doneTasks.length === 0
+  ) {
+    return (
+      <Box sx={{ textAlign: "center", padding: "20px" }}>
+        <Typography>Loading tasks...</Typography>
+      </Box>
+    );
+  }
+
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <h2 style={{ textAlign: "center", color: "#242d49" }}>Progress Board</h2>
-      <div
-        style={{
+    <Box sx={{ padding: "20px" }}>
+      <Box
+        sx={{
           display: "flex",
           justifyContent: "space-between",
-          gap: "20px",
+          alignItems: "center",
+          marginBottom: "20px",
         }}
       >
-        <Column title="To Do" tasks={toDo} id={"1"} />
-        <Column title="In Progress" tasks={inProgress} id={"2"} />
-        <Column title="Done" tasks={done} id={"3"} />
-      </div>
-    </DragDropContext>
+        <Typography variant="h4" sx={{ color: "#242d49" }}>
+          Task Management
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleOpenTaskForm}
+        >
+          New Task
+        </Button>
+      </Box>
+
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "20px",
+          }}
+        >
+          <Column title="To Do" tasks={todoTasks} id={"1"} />
+          <Column title="In Progress" tasks={inProgressTasks} id={"2"} />
+          <Column title="Done" tasks={doneTasks} id={"3"} />
+        </Box>
+      </DragDropContext>
+
+      <TaskForm open={openTaskForm} handleClose={handleCloseTaskForm} />
+    </Box>
   );
 }
