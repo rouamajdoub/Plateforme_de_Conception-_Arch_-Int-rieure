@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import "./ProjectStyles.css";
+import { motion } from "framer-motion";
+
 import {
   updateProject,
   fetchProjectById,
   resetProjectState,
+  addMilestone,
+  updateMilestone,
+  deleteMilestone,
+  updateProjectProgress,
+  addPayment,
+  updatePaymentStatus,
+  resetMilestoneState,
+  resetPaymentState,
 } from "../../../../../redux/slices/ProjectSlice";
 import {
   Box,
@@ -21,17 +32,30 @@ import {
   Alert,
   Divider,
   Paper,
-  Card,
+  InputAdornment,
   CardMedia,
   IconButton,
-  Tooltip,
+  Slider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  Chip,
+  LinearProgress,
 } from "@mui/material";
 import {
   Save as SaveIcon,
   Cancel as CancelIcon,
-  CloudUpload as CloudUploadIcon,
   Delete as DeleteIcon,
   AddPhotoAlternate as AddPhotoIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  ExpandMore as ExpandMoreIcon,
+  Payment as PaymentIcon,
 } from "@mui/icons-material";
 
 const EditProject = ({ projectId, isDialog = false, onClose }) => {
@@ -40,6 +64,8 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
     currentProject: project,
     isLoading,
     error,
+    milestone: milestoneState,
+    payment: paymentState,
   } = useSelector((state) => state.projects);
   const { clients } = useSelector((state) => state.clients);
 
@@ -72,7 +98,67 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
   const [deletedBeforePhotoIds, setDeletedBeforePhotoIds] = useState([]);
   const [deletedAfterPhotoIds, setDeletedAfterPhotoIds] = useState([]);
 
+  // Progress state
+  const [progressPercentage, setProgressPercentage] = useState(0);
+
+  // Milestone states
+  const [milestones, setMilestones] = useState([]);
+  const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false);
+  const [currentMilestone, setCurrentMilestone] = useState({
+    title: "",
+    description: "",
+    dueDate: "",
+    status: "pending",
+    completionPercentage: 0,
+  });
+  const [isEditingMilestone, setIsEditingMilestone] = useState(false);
+  const [currentMilestoneId, setCurrentMilestoneId] = useState(null);
+
+  // Payment states
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState("unpaid");
+  const [currentPayment, setCurrentPayment] = useState({
+    amount: "",
+    date: "",
+    method: "bank_transfer",
+    notes: "",
+    status: "pending",
+  });
+  const [isEditingPayment, setIsEditingPayment] = useState(false);
+  const [currentPaymentId, setCurrentPaymentId] = useState(null);
+
   const [formErrors, setFormErrors] = useState({});
+
+  // Status colors
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "completed":
+        return "success";
+      case "in_progress":
+        return "primary";
+      case "pending":
+        return "warning";
+      case "canceled":
+        return "error";
+      default:
+        return "default";
+    }
+  };
+
+  const getPaymentStatusColor = (status) => {
+    switch (status) {
+      case "paid":
+        return "success";
+      case "partial":
+        return "warning";
+      case "unpaid":
+        return "error";
+      case "overdue":
+        return "error";
+      default:
+        return "default";
+    }
+  };
 
   // Load project data when component mounts or projectId changes
   useEffect(() => {
@@ -83,6 +169,8 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
     return () => {
       if (!isDialog) {
         dispatch(resetProjectState());
+        dispatch(resetMilestoneState());
+        dispatch(resetPaymentState());
       }
 
       // Clean up image URLs
@@ -147,6 +235,19 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
       setFormData(formattedData);
       setOriginalData(formattedData);
 
+      // Set initial progress
+      setProgressPercentage(project.progressPercentage || 0);
+
+      // Set milestones
+      if (project.milestones && project.milestones.length > 0) {
+        setMilestones(project.milestones);
+      }
+
+      // Set payment status
+      if (project.paymentStatus) {
+        setPaymentStatus(project.paymentStatus);
+      }
+
       // Set initial image data
       if (project.coverImage) {
         setCoverImage(project.coverImage);
@@ -189,6 +290,194 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
         [name]: null,
       });
     }
+  };
+
+  // Handle milestone input changes
+  const handleMilestoneChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentMilestone({
+      ...currentMilestone,
+      [name]: value,
+    });
+  };
+
+  // Handle payment input changes
+  const handlePaymentChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentPayment({
+      ...currentPayment,
+      [name]: value,
+    });
+  };
+
+  // Handle progress slider change
+  const handleProgressChange = (event, newValue) => {
+    setProgressPercentage(newValue);
+  };
+
+  // Update project progress
+  const handleUpdateProgress = () => {
+    dispatch(
+      updateProjectProgress({
+        projectId: project._id,
+        progressData: { progressPercentage },
+      })
+    );
+  };
+
+  // Open milestone dialog
+  const handleOpenMilestoneDialog = (milestone = null) => {
+    if (milestone) {
+      setCurrentMilestone({
+        title: milestone.title || "",
+        description: milestone.description || "",
+        dueDate: formatDateForInput(milestone.dueDate) || "",
+        status: milestone.status || "pending",
+        completionPercentage: milestone.completionPercentage || 0,
+      });
+      setIsEditingMilestone(true);
+      setCurrentMilestoneId(milestone._id);
+    } else {
+      setCurrentMilestone({
+        title: "",
+        description: "",
+        dueDate: "",
+        status: "pending",
+        completionPercentage: 0,
+      });
+      setIsEditingMilestone(false);
+      setCurrentMilestoneId(null);
+    }
+    setMilestoneDialogOpen(true);
+  };
+
+  // Close milestone dialog
+  const handleCloseMilestoneDialog = () => {
+    setMilestoneDialogOpen(false);
+    setCurrentMilestone({
+      title: "",
+      description: "",
+      dueDate: "",
+      status: "pending",
+      completionPercentage: 0,
+    });
+    setIsEditingMilestone(false);
+    setCurrentMilestoneId(null);
+  };
+
+  // Save milestone
+  const handleSaveMilestone = () => {
+    if (!currentMilestone.title) {
+      // Show error
+      return;
+    }
+
+    if (isEditingMilestone && currentMilestoneId) {
+      dispatch(
+        updateMilestone({
+          projectId: project._id,
+          milestoneId: currentMilestoneId,
+          milestoneData: currentMilestone,
+        })
+      );
+    } else {
+      dispatch(
+        addMilestone({
+          projectId: project._id,
+          milestoneData: currentMilestone,
+        })
+      );
+    }
+    handleCloseMilestoneDialog();
+  };
+
+  // Delete milestone
+  const handleDeleteMilestone = (milestoneId) => {
+    if (window.confirm("Are you sure you want to delete this milestone?")) {
+      dispatch(
+        deleteMilestone({
+          projectId: project._id,
+          milestoneId,
+        })
+      );
+    }
+  };
+
+  // Open payment dialog
+  const handleOpenPaymentDialog = (payment = null) => {
+    if (payment) {
+      setCurrentPayment({
+        amount: payment.amount?.toString() || "",
+        date: formatDateForInput(payment.date) || "",
+        method: payment.method || "bank_transfer",
+        notes: payment.notes || "",
+        status: payment.status || "pending",
+      });
+      setIsEditingPayment(true);
+      setCurrentPaymentId(payment._id);
+    } else {
+      setCurrentPayment({
+        amount: "",
+        date: formatDateForInput(new Date()),
+        method: "bank_transfer",
+        notes: "",
+        status: "pending",
+      });
+      setIsEditingPayment(false);
+      setCurrentPaymentId(null);
+    }
+    setPaymentDialogOpen(true);
+  };
+
+  // Close payment dialog
+  const handleClosePaymentDialog = () => {
+    setPaymentDialogOpen(false);
+    setCurrentPayment({
+      amount: "",
+      date: "",
+      method: "bank_transfer",
+      notes: "",
+      status: "pending",
+    });
+    setIsEditingPayment(false);
+    setCurrentPaymentId(null);
+  };
+
+  // Save payment
+  const handleSavePayment = () => {
+    if (!currentPayment.amount || isNaN(Number(currentPayment.amount))) {
+      // Show error
+      return;
+    }
+
+    const paymentData = {
+      ...currentPayment,
+      amount: Number(currentPayment.amount),
+    };
+
+    if (isEditingPayment && currentPaymentId) {
+      // Handle updating payment if needed
+      handleClosePaymentDialog();
+    } else {
+      dispatch(
+        addPayment({
+          projectId: project._id,
+          paymentData,
+        })
+      );
+      handleClosePaymentDialog();
+    }
+  };
+
+  // Update payment status
+  const handleUpdatePaymentStatus = (newStatus) => {
+    dispatch(
+      updatePaymentStatus({
+        projectId: project._id,
+        statusData: { status: newStatus },
+      })
+    );
+    setPaymentStatus(newStatus);
   };
 
   // Handle cover image change
@@ -378,6 +667,11 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
       }
     });
 
+    // Append progress percentage if changed
+    if (progressPercentage !== (project?.progressPercentage || 0)) {
+      formDataObj.append("progressPercentage", progressPercentage);
+    }
+
     // Append cover image if changed
     if (coverImageChanged) {
       if (coverImageFile) {
@@ -422,8 +716,17 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
       onClose();
     } else {
       // Reset form to original data
-      if (originalData) {
-        setFormData(originalData);
+      if (project) {
+        setFormData(originalData || {});
+        setProgressPercentage(project.progressPercentage || 0);
+
+        if (project.milestones) {
+          setMilestones(project.milestones);
+        }
+
+        if (project.paymentStatus) {
+          setPaymentStatus(project.paymentStatus);
+        }
       }
 
       // Reset image states
@@ -491,10 +794,43 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
   }
 
   return (
-    <Paper elevation={isDialog ? 0 : 3} sx={{ p: 3 }}>
+    <Paper
+      elevation={isDialog ? 0 : 3}
+      sx={{
+        p: 3,
+        backgroundColor: "#c9d3f1",
+        color: "#242d49",
+        borderRadius: "12px",
+      }}
+      className="edit-project-container"
+      component={motion.div}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error.message || "An error occurred while updating the project"}
+        </Alert>
+      )}
+
+      {milestoneState.error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {milestoneState.error.message || "An error occurred with milestones"}
+        </Alert>
+      )}
+
+      {paymentState.error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {paymentState.error.message || "An error occurred with payments"}
+        </Alert>
+      )}
+
+      {(milestoneState.success || paymentState.success) && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {milestoneState.message ||
+            paymentState.message ||
+            "Operation successful!"}
         </Alert>
       )}
 
@@ -502,10 +838,16 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
         <Grid container spacing={3}>
           {/* Basic Info Section */}
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Project Information
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Project Information
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+            </motion.div>
           </Grid>
 
           <Grid item xs={12} sm={6}>
@@ -611,29 +953,276 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
             />
           </Grid>
 
-          {/* Financial and Timeline Section */}
+          {/* Progress Section */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-              Financial & Timeline
+              Project Progress
             </Typography>
             <Divider sx={{ mb: 2 }} />
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <Typography variant="body1" sx={{ mr: 2, minWidth: "100px" }}>
+                Progress: {progressPercentage}%
+              </Typography>
+              <Slider
+                value={progressPercentage}
+                onChange={handleProgressChange}
+                aria-labelledby="project-progress-slider"
+                valueLabelDisplay="auto"
+                step={5}
+                marks
+                min={0}
+                max={100}
+                sx={{ flexGrow: 1, mr: 2 }}
+              />
+              <Button
+                variant="outlined"
+                onClick={handleUpdateProgress}
+                disabled={
+                  progressPercentage === (project?.progressPercentage || 0)
+                }
+              >
+                Update
+              </Button>
+            </Box>
+          </Grid>
+
+          {/* Milestones Section */}
+          <Grid item xs={12}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                Milestones
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpenMilestoneDialog()}
+                sx={{ mt: 2 }}
+              >
+                Add Milestone
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+          </Grid>
+
+          <Grid item xs={12}>
+            {milestoneState.isLoading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : project?.milestones && project.milestones.length > 0 ? (
+              <List>
+                {project.milestones.map((milestone) => (
+                  <Paper
+                    key={milestone._id}
+                    sx={{ mb: 2, p: 2 }}
+                    component={motion.div}
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          {milestone.title}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {milestone.description}
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", mt: 1 }}
+                        >
+                          <Chip
+                            label={milestone.status}
+                            color={getStatusColor(milestone.status)}
+                            size="small"
+                            sx={{ mr: 2 }}
+                          />
+                          <Typography variant="body2">
+                            Due:{" "}
+                            {new Date(milestone.dueDate).toLocaleDateString()}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box>
+                        <IconButton
+                          onClick={() => handleOpenMilestoneDialog(milestone)}
+                          size="small"
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleDeleteMilestone(milestone._id)}
+                          size="small"
+                          color="error"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ mr: 2, minWidth: "40px" }}
+                      >
+                        {milestone.completionPercentage}%
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={milestone.completionPercentage}
+                        sx={{ flexGrow: 1, height: 8, borderRadius: 1 }}
+                      />
+                    </Box>
+                  </Paper>
+                ))}
+              </List>
+            ) : (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontStyle: "italic" }}
+              >
+                No milestones defined for this project yet. Add a milestone to
+                track project progress.
+              </Typography>
+            )}
+          </Grid>
+
+          {/* Payment Section */}
+          <Grid item xs={12}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                Payment Information
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<PaymentIcon />}
+                onClick={() => handleOpenPaymentDialog()}
+                sx={{ mt: 2 }}
+              >
+                Add Payment
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel id="payment-status-label">Payment Status</InputLabel>
+              <Select
+                labelId="payment-status-label"
+                value={paymentStatus}
+                label="Payment Status"
+                onChange={(e) => handleUpdatePaymentStatus(e.target.value)}
+              >
+                <MenuItem value="unpaid">Unpaid</MenuItem>
+                <MenuItem value="partial">Partially Paid</MenuItem>
+                <MenuItem value="paid">Paid</MenuItem>
+                <MenuItem value="overdue">Overdue</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Budget ($)"
+              label="Budget"
               name="budget"
+              type="number"
               value={formData.budget}
               onChange={handleChange}
-              type="number"
-              InputProps={{ inputProps: { min: 0 } }}
               error={!!formErrors.budget}
               helperText={formErrors.budget}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">$</InputAdornment>
+                ),
+              }}
             />
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12}>
+            {paymentState.isLoading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+                <CircularProgress size={24} style={{ color: "#ff919d" }} />
+              </Box>
+            ) : project?.payments && project.payments.length > 0 ? (
+              <List>
+                {project.payments.map((payment) => (
+                  <Paper key={payment._id} sx={{ mb: 2, p: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          ${payment.amount.toFixed(2)}
+                        </Typography>
+                        <Typography variant="body2">
+                          Date: {new Date(payment.date).toLocaleDateString()}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Method: {payment.method.replace("_", " ")}
+                        </Typography>
+                        {payment.notes && (
+                          <Typography variant="body2" color="text.secondary">
+                            Notes: {payment.notes}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Box>
+                        <Chip
+                          label={payment.status}
+                          color={getPaymentStatusColor(payment.status)}
+                          size="small"
+                        />
+                      </Box>
+                    </Box>
+                  </Paper>
+                ))}
+              </List>
+            ) : (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontStyle: "italic" }}
+              >
+                No payments recorded for this project yet.
+              </Typography>
+            )}
+          </Grid>
+
+          {/* Schedule Section */}
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+              Schedule
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Start Date"
@@ -647,7 +1236,7 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="End Date"
@@ -663,232 +1252,10 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
             />
           </Grid>
 
-          {/* Cover Image Section */}
+          {/* Additional Info Section */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-              Cover Image
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <Button
-                variant="contained"
-                component="label"
-                startIcon={<CloudUploadIcon />}
-                sx={{ mr: 2 }}
-              >
-                Upload Cover Image
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleCoverImageChange}
-                />
-              </Button>
-              {coverImage && (
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={handleRemoveCoverImage}
-                  startIcon={<DeleteIcon />}
-                >
-                  Remove
-                </Button>
-              )}
-            </Box>
-
-            {coverImage && (
-              <Box sx={{ mb: 3, maxWidth: "300px" }}>
-                <Card>
-                  <CardMedia
-                    component="img"
-                    height="180"
-                    image={coverImage}
-                    alt="Cover image"
-                  />
-                </Card>
-              </Box>
-            )}
-          </Grid>
-
-          {/* Before Photos Section */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-              Before Photos
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Box sx={{ mb: 2 }}>
-              <Button
-                variant="contained"
-                component="label"
-                startIcon={<AddPhotoIcon />}
-              >
-                Add Before Photos
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  multiple
-                  onChange={handleBeforePhotosChange}
-                />
-              </Button>
-            </Box>
-
-            <Grid container spacing={2}>
-              {/* Existing before photos */}
-              {beforePhotos.map((photo, index) => (
-                <Grid
-                  item
-                  xs={6}
-                  sm={4}
-                  md={3}
-                  key={`existing-before-${index}`}
-                >
-                  <Card>
-                    <CardMedia
-                      component="img"
-                      height="120"
-                      image={photo.url}
-                      alt={`Before photo ${index + 1}`}
-                    />
-                    <Box
-                      sx={{ p: 1, display: "flex", justifyContent: "center" }}
-                    >
-                      <Tooltip title="Remove Photo">
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() => handleRemoveBeforePhoto(index, false)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </Card>
-                </Grid>
-              ))}
-
-              {/* New before photos */}
-              {newBeforePhotos.map((photo, index) => (
-                <Grid item xs={6} sm={4} md={3} key={`new-before-${index}`}>
-                  <Card>
-                    <CardMedia
-                      component="img"
-                      height="120"
-                      image={photo.preview}
-                      alt={`New before photo ${index + 1}`}
-                    />
-                    <Box
-                      sx={{ p: 1, display: "flex", justifyContent: "center" }}
-                    >
-                      <Tooltip title="Remove Photo">
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() => handleRemoveBeforePhoto(index, true)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
-
-          {/* After Photos Section */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-              After Photos
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Box sx={{ mb: 2 }}>
-              <Button
-                variant="contained"
-                component="label"
-                startIcon={<AddPhotoIcon />}
-              >
-                Add After Photos
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  multiple
-                  onChange={handleAfterPhotosChange}
-                />
-              </Button>
-            </Box>
-
-            <Grid container spacing={2}>
-              {/* Existing after photos */}
-              {afterPhotos.map((photo, index) => (
-                <Grid item xs={6} sm={4} md={3} key={`existing-after-${index}`}>
-                  <Card>
-                    <CardMedia
-                      component="img"
-                      height="120"
-                      image={photo.url}
-                      alt={`After photo ${index + 1}`}
-                    />
-                    <Box
-                      sx={{ p: 1, display: "flex", justifyContent: "center" }}
-                    >
-                      <Tooltip title="Remove Photo">
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() => handleRemoveAfterPhoto(index, false)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </Card>
-                </Grid>
-              ))}
-
-              {/* New after photos */}
-              {newAfterPhotos.map((photo, index) => (
-                <Grid item xs={6} sm={4} md={3} key={`new-after-${index}`}>
-                  <Card>
-                    <CardMedia
-                      component="img"
-                      height="120"
-                      image={photo.preview}
-                      alt={`New after photo ${index + 1}`}
-                    />
-                    <Box
-                      sx={{ p: 1, display: "flex", justifyContent: "center" }}
-                    >
-                      <Tooltip title="Remove Photo">
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() => handleRemoveAfterPhoto(index, true)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
-
-          {/* Additional Details Section */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-              Additional Details
+              Additional Information
             </Typography>
             <Divider sx={{ mb: 2 }} />
           </Grid>
@@ -910,7 +1277,7 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
               name="tags"
               value={formData.tags}
               onChange={handleChange}
-              placeholder="residential, modern, eco-friendly"
+              placeholder="residential, modern, renovation"
             />
           </Grid>
 
@@ -921,49 +1288,464 @@ const EditProject = ({ projectId, isDialog = false, onClose }) => {
                   checked={formData.isPublic}
                   onChange={handleChange}
                   name="isPublic"
-                  color="primary"
                 />
               }
-              label="Display in public portfolio"
+              label="Make project public in portfolio"
             />
           </Grid>
 
-          {/* Action Buttons */}
+          {/* Image Section */}
           <Grid item xs={12}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 2,
-                mt: 2,
-              }}
-            >
+            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+              Project Images
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+          </Grid>
+
+          {/* Cover Image */}
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle1" gutterBottom>
+              Cover Image
+            </Typography>
+            {coverImage ? (
+              <Box sx={{ position: "relative", mb: 2 }}>
+                <CardMedia
+                  component="img"
+                  image={coverImage}
+                  alt="Project Cover"
+                  sx={{ height: 200, borderRadius: 1 }}
+                />
+                <IconButton
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    backgroundColor: "rgba(0,0,0,0.6)",
+                    "&:hover": { backgroundColor: "rgba(0,0,0,0.8)" },
+                  }}
+                  onClick={handleRemoveCoverImage}
+                >
+                  <DeleteIcon sx={{ color: "white" }} />
+                </IconButton>
+              </Box>
+            ) : (
               <Button
                 variant="outlined"
-                startIcon={<CancelIcon />}
-                onClick={handleCancel}
+                component="label"
+                startIcon={<AddPhotoIcon />}
+                sx={{ mb: 2 }}
               >
-                Cancel
+                Add Cover Image
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleCoverImageChange}
+                />
               </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                startIcon={<SaveIcon />}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <CircularProgress size={24} sx={{ mr: 1 }} />
-                    Saving...
-                  </Box>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
-            </Box>
+            )}
+          </Grid>
+
+          {/* Before and After Photos */}
+          <Grid item xs={12}>
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>Project Photos</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Grid container spacing={2}>
+                  {/* Before Photos */}
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      Before Photos
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<AddPhotoIcon />}
+                        sx={{ mb: 2 }}
+                      >
+                        Add Before Photos
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          multiple
+                          onChange={handleBeforePhotosChange}
+                        />
+                      </Button>
+                    </Box>
+                    <Grid container spacing={1}>
+                      {beforePhotos.map((photo, index) => (
+                        <Grid item xs={6} key={`existing-before-${index}`}>
+                          <Box sx={{ position: "relative" }}>
+                            <img
+                              src={photo.url}
+                              alt={`Before ${index + 1}`}
+                              style={{
+                                width: "100%",
+                                height: 100,
+                                objectFit: "cover",
+                                borderRadius: 4,
+                              }}
+                            />
+                            <IconButton
+                              sx={{
+                                position: "absolute",
+                                top: 4,
+                                right: 4,
+                                backgroundColor: "rgba(0,0,0,0.6)",
+                                "&:hover": {
+                                  backgroundColor: "rgba(0,0,0,0.8)",
+                                },
+                                padding: "4px",
+                              }}
+                              onClick={() => handleRemoveBeforePhoto(index)}
+                            >
+                              <DeleteIcon
+                                sx={{ color: "white", fontSize: 16 }}
+                              />
+                            </IconButton>
+                          </Box>
+                        </Grid>
+                      ))}
+                      {newBeforePhotos.map((photo, index) => (
+                        <Grid item xs={6} key={`new-before-${index}`}>
+                          <Box sx={{ position: "relative" }}>
+                            <img
+                              src={photo.preview}
+                              alt={`New Before ${index + 1}`}
+                              style={{
+                                width: "100%",
+                                height: 100,
+                                objectFit: "cover",
+                                borderRadius: 4,
+                              }}
+                            />
+                            <IconButton
+                              sx={{
+                                position: "absolute",
+                                top: 4,
+                                right: 4,
+                                backgroundColor: "rgba(0,0,0,0.6)",
+                                "&:hover": {
+                                  backgroundColor: "rgba(0,0,0,0.8)",
+                                },
+                                padding: "4px",
+                              }}
+                              onClick={() =>
+                                handleRemoveBeforePhoto(index, true)
+                              }
+                            >
+                              <DeleteIcon
+                                sx={{ color: "white", fontSize: 16 }}
+                              />
+                            </IconButton>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Grid>
+
+                  {/* After Photos */}
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      After Photos
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<AddPhotoIcon />}
+                        sx={{ mb: 2 }}
+                      >
+                        Add After Photos
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          multiple
+                          onChange={handleAfterPhotosChange}
+                        />
+                      </Button>
+                    </Box>
+                    <Grid container spacing={1}>
+                      {afterPhotos.map((photo, index) => (
+                        <Grid item xs={6} key={`existing-after-${index}`}>
+                          <Box sx={{ position: "relative" }}>
+                            <img
+                              src={photo.url}
+                              alt={`After ${index + 1}`}
+                              style={{
+                                width: "100%",
+                                height: 100,
+                                objectFit: "cover",
+                                borderRadius: 4,
+                              }}
+                            />
+                            <IconButton
+                              sx={{
+                                position: "absolute",
+                                top: 4,
+                                right: 4,
+                                backgroundColor: "rgba(0,0,0,0.6)",
+                                "&:hover": {
+                                  backgroundColor: "rgba(0,0,0,0.8)",
+                                },
+                                padding: "4px",
+                              }}
+                              onClick={() => handleRemoveAfterPhoto(index)}
+                            >
+                              <DeleteIcon
+                                sx={{ color: "white", fontSize: 16 }}
+                              />
+                            </IconButton>
+                          </Box>
+                        </Grid>
+                      ))}
+                      {newAfterPhotos.map((photo, index) => (
+                        <Grid item xs={6} key={`new-after-${index}`}>
+                          <Box sx={{ position: "relative" }}>
+                            <img
+                              src={photo.preview}
+                              alt={`New After ${index + 1}`}
+                              style={{
+                                width: "100%",
+                                height: 100,
+                                objectFit: "cover",
+                                borderRadius: 4,
+                              }}
+                            />
+                            <IconButton
+                              sx={{
+                                position: "absolute",
+                                top: 4,
+                                right: 4,
+                                backgroundColor: "rgba(0,0,0,0.6)",
+                                "&:hover": {
+                                  backgroundColor: "rgba(0,0,0,0.8)",
+                                },
+                                padding: "4px",
+                              }}
+                              onClick={() =>
+                                handleRemoveAfterPhoto(index, true)
+                              }
+                            >
+                              <DeleteIcon
+                                sx={{ color: "white", fontSize: 16 }}
+                              />
+                            </IconButton>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </AccordionDetails>
+            </Accordion>
+          </Grid>
+
+          {/* Action buttons */}
+          <Grid
+            item
+            xs={12}
+            sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}
+          >
+            <Button
+              variant="outlined"
+              onClick={handleCancel}
+              startIcon={<CancelIcon />}
+              sx={{ mr: 2 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={<SaveIcon />}
+              disabled={isLoading}
+            >
+              {isLoading ? <CircularProgress size={24} /> : "Save Project"}
+            </Button>
           </Grid>
         </Grid>
       </form>
+
+      {/* Milestone Dialog */}
+      <Dialog
+        open={milestoneDialogOpen}
+        onClose={handleCloseMilestoneDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {isEditingMilestone ? "Edit Milestone" : "Add Milestone"}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Title"
+                name="title"
+                value={currentMilestone.title}
+                onChange={handleMilestoneChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                name="description"
+                value={currentMilestone.description}
+                onChange={handleMilestoneChange}
+                multiline
+                rows={3}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Due Date"
+                name="dueDate"
+                type="date"
+                value={currentMilestone.dueDate}
+                onChange={handleMilestoneChange}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel id="milestone-status-label">Status</InputLabel>
+                <Select
+                  labelId="milestone-status-label"
+                  name="status"
+                  value={currentMilestone.status}
+                  label="Status"
+                  onChange={handleMilestoneChange}
+                >
+                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="in_progress">In Progress</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="blocked">Blocked</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body2" gutterBottom>
+                Completion Percentage: {currentMilestone.completionPercentage}%
+              </Typography>
+              <Slider
+                value={currentMilestone.completionPercentage}
+                onChange={(e, newValue) =>
+                  setCurrentMilestone({
+                    ...currentMilestone,
+                    completionPercentage: newValue,
+                  })
+                }
+                valueLabelDisplay="auto"
+                step={5}
+                marks
+                min={0}
+                max={100}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseMilestoneDialog}>Cancel</Button>
+          <Button onClick={handleSaveMilestone} variant="contained">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Payment Dialog */}
+      <Dialog
+        open={paymentDialogOpen}
+        onClose={handleClosePaymentDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {isEditingPayment ? "Edit Payment" : "Add Payment"}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Amount"
+                name="amount"
+                type="number"
+                value={currentPayment.amount}
+                onChange={handlePaymentChange}
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">$</InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Date"
+                name="date"
+                type="date"
+                value={currentPayment.date}
+                onChange={handlePaymentChange}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel id="payment-method-label">
+                  Payment Method
+                </InputLabel>
+                <Select
+                  labelId="payment-method-label"
+                  name="method"
+                  value={currentPayment.method}
+                  label="Payment Method"
+                  onChange={handlePaymentChange}
+                >
+                  <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
+                  <MenuItem value="cash">Cash</MenuItem>
+                  <MenuItem value="check">Check</MenuItem>
+                  <MenuItem value="credit_card">Credit Card</MenuItem>
+                  <MenuItem value="paypal">PayPal</MenuItem>
+                  <MenuItem value="other">Other</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Notes"
+                name="notes"
+                value={currentPayment.notes}
+                onChange={handlePaymentChange}
+                multiline
+                rows={2}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePaymentDialog}>Cancel</Button>
+          <Button onClick={handleSavePayment} variant="contained">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 };

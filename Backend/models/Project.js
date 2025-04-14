@@ -26,12 +26,15 @@ const projectSchema = new mongoose.Schema(
     startDate: { type: Date },
     endDate: { type: Date },
     actualEndDate: { type: Date }, // Actual completion date that may differ from planned
+    //clinet dash
     isPublic: { type: Boolean, default: false },
     showroomStatus: {
       type: String,
       enum: ["featured", "trending", "normal"],
       default: "normal",
     },
+
+    //media
     coverImage: { type: String, required: true },
     beforePhotos: [{ type: String }],
     afterPhotos: [{ type: String }],

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
   Box,
   Paper,
@@ -18,9 +19,17 @@ import {
   DialogContent,
   DialogActions,
   Badge,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  LinearProgress,
   ImageList,
   ImageListItem,
-  Modal,
+  Tab,
+  Tabs,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -33,9 +42,11 @@ import {
   Public as PublicIcon,
   ThumbUp as ThumbUpIcon,
   LocationOn as LocationOnIcon,
-  Close as CloseIcon,
-  NavigateBefore as NavigateBeforeIcon,
-  NavigateNext as NavigateNextIcon,
+  CheckCircle as CheckCircleIcon,
+  Pending as PendingIcon,
+  ImageAspectRatio as ImageIcon,
+  Payment as PaymentIcon,
+  Flag as FlagIcon,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -46,9 +57,42 @@ import {
   likeProject,
 } from "../../../../../redux/slices/ProjectSlice";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+// Function to get custom theme colors
+const getThemeColors = () => {
+  return {
+    background: "#cdd6f2",
+    text: "#242d49",
+    accent: "#e57f8a",
+    lightAccent: "#f6e7e9",
+    success: "#4caf50",
+    warning: "#ff9800",
+    info: "#2196f3",
+    error: "#f44336",
+  };
+};
+
+const TabPanel = (props) => {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`project-tabpanel-${index}`}
+      aria-labelledby={`project-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+    </div>
+  );
+};
+
 const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const colors = getThemeColors();
 
   const { currentProject, isLoading, error, likesCount } = useSelector(
     (state) => state.projects
@@ -56,8 +100,7 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
   const { user } = useSelector((state) => state.auth);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [imageModalOpen, setImageModalOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [tabValue, setTabValue] = useState(0);
 
   useEffect(() => {
     if (projectId) {
@@ -86,6 +129,10 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
     }
   };
 
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "Not set";
     const date = new Date(dateString);
@@ -94,6 +141,14 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return "Not set";
+    return `$${Number(amount).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
   // Function to format location, whether it's a string or an object
@@ -116,74 +171,102 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
-        return "warning";
+        return colors.warning;
       case "in_progress":
-        return "info";
+        return colors.info;
       case "completed":
-        return "success";
+        return colors.success;
       case "canceled":
-        return "error";
+        return colors.error;
       default:
         return "default";
     }
   };
 
-  const handleImageClick = (index) => {
-    setCurrentImageIndex(index);
-    setImageModalOpen(true);
+  const getStatusChip = (status) => {
+    return (
+      <Chip
+        label={status}
+        sx={{
+          backgroundColor: getStatusColor(status),
+          color: "white",
+          textTransform: "capitalize",
+        }}
+      />
+    );
   };
 
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prevIndex) => {
-      const images = currentProject.images || [];
-      return prevIndex > 0 ? prevIndex - 1 : images.length - 1;
-    });
-  };
-
-  const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => {
-      const images = currentProject.images || [];
-      return prevIndex < images.length - 1 ? prevIndex + 1 : 0;
-    });
+  const getMilestoneStatusIcon = (status) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircleIcon sx={{ color: colors.success }} />;
+      case "in_progress":
+        return <PendingIcon sx={{ color: colors.info }} />;
+      default:
+        return <FlagIcon sx={{ color: colors.warning }} />;
+    }
   };
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-        <CircularProgress />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          p: 4,
+          backgroundColor: colors.background,
+          minHeight: "100vh",
+        }}
+      >
+        <CircularProgress sx={{ color: colors.accent }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ mb: 3 }}>
-        {error.message || "An error occurred while fetching the project."}
-      </Alert>
+      <Box sx={{ backgroundColor: colors.background, p: 3 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error.message || "An error occurred while fetching the project."}
+        </Alert>
+      </Box>
     );
   }
 
   if (!currentProject) {
-    return <Alert severity="info">Project not found or still loading...</Alert>;
-  }
-
-  // Get all images including cover image
-  const allImages = [];
-  if (currentProject.coverImage) {
-    allImages.push(currentProject.coverImage);
-  }
-  if (currentProject.images && Array.isArray(currentProject.images)) {
-    allImages.push(...currentProject.images);
+    return (
+      <Box sx={{ backgroundColor: colors.background, p: 3 }}>
+        <Alert severity="info">Project not found or still loading...</Alert>
+      </Box>
+    );
   }
 
   // Remove outer Paper when shown in dialog
   const ContentWrapper = isDialog ? Box : Paper;
   const contentWrapperProps = isDialog
     ? { sx: { p: 3 } }
-    : { elevation: 2, sx: { mb: 4, p: 3, borderRadius: 2 } };
+    : {
+        elevation: 2,
+        sx: {
+          mb: 4,
+          p: 3,
+          borderRadius: 2,
+          backgroundColor: "white",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+        },
+      };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", p: isDialog ? 0 : 3 }}>
+    <Box
+      sx={{
+        maxWidth: 1200,
+        mx: "auto",
+        p: isDialog ? 0 : 3,
+        backgroundColor: colors.background,
+        color: colors.text,
+        minHeight: "100vh",
+      }}
+    >
       {/* Header - Only show if not in dialog mode */}
       {!isDialog && (
         <Box
@@ -197,11 +280,11 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <IconButton
               onClick={() => navigate("/dashboard/architect/projects")}
-              sx={{ mr: 1 }}
+              sx={{ mr: 1, color: colors.text }}
             >
               <ArrowBackIcon />
             </IconButton>
-            <Typography variant="h5" component="h1">
+            <Typography variant="h5" component="h1" sx={{ color: colors.text }}>
               Project Details
             </Typography>
           </Box>
@@ -212,14 +295,28 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
               }
               variant="outlined"
               startIcon={<EditIcon />}
+              sx={{
+                borderColor: colors.accent,
+                color: colors.accent,
+                "&:hover": {
+                  borderColor: colors.accent,
+                  backgroundColor: colors.lightAccent,
+                },
+              }}
             >
               Edit
             </Button>
             <Button
-              variant="outlined"
+              variant="contained"
               color="error"
               startIcon={<DeleteIcon />}
               onClick={() => setDeleteDialogOpen(true)}
+              sx={{
+                backgroundColor: colors.accent,
+                "&:hover": {
+                  backgroundColor: "#c5616c",
+                },
+              }}
             >
               Delete
             </Button>
@@ -230,16 +327,21 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
       {/* Project Overview Card */}
       <ContentWrapper {...contentWrapperProps}>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-          <Typography variant="h4" component="h2" gutterBottom>
+          <Typography
+            variant="h4"
+            component="h2"
+            gutterBottom
+            sx={{ color: colors.text }}
+          >
             {currentProject.title}
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Chip
-              label={currentProject.status}
-              color={getStatusColor(currentProject.status)}
-            />
+            {getStatusChip(currentProject.status)}
             <Badge badgeContent={likesCount} color="primary">
-              <IconButton onClick={handleLikeProject} color="primary">
+              <IconButton
+                onClick={handleLikeProject}
+                sx={{ color: colors.accent }}
+              >
                 <ThumbUpIcon />
               </IconButton>
             </Badge>
@@ -257,21 +359,29 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <PersonIcon sx={{ mr: 1, color: "primary.main" }} />
-              <Typography variant="subtitle1" fontWeight="bold">
+              <PersonIcon sx={{ mr: 1, color: colors.accent }} />
+              <Typography
+                variant="subtitle1"
+                fontWeight="bold"
+                sx={{ color: colors.text }}
+              >
                 Client:
               </Typography>
-              <Typography variant="body1" sx={{ ml: 1 }}>
+              <Typography variant="body1" sx={{ ml: 1, color: colors.text }}>
                 {currentProject.clientId?.name || "Unknown Client"}
               </Typography>
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <AttachMoneyIcon sx={{ mr: 1, color: "primary.main" }} />
-              <Typography variant="subtitle1" fontWeight="bold">
+              <AttachMoneyIcon sx={{ mr: 1, color: colors.accent }} />
+              <Typography
+                variant="subtitle1"
+                fontWeight="bold"
+                sx={{ color: colors.text }}
+              >
                 Budget:
               </Typography>
-              <Typography variant="body1" sx={{ ml: 1 }}>
+              <Typography variant="body1" sx={{ ml: 1, color: colors.text }}>
                 {currentProject.budget
                   ? `$${currentProject.budget.toLocaleString()}`
                   : "Not set"}
@@ -279,21 +389,29 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <LocationOnIcon sx={{ mr: 1, color: "primary.main" }} />
-              <Typography variant="subtitle1" fontWeight="bold">
+              <LocationOnIcon sx={{ mr: 1, color: colors.accent }} />
+              <Typography
+                variant="subtitle1"
+                fontWeight="bold"
+                sx={{ color: colors.text }}
+              >
                 Location:
               </Typography>
-              <Typography variant="body1" sx={{ ml: 1 }}>
+              <Typography variant="body1" sx={{ ml: 1, color: colors.text }}>
                 {formatLocation(currentProject.location)}
               </Typography>
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center" }}>
-              <PublicIcon sx={{ mr: 1, color: "primary.main" }} />
-              <Typography variant="subtitle1" fontWeight="bold">
+              <PublicIcon sx={{ mr: 1, color: colors.accent }} />
+              <Typography
+                variant="subtitle1"
+                fontWeight="bold"
+                sx={{ color: colors.text }}
+              >
                 Visibility:
               </Typography>
-              <Typography variant="body1" sx={{ ml: 1 }}>
+              <Typography variant="body1" sx={{ ml: 1, color: colors.text }}>
                 {currentProject.isPublic ? "Public" : "Private"}
                 {currentProject.isPublic &&
                   currentProject.showroomStatus &&
@@ -315,116 +433,175 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
 
           <Grid item xs={12} md={6}>
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <VisibilityIcon sx={{ mr: 1, color: "primary.main" }} />
-              <Typography variant="subtitle1" fontWeight="bold">
+              <VisibilityIcon sx={{ mr: 1, color: colors.accent }} />
+              <Typography
+                variant="subtitle1"
+                fontWeight="bold"
+                sx={{ color: colors.text }}
+              >
                 Category:
               </Typography>
-              <Typography variant="body1" sx={{ ml: 1 }}>
+              <Typography variant="body1" sx={{ ml: 1, color: colors.text }}>
                 {currentProject.category || "Not specified"}
               </Typography>
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <EventIcon sx={{ mr: 1, color: "primary.main" }} />
-              <Typography variant="subtitle1" fontWeight="bold">
+              <EventIcon sx={{ mr: 1, color: colors.accent }} />
+              <Typography
+                variant="subtitle1"
+                fontWeight="bold"
+                sx={{ color: colors.text }}
+              >
                 Start Date:
               </Typography>
-              <Typography variant="body1" sx={{ ml: 1 }}>
+              <Typography variant="body1" sx={{ ml: 1, color: colors.text }}>
                 {formatDate(currentProject.startDate)}
               </Typography>
             </Box>
 
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <EventIcon sx={{ mr: 1, color: "primary.main" }} />
-              <Typography variant="subtitle1" fontWeight="bold">
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <EventIcon sx={{ mr: 1, color: colors.accent }} />
+              <Typography
+                variant="subtitle1"
+                fontWeight="bold"
+                sx={{ color: colors.text }}
+              >
                 End Date:
               </Typography>
-              <Typography variant="body1" sx={{ ml: 1 }}>
+              <Typography variant="body1" sx={{ ml: 1, color: colors.text }}>
                 {formatDate(currentProject.endDate)}
               </Typography>
             </Box>
+
+            {currentProject.progressPercentage !== undefined && (
+              <Box>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  sx={{ color: colors.text }}
+                >
+                  Progress: {currentProject.progressPercentage}%
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={currentProject.progressPercentage}
+                  sx={{
+                    height: 10,
+                    borderRadius: 1,
+                    mt: 1,
+                    backgroundColor: colors.lightAccent,
+                    "& .MuiLinearProgress-bar": {
+                      backgroundColor: colors.accent,
+                    },
+                  }}
+                />
+              </Box>
+            )}
           </Grid>
         </Grid>
 
-        {/* Project Images Section */}
-        {allImages.length > 0 && (
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Project Images
-            </Typography>
-            <ImageList
-              sx={{ width: "100%", height: 450 }}
-              cols={allImages.length === 1 ? 1 : 3}
-              rowHeight={300}
-              gap={8}
-            >
-              {allImages.map((img, index) => (
-                <ImageListItem
-                  key={index}
-                  onClick={() => handleImageClick(index)}
-                  sx={{
-                    cursor: "pointer",
-                    "&:hover": {
-                      opacity: 0.8,
-                      transition: "opacity 0.3s ease-in-out",
-                    },
-                  }}
-                >
-                  <img
-                    src={img}
-                    alt={`Project image ${index + 1}`}
-                    loading="lazy"
-                    style={{
-                      height: "100%",
-                      width: "100%",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                    }}
-                  />
-                </ImageListItem>
-              ))}
-            </ImageList>
+        {currentProject.coverImage && (
+          <Box sx={{ my: 3, textAlign: "center" }}>
+            <img
+              src={`${API_BASE_URL}${currentProject.coverImage}`}
+              alt={currentProject.title}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "400px",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              }}
+            />
           </Box>
         )}
 
         <Divider sx={{ my: 3 }} />
 
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom sx={{ color: colors.text }}>
           Description
         </Typography>
-        <Typography variant="body1" paragraph>
+        <Typography variant="body1" paragraph sx={{ color: colors.text }}>
           {currentProject.description || "No description provided."}
         </Typography>
 
         {currentProject.tags && currentProject.tags.length > 0 && (
           <Box sx={{ mt: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
+            <Typography
+              variant="subtitle1"
+              gutterBottom
+              sx={{ color: colors.text }}
+            >
               Tags
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {currentProject.tags.map((tag, index) => (
-                <Chip key={index} label={tag} size="small" />
+                <Chip
+                  key={index}
+                  label={tag}
+                  size="small"
+                  sx={{
+                    backgroundColor: colors.lightAccent,
+                    color: colors.text,
+                  }}
+                />
               ))}
             </Box>
           </Box>
         )}
       </ContentWrapper>
 
-      {/* Client Information Card */}
-      {currentProject.clientId &&
-        typeof currentProject.clientId === "object" && (
-          <Card sx={{ mb: isDialog ? 0 : 4 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Client Information
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
+      {/* Tabs for Project Details */}
+      <Paper
+        elevation={2}
+        sx={{ mb: 4, borderRadius: 2, backgroundColor: "white" }}
+      >
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          sx={{
+            "& .MuiTabs-indicator": {
+              backgroundColor: colors.accent,
+            },
+            "& .Mui-selected": {
+              color: `${colors.accent} !important`,
+            },
+          }}
+        >
+          <Tab
+            icon={<PersonIcon />}
+            label="Client"
+            sx={{ color: colors.text }}
+          />
+          <Tab
+            icon={<FlagIcon />}
+            label="Milestones"
+            sx={{ color: colors.text }}
+          />
+          <Tab
+            icon={<PaymentIcon />}
+            label="Payments"
+            sx={{ color: colors.text }}
+          />
+          <Tab
+            icon={<ImageIcon />}
+            label="Photos"
+            sx={{ color: colors.text }}
+          />
+        </Tabs>
+
+        {/* Client Information */}
+        <TabPanel value={tabValue} index={0}>
+          <Box sx={{ p: 3 }}>
+            {currentProject.clientId &&
+            typeof currentProject.clientId === "object" ? (
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle2" color="text.secondary">
                     Name
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography variant="body1" sx={{ color: colors.text }}>
                     {currentProject.clientId.name || "N/A"}
                   </Typography>
                 </Grid>
@@ -432,7 +609,7 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
                   <Typography variant="subtitle2" color="text.secondary">
                     Email
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography variant="body1" sx={{ color: colors.text }}>
                     {currentProject.clientId.email || "N/A"}
                   </Typography>
                 </Grid>
@@ -441,7 +618,7 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
                     <Typography variant="subtitle2" color="text.secondary">
                       Phone
                     </Typography>
-                    <Typography variant="body1">
+                    <Typography variant="body1" sx={{ color: colors.text }}>
                       {currentProject.clientId.phone}
                     </Typography>
                   </Grid>
@@ -451,131 +628,367 @@ const ProjectDetails = ({ projectId, isDialog = false, onClose }) => {
                     <Typography variant="subtitle2" color="text.secondary">
                       Address
                     </Typography>
-                    <Typography variant="body1">
+                    <Typography variant="body1" sx={{ color: colors.text }}>
                       {typeof currentProject.clientId.address === "string"
                         ? currentProject.clientId.address
                         : formatLocation(currentProject.clientId.address)}
                     </Typography>
                   </Grid>
                 )}
+                {currentProject.clientId.company && (
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Company
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: colors.text }}>
+                      {currentProject.clientId.company}
+                    </Typography>
+                  </Grid>
+                )}
+                {currentProject.clientId.notes && (
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Notes
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: colors.text }}>
+                      {currentProject.clientId.notes}
+                    </Typography>
+                  </Grid>
+                )}
               </Grid>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <Alert severity="info">Client information not available</Alert>
+            )}
+          </Box>
+        </TabPanel>
+
+        {/* Milestones */}
+        <TabPanel value={tabValue} index={1}>
+          <Box sx={{ p: 3 }}>
+            {currentProject.milestones &&
+            currentProject.milestones.length > 0 ? (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: colors.lightAccent }}>
+                      <TableCell
+                        sx={{ color: colors.text, fontWeight: "bold" }}
+                      >
+                        Title
+                      </TableCell>
+                      <TableCell
+                        sx={{ color: colors.text, fontWeight: "bold" }}
+                      >
+                        Description
+                      </TableCell>
+                      <TableCell
+                        sx={{ color: colors.text, fontWeight: "bold" }}
+                      >
+                        Due Date
+                      </TableCell>
+                      <TableCell
+                        sx={{ color: colors.text, fontWeight: "bold" }}
+                      >
+                        Status
+                      </TableCell>
+                      <TableCell
+                        sx={{ color: colors.text, fontWeight: "bold" }}
+                      >
+                        Completion Date
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {currentProject.milestones.map((milestone) => (
+                      <TableRow key={milestone._id}>
+                        <TableCell sx={{ color: colors.text }}>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            {getMilestoneStatusIcon(milestone.status)}
+                            <Typography sx={{ ml: 1 }}>
+                              {milestone.title}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ color: colors.text }}>
+                          {milestone.description}
+                        </TableCell>
+                        <TableCell sx={{ color: colors.text }}>
+                          {formatDate(milestone.dueDate)}
+                        </TableCell>
+                        <TableCell>{getStatusChip(milestone.status)}</TableCell>
+                        <TableCell sx={{ color: colors.text }}>
+                          {milestone.completionDate
+                            ? formatDate(milestone.completionDate)
+                            : "Not completed"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Alert severity="info">
+                No milestones have been added to this project yet.
+              </Alert>
+            )}
+          </Box>
+        </TabPanel>
+
+        {/* Payments */}
+        <TabPanel value={tabValue} index={2}>
+          <Box sx={{ p: 3 }}>
+            {currentProject.paymentHistory &&
+            currentProject.paymentHistory.length > 0 ? (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ color: colors.text }}
+                  >
+                    Payment Status:
+                    <Chip
+                      label={currentProject.paymentStatus || "Not set"}
+                      sx={{
+                        ml: 1,
+                        backgroundColor:
+                          currentProject.paymentStatus === "paid"
+                            ? colors.success
+                            : currentProject.paymentStatus === "partially_paid"
+                            ? colors.warning
+                            : colors.error,
+                        color: "white",
+                      }}
+                    />
+                  </Typography>
+                </Box>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: colors.lightAccent }}>
+                        <TableCell
+                          sx={{ color: colors.text, fontWeight: "bold" }}
+                        >
+                          Amount
+                        </TableCell>
+                        <TableCell
+                          sx={{ color: colors.text, fontWeight: "bold" }}
+                        >
+                          Date
+                        </TableCell>
+                        <TableCell
+                          sx={{ color: colors.text, fontWeight: "bold" }}
+                        >
+                          Method
+                        </TableCell>
+                        <TableCell
+                          sx={{ color: colors.text, fontWeight: "bold" }}
+                        >
+                          Status
+                        </TableCell>
+                        <TableCell
+                          sx={{ color: colors.text, fontWeight: "bold" }}
+                        >
+                          Notes
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {currentProject.paymentHistory.map((payment) => (
+                        <TableRow key={payment._id}>
+                          <TableCell sx={{ color: colors.text }}>
+                            {formatCurrency(payment.amount)}
+                          </TableCell>
+                          <TableCell sx={{ color: colors.text }}>
+                            {formatDate(payment.date)}
+                          </TableCell>
+                          <TableCell sx={{ color: colors.text }}>
+                            {payment.method}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={payment.status}
+                              sx={{
+                                backgroundColor:
+                                  payment.status === "completed"
+                                    ? colors.success
+                                    : payment.status === "pending"
+                                    ? colors.warning
+                                    : payment.status === "failed"
+                                    ? colors.error
+                                    : colors.info,
+                                color: "white",
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ color: colors.text }}>
+                            {payment.notes || "—"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            ) : (
+              <Alert severity="info">
+                No payment records found for this project.
+              </Alert>
+            )}
+          </Box>
+        </TabPanel>
+
+        {/* Photos */}
+        <TabPanel value={tabValue} index={3}>
+          <Box sx={{ p: 3 }}>
+            {/* Before Photos */}
+            <Typography variant="h6" gutterBottom sx={{ color: colors.text }}>
+              Before Photos
+            </Typography>
+            {currentProject.beforePhotos &&
+            currentProject.beforePhotos.length > 0 ? (
+              <ImageList cols={3} gap={16}>
+                {currentProject.beforePhotos.map((photo, index) => (
+                  <ImageListItem
+                    key={index}
+                    sx={{ overflow: "hidden", borderRadius: 2 }}
+                  >
+                    <img
+                      src={
+                        photo.startsWith("http")
+                          ? photo
+                          : `${API_BASE_URL.replace(/\/$/, "")}${photo}`
+                      }
+                      alt={`Before photo ${index + 1}`}
+                      loading="lazy"
+                      style={{
+                        objectFit: "cover",
+                        height: "100%",
+                        width: "100%",
+                      }}
+                    />
+                  </ImageListItem>
+                ))}
+              </ImageList>
+            ) : (
+              <Alert severity="info" sx={{ mb: 3 }}>
+                No before photos available.
+              </Alert>
+            )}
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* After Photos */}
+            <Typography variant="h6" gutterBottom sx={{ color: colors.text }}>
+              After Photos
+            </Typography>
+            {currentProject.afterPhotos &&
+            currentProject.afterPhotos.length > 0 ? (
+              <ImageList cols={3} gap={16}>
+                {currentProject.afterPhotos.map((photo, index) => (
+                  <ImageListItem
+                    key={index}
+                    sx={{ overflow: "hidden", borderRadius: 2 }}
+                  >
+                    <img
+                      src={
+                        photo.startsWith("http")
+                          ? photo
+                          : `${API_BASE_URL.replace(/\/$/, "")}${photo}`
+                      }
+                      alt={`Before photo ${index + 1}`}
+                      loading="lazy"
+                      style={{
+                        objectFit: "cover",
+                        height: "100%",
+                        width: "100%",
+                      }}
+                    />
+                  </ImageListItem>
+                ))}
+              </ImageList>
+            ) : (
+              <Alert severity="info">No after photos available.</Alert>
+            )}
+
+            {/* Additional project images */}
+            {currentProject.images && currentProject.images.length > 0 && (
+              <>
+                <Divider sx={{ my: 3 }} />
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ color: colors.text }}
+                >
+                  Additional Project Images
+                </Typography>
+                <ImageList cols={3} gap={16}>
+                  {currentProject.images.map((photo, index) => (
+                    <ImageListItem
+                      key={index}
+                      sx={{ overflow: "hidden", borderRadius: 2 }}
+                    >
+                      <img
+                        src={
+                          photo.startsWith("http")
+                            ? photo
+                            : `${API_BASE_URL.replace(/\/$/, "")}${photo}`
+                        }
+                        alt={`Before photo ${index + 1}`}
+                        loading="lazy"
+                        style={{
+                          objectFit: "cover",
+                          height: "100%",
+                          width: "100%",
+                        }}
+                      />
+                    </ImageListItem>
+                  ))}
+                </ImageList>
+              </>
+            )}
+          </Box>
+        </TabPanel>
+      </Paper>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+          },
+        }}
       >
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle sx={{ color: colors.text }}>Confirm Delete</DialogTitle>
         <DialogContent>
-          Are you sure you want to delete this project? This action cannot be
-          undone.
+          <Typography sx={{ color: colors.text }}>
+            Are you sure you want to delete this project? This action cannot be
+            undone.
+          </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={{ color: colors.text }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleDelete} color="error">
+          <Button
+            onClick={handleDelete}
+            variant="contained"
+            sx={{
+              backgroundColor: colors.accent,
+              "&:hover": {
+                backgroundColor: "#c5616c",
+              },
+            }}
+          >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Image Modal */}
-      <Modal
-        open={imageModalOpen}
-        onClose={() => setImageModalOpen(false)}
-        aria-labelledby="image-modal"
-        aria-describedby="project-image-full-view"
-      >
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "90%",
-            maxWidth: 1000,
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 1,
-            outline: "none",
-            borderRadius: 2,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-            <IconButton onClick={() => setImageModalOpen(false)}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          <Box
-            sx={{
-              position: "relative",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "80vh",
-              width: "100%",
-            }}
-          >
-            <img
-              src={allImages[currentImageIndex]}
-              alt={`Project image ${currentImageIndex + 1}`}
-              style={{
-                maxHeight: "100%",
-                maxWidth: "100%",
-                objectFit: "contain",
-              }}
-            />
-            {allImages.length > 1 && (
-              <>
-                <IconButton
-                  onClick={handlePrevImage}
-                  sx={{
-                    position: "absolute",
-                    left: 0,
-                    backgroundColor: "rgba(0,0,0,0.3)",
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                    },
-                  }}
-                >
-                  <NavigateBeforeIcon fontSize="large" />
-                </IconButton>
-                <IconButton
-                  onClick={handleNextImage}
-                  sx={{
-                    position: "absolute",
-                    right: 0,
-                    backgroundColor: "rgba(0,0,0,0.3)",
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                    },
-                  }}
-                >
-                  <NavigateNextIcon fontSize="large" />
-                </IconButton>
-              </>
-            )}
-          </Box>
-          <Typography
-            variant="caption"
-            sx={{
-              textAlign: "center",
-              mt: 1,
-              color: "text.secondary",
-            }}
-          >
-            {`Image ${currentImageIndex + 1} of ${allImages.length}`}
-          </Typography>
-        </Box>
-      </Modal>
     </Box>
   );
 };

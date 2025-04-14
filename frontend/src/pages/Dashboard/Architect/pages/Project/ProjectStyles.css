@@ -1,94 +1,331 @@
-/* ProjectStyles.css */
-
-/* General container styling */
+/* Add this to your component's CSS file or global styles */
 .projects-container {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  height: 100vh; /* Set fixed height for container */
+  padding: 20px;
+  overflow: hidden; /* Prevent main container scrolling */
 }
 
-/* Table styling */
 .transparent-table {
-  background-color: transparent !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  max-height: calc(
+    100vh - 180px
+  ) !important; /* Adjust based on your header height */
+  overflow: auto;
+  color: #242d49;
+}
+.h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #242d49;
+  margin-bottom: 20px;
+}
+/* Sticky header */
+.transparent-table .MuiTableHead-root {
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  z-index: 1;
+}
+
+/* Table cell styling */
+.transparent-table .MuiTableCell-root {
+  color: #242d49 !important;
+  border-bottom: 1px solid rgba(36, 45, 73, 0.1);
+}
+
+/* Action buttons */
+.transparent-table .MuiIconButton-root {
+  color: #ff919d !important;
+  transition: transform 0.2s ease;
+}
+
+.transparent-table .MuiIconButton-root:hover {
+  transform: scale(1.1);
+  background: rgba(255, 145, 157, 0.1) !important;
+}
+
+/* Scrollbar styling */
+.transparent-table::-webkit-scrollbar {
+  width: 8px;
+}
+
+.transparent-table::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.transparent-table::-webkit-scrollbar-thumb {
+  background: rgba(36, 45, 73, 0.4);
+  border-radius: 4px;
+}
+
+.transparent-table::-webkit-scrollbar-thumb:hover {
+  background: rgba(36, 45, 73, 0.6);
+}
+/* --------------------for the edit component --------------- */
+.edit-project-container {
+  padding-top: 2rem; /* pt-8 */
+  padding-bottom: 5rem; /* pb-20 */
+  background: radial-gradient(
+    ellipse 200% 100% at bottom left,
+    #183ec2,
+    #eaeefe 100%
+  );
+  overflow-x: clip;
+  color: #242d49; /* Default text color */
+}
+
+/* Medium screen breakpoint (md) */
+@media (min-width: 768px) {
+  .edit-project-container {
+    padding-top: 1.25rem; /* md:pt-5 */
+    padding-bottom: 2.5rem; /* md:pb-10 */
+  }
+}
+
+/* Button styling */
+.edit-project-container .MuiButton-contained {
+  background-color: #ff919d;
+  color: white;
+}
+
+.edit-project-container .MuiButton-contained:hover {
+  background-color: #e57f8a;
+}
+
+/* Text color overrides for MUI components */
+.edit-project-container .MuiTypography-root,
+.edit-project-container .MuiInputLabel-root,
+.edit-project-container .MuiInputBase-input,
+.edit-project-container .MuiFormLabel-root,
+.edit-project-container .MuiSelect-icon,
+.edit-project-container .MuiChip-label {
+  color: #242d49 !important;
+}
+
+/* Slider color */
+.edit-project-container .MuiSlider-thumb {
+  color: #ff919d;
+}
+
+.edit-project-container .MuiSlider-track {
+  color: #ff919d;
+}
+
+/* Switch color */
+.edit-project-container .MuiSwitch-switchBase.Mui-checked {
+  color: #ff919d;
+}
+
+.edit-project-container .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track {
+  background-color: #ff919d;
+}
+/* ProjectStyles.css */
+
+/* ... previous styles ... */
+
+/* Project Photos Accordion */
+.edit-project-container .MuiAccordion-root {
+  background: transparent !important;
+  color: #242d49 !important;
   box-shadow: none !important;
 }
 
-.transparent-table th {
-  font-weight: bold;
-  color: #555;
-  background-color: #f1f3f5;
+.edit-project-container .MuiAccordionSummary-root {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  margin-bottom: 1rem;
 }
 
-.transparent-table tr:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+.edit-project-container .MuiAccordionDetails-root {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
 }
 
-/* Project form styling */
-.add-project-container,
-.edit-project-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 24px;
+/* Photo grid items */
+.edit-project-container .MuiGrid-item {
+  background: transparent !important;
 }
 
-.add-project-dialog {
-  padding: 0;
+/* Photo previews */
+.edit-project-container .MuiCardMedia-root,
+.edit-project-container .MuiAccordionDetails-root img {
+  border: 2px solid rgba(255, 145, 157, 0.3) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
 }
 
-.add-project-content {
-  padding: 0 !important;
+/* Add photo buttons */
+.edit-project-container .MuiAccordionDetails-root .MuiButton-root {
+  background-color: rgba(255, 145, 157, 0.1) !important;
+  border: 1px solid #ff919d !important;
+  color: #ff919d !important;
 }
 
-.add-project-btn {
-  background: linear-gradient(45deg, #1976d2, #2196f3);
-  transition: all 0.3s ease;
+.edit-project-container .MuiAccordionDetails-root .MuiButton-root:hover {
+  background-color: rgba(255, 145, 157, 0.2) !important;
 }
 
-.add-project-btn:hover {
-  background: linear-gradient(45deg, #1565c0, #1976d2);
-  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+/* Photo delete buttons */
+.edit-project-container .MuiIconButton-root {
+  color: #ff919d !important;
+  background-color: rgba(255, 145, 157, 0.1) !important;
 }
 
-.submit-btn {
-  background: linear-gradient(45deg, #1976d2, #2196f3);
-  transition: all 0.3s ease;
+.edit-project-container .MuiIconButton-root:hover {
+  background-color: rgba(255, 145, 157, 0.3) !important;
 }
 
-.submit-btn:hover {
-  background: linear-gradient(45deg, #1565c0, #1976d2);
-  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+/* Accordion text */
+.edit-project-container .MuiAccordionSummary-content .MuiTypography-root {
+  color: #242d49 !important;
+  font-weight: 600 !important;
 }
 
-.close-btn {
-  color: #757575;
-  transition: all 0.3s ease;
+/* Photo section titles */
+.edit-project-container .MuiAccordionDetails-root .MuiTypography-subtitle1 {
+  color: #242d49 !important;
+  font-weight: 500 !important;
+  margin-bottom: 1rem;
 }
 
-.close-btn:hover {
-  color: #d32f2f;
-  background-color: rgba(211, 47, 47, 0.04);
+/*the add project css code */
+/* ProjectStyles.css */
+.add-project-container {
+  padding-top: 2rem; /* pt-8 */
+  padding-bottom: 5rem; /* pb-20 */
+  background: #eaeefe;
+  overflow-x: clip;
+  color: #242d49; /* Default text color */
 }
 
-/* Project details styling */
-.project-detail-card {
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.project-detail-card:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .projects-container,
-  .add-project-container,
-  .edit-project-container {
-    padding: 16px;
+/* Medium screen breakpoint (md) */
+@media (min-width: 768px) {
+  .add-project-container {
+    padding-top: 1.25rem; /* md:pt-5 */
+    padding-bottom: 2.5rem; /* md:pb-10 */
   }
+}
+
+/* Text color overrides */
+.add-project-container .MuiTypography-root,
+.add-project-container .MuiInputLabel-root,
+.add-project-container .MuiInputBase-input,
+.add-project-container .MuiFormLabel-root,
+.add-project-container .MuiSelect-icon,
+.add-project-container .MuiChip-label {
+  color: #242d49 !important;
+}
+
+/* Button styling */
+.add-project-container .MuiButton-contained {
+  background-color: #ff919d !important;
+  color: white !important;
+}
+
+.add-project-container .MuiButton-contained:hover {
+  background-color: #e57f8a !important;
+}
+
+/* Outlined button styling */
+.add-project-container .MuiButton-outlined {
+  border-color: #ff919d !important;
+  color: #ff919d !important;
+}
+
+.add-project-container .MuiButton-outlined:hover {
+  background-color: rgba(255, 145, 157, 0.1) !important;
+}
+
+/* Form elements */
+.add-project-container .MuiTextField-root,
+.add-project-container .MuiAutocomplete-root,
+.add-project-container .MuiSelect-root {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 4px !important;
+}
+
+.add-project-container .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(36, 45, 73, 0.2) !important;
+}
+
+.add-project-container
+  .MuiOutlinedInput-root:hover
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #ff919d !important;
+}
+
+/* Card styling */
+.add-project-container .MuiCard-root {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(255, 145, 157, 0.3) !important;
+}
+
+/* Chip styling */
+.add-project-container .MuiChip-root {
+  border-color: #ff919d !important;
+  background-color: rgba(255, 145, 157, 0.1) !important;
+}
+
+.add-project-container .MuiChip-deleteIcon {
+  color: #ff919d !important;
+}
+
+/* Divider styling */
+.add-project-container .MuiDivider-root {
+  border-color: rgba(36, 45, 73, 0.1) !important;
+}
+
+/* Alert styling */
+.add-project-container .MuiAlert-root {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Success snackbar */
+.add-project-container .MuiAlert-filledSuccess {
+  background-color: #4caf50 !important;
+}
+
+/* Error snackbar */
+.add-project-container .MuiAlert-filledError {
+  background-color: #f44336 !important;
+}
+
+/* Close icon */
+.add-project-container .close-btn {
+  color: #242d49 !important;
+}
+
+/* Photo preview buttons */
+.add-project-container .MuiCard-root .MuiButton-root {
+  background-color: rgba(255, 145, 157, 0.1) !important;
+  color: #ff919d !important;
+}
+
+.add-project-container .MuiCard-root .MuiButton-root:hover {
+  background-color: rgba(255, 145, 157, 0.2) !important;
+}
+
+/* Autocomplete dropdown */
+.add-project-container .MuiAutocomplete-paper {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(36, 45, 73, 0.1) !important;
+}
+
+/* Checkbox color */
+.add-project-container .MuiCheckbox-colorPrimary.Mui-checked {
+  color: #ff919d !important;
+}
+
+/* Progress spinner */
+.add-project-container .MuiCircularProgress-root {
+  color: #ff919d !important;
+}
+
+/* Tag input */
+.add-project-container .MuiInputBase-root input::placeholder {
+  color: rgba(36, 45, 73, 0.5) !important;
 }

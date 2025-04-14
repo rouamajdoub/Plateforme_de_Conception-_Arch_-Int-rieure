@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import "./ProjectStyles.css";
+
 import {
   TextField,
   Button,
@@ -18,6 +20,7 @@ import {
   Card,
   CardMedia,
   Chip,
+  Paper,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -52,12 +55,12 @@ const AddProject = ({ onCancel }) => {
     budget: "",
     startDate: "",
     endDate: "",
-    coverImage: null, // Changed to null instead of empty string
+    coverImage: null,
     isPublic: false,
     showroomStatus: "normal",
     clientId: "",
     status: "pending",
-    tags: [], // Initialize tags as array
+    tags: [],
   });
 
   const [coverImagePreview, setCoverImagePreview] = useState(null);
@@ -119,7 +122,7 @@ const AddProject = ({ onCancel }) => {
       // Update projectData with the file
       setProjectData({
         ...projectData,
-        coverImage: file, // Store the file object, not the URL
+        coverImage: file,
       });
     }
   };
@@ -269,7 +272,17 @@ const AddProject = ({ onCancel }) => {
   }, []);
 
   return (
-    <div className="add-project-container">
+    <Paper
+      elevation={3}
+      className="add-project-container"
+      sx={{
+        p: 3,
+        backgroundColor: "#f9f9f9", // Consistent background color
+        borderRadius: 2,
+        position: "relative",
+      }}
+    >
+      {/* Single header with one close button */}
       <Box
         sx={{
           display: "flex",
@@ -281,9 +294,21 @@ const AddProject = ({ onCancel }) => {
         <Typography variant="h5" component="h1">
           Create New Project
         </Typography>
-        <IconButton onClick={onCancel} size="small" className="close-btn">
-          <CloseIcon />
-        </IconButton>
+        {onCancel && (
+          <IconButton
+            onClick={onCancel}
+            size="small"
+            aria-label="close"
+            sx={{
+              position: "absolute",
+              right: 16,
+              top: 16,
+              color: "text.secondary",
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        )}
       </Box>
       <Divider sx={{ mb: 4 }} />
 
@@ -718,7 +743,6 @@ const AddProject = ({ onCancel }) => {
           </Button>
         </Box>
       </form>
-
       {/* Success Snackbar */}
       <Snackbar
         open={snackbarOpen}
@@ -734,7 +758,7 @@ const AddProject = ({ onCancel }) => {
           {message || "Project created successfully!"}
         </Alert>
       </Snackbar>
-    </div>
+    </Paper>
   );
 };
 

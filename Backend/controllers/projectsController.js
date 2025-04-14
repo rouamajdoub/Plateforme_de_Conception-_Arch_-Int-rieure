@@ -613,3 +613,380 @@ exports.getProjectsByClient = async (req, res) => {
     });
   }
 };
+// Add milestone to a project
+exports.addMilestone = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { title, status, dueDate } = req.body;
+    const architectId = req.user._id;
+
+    // Validate required fields
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: "Milestone title is required",
+      });
+    }
+
+    const milestone = {
+      title,
+      status: status || "pending",
+      dueDate: dueDate || null,
+    };
+
+    const project = await Project.findOneAndUpdate(
+      { _id: projectId, architectId },
+      { $push: { milestones: milestone } },
+      { new: true }
+    );
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found or you don't have permission to update it",
+      });
+    }
+
+    // Recalculate progress percentage based on milestones
+    await updateProjectProgress(projectId);
+
+    res.status(200).json({
+      success: true,
+      message: "Milestone added successfully",
+      milestone: project.milestones[project.milestones.length - 1],
+      projectId: project._id,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// Delete milestone from a project
+exports.deleteMilestone = async (req, res) => {
+  try {
+    const { projectId, milestoneId } = req.params;
+    const architectId = req.user._id;
+
+    const project = await Project.findOneAndUpdate(
+      { _id: projectId, architectId },
+      { $pull: { milestones: { _id: milestoneId } } },
+      { new: true }
+    );
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found or you don't have permission to update it",
+      });
+    }
+
+    // Recalculate progress percentage based on remaining milestones
+    await updateProjectProgress(projectId);
+
+    res.status(200).json({
+      success: true,
+      message: "Milestone deleted successfully",
+      projectId: project._id,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// Update milestone status
+exports.updateMilestone = async (req, res) => {
+  try {
+    const { projectId, milestoneId } = req.params;
+    const { title, status, dueDate } = req.body;
+    const architectId = req.user._id;
+
+    const updateFields = {};
+    if (title) updateFields["milestones.$.title"] = title;
+    if (status) updateFields["milestones.$.status"] = status;
+    if (dueDate) updateFields["milestones.$.dueDate"] = dueDate;
+
+    const project = await Project.findOneAndUpdate(
+      {
+        _id: projectId,
+        architectId,
+        "milestones._id": milestoneId,
+      },
+      { $set: updateFields },
+      { new: true }
+    );
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project or milestone not found",
+      });
+    }
+
+    // Recalculate progress percentage
+    await updateProjectProgress(projectId);
+
+    res.status(200).json({
+      success: true,
+      message: "Milestone updated successfully",
+      project: {
+        _id: project._id,
+        milestones: project.milestones,
+        progressPercentage: project.progressPercentage,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// Update project progress percentage manually
+exports.updateProjectProgress = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { progressPercentage } = req.body;
+    const architectId = req.user._id;
+
+    if (
+      progressPercentage === undefined ||
+      progressPercentage < 0 ||
+      progressPercentage > 100
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Progress percentage must be between 0 and 100",
+      });
+    }
+
+    const project = await Project.findOneAndUpdate(
+      { _id: projectId, architectId },
+      { progressPercentage },
+      { new: true }
+    );
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found or you don't have permission to update it",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Project progress updated successfully",
+      progressPercentage: project.progressPercentage,
+      projectId: project._id,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// Add payment to project history
+exports.addPayment = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { amount, method, reference, notes } = req.body;
+    const architectId = req.user._id;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid payment amount is required",
+      });
+    }
+
+    const payment = {
+      amount,
+      date: new Date(),
+      method: method || "unspecified",
+      reference: reference || "",
+      notes: notes || "",
+    };
+
+    const project = await Project.findOne({ _id: projectId, architectId });
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found or you don't have permission to update it",
+      });
+    }
+
+    // Add payment to history
+    project.paymentHistory.push(payment);
+
+    // Calculate total paid amount
+    const totalPaid = project.paymentHistory.reduce(
+      (sum, payment) => sum + payment.amount,
+      0
+    );
+
+    // Update payment status
+    if (project.budget) {
+      if (totalPaid >= project.budget) {
+        project.paymentStatus = "paid";
+      } else if (totalPaid > 0) {
+        project.paymentStatus = "partially_paid";
+      } else {
+        project.paymentStatus = "pending";
+      }
+    } else {
+      // If no budget is set, but payment was made
+      project.paymentStatus = totalPaid > 0 ? "partially_paid" : "pending";
+    }
+
+    await project.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Payment added successfully",
+      payment: project.paymentHistory[project.paymentHistory.length - 1],
+      paymentStatus: project.paymentStatus,
+      projectId: project._id,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// Update payment status manually
+exports.updatePaymentStatus = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { paymentStatus } = req.body;
+    const architectId = req.user._id;
+
+    if (
+      !paymentStatus ||
+      !["pending", "paid", "partially_paid"].includes(paymentStatus)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Valid payment status is required (pending, paid, or partially_paid)",
+      });
+    }
+
+    const project = await Project.findOneAndUpdate(
+      { _id: projectId, architectId },
+      { paymentStatus },
+      { new: true }
+    );
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found or you don't have permission to update it",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Payment status updated successfully",
+      paymentStatus: project.paymentStatus,
+      projectId: project._id,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// Delete payment from history
+exports.deletePayment = async (req, res) => {
+  try {
+    const { projectId, paymentId } = req.params;
+    const architectId = req.user._id;
+
+    const project = await Project.findOneAndUpdate(
+      { _id: projectId, architectId },
+      { $pull: { paymentHistory: { _id: paymentId } } },
+      { new: true }
+    );
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project or payment not found",
+      });
+    }
+
+    // Recalculate payment status
+    const totalPaid = project.paymentHistory.reduce(
+      (sum, payment) => sum + payment.amount,
+      0
+    );
+
+    if (project.budget) {
+      if (totalPaid >= project.budget) {
+        project.paymentStatus = "paid";
+      } else if (totalPaid > 0) {
+        project.paymentStatus = "partially_paid";
+      } else {
+        project.paymentStatus = "pending";
+      }
+    } else {
+      project.paymentStatus = totalPaid > 0 ? "partially_paid" : "pending";
+    }
+
+    await project.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Payment deleted successfully",
+      paymentStatus: project.paymentStatus,
+      projectId: project._id,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// Helper function to update project progress based on milestones
+async function updateProjectProgress(projectId) {
+  try {
+    const project = await Project.findById(projectId);
+    if (!project) return;
+
+    // If there are no milestones, set progress to 0
+    if (!project.milestones || project.milestones.length === 0) {
+      project.progressPercentage = 0;
+    } else {
+      // Calculate percentage based on completed milestones
+      const totalMilestones = project.milestones.length;
+      const completedMilestones = project.milestones.filter(
+        (milestone) => milestone.status === "completed"
+      ).length;
+
+      project.progressPercentage = Math.round(
+        (completedMilestones / totalMilestones) * 100
+      );
+    }
+
+    await project.save();
+    return project.progressPercentage;
+  } catch (error) {
+    console.error("Error updating project progress:", error);
+    throw error;
+  }
+}

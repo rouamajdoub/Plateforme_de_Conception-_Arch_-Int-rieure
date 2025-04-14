@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { motion } from "framer-motion";
+import "./ProjectStyles.css";
 import {
   fetchAllProjects,
   deleteProject,
@@ -34,6 +36,7 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
+  LinearProgress,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -193,9 +196,7 @@ const ProjectsTable = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h5" component="h1" gutterBottom>
-          Projects Management
-        </Typography>
+        <h2>Projects Management</h2>
         <Box sx={{ display: "flex", gap: 2 }}>
           <TextField
             size="small"
@@ -256,8 +257,8 @@ const ProjectsTable = () => {
                     <TableCell>Client</TableCell>
                     <TableCell>Category</TableCell>
                     <TableCell>Status</TableCell>
-                    <TableCell>Budget</TableCell>
-                    <TableCell>Start Date</TableCell>
+                    <TableCell>Milestones</TableCell>
+                    <TableCell>Progress</TableCell>
                     <TableCell>End Date</TableCell>
                     <TableCell align="center">Public</TableCell>
                     <TableCell align="right">Actions</TableCell>
@@ -265,7 +266,14 @@ const ProjectsTable = () => {
                 </TableHead>
                 <TableBody>
                   {projects.map((project) => (
-                    <TableRow key={project._id}>
+                    <TableRow
+                      key={project._id}
+                      component={motion.tr}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                    >
                       <TableCell component="th" scope="row">
                         {project.title}
                       </TableCell>
@@ -283,11 +291,28 @@ const ProjectsTable = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        {project.budget
-                          ? `$${project.budget.toLocaleString()}`
-                          : "Not set"}
+                        {project.milestones?.length || 0}
+                        <Typography variant="caption" display="block">
+                          {
+                            project.milestones?.filter(
+                              (m) => m.status === "completed"
+                            ).length
+                          }{" "}
+                          completed
+                        </Typography>
                       </TableCell>
-                      <TableCell>{formatDate(project.startDate)}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={project.progressPercentage || 0}
+                            sx={{ width: "80%", mr: 1 }}
+                          />
+                          <Typography variant="body2">
+                            {Math.round(project.progressPercentage || 0)}%
+                          </Typography>
+                        </Box>
+                      </TableCell>
                       <TableCell>{formatDate(project.endDate)}</TableCell>
                       <TableCell align="center">
                         {project.isPublic ? "✓" : "✗"}
@@ -300,6 +325,8 @@ const ProjectsTable = () => {
                             <IconButton
                               onClick={() => openViewProjectDialog(project._id)}
                               size="small"
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
                             >
                               <ViewIcon fontSize="small" />
                             </IconButton>
@@ -308,6 +335,8 @@ const ProjectsTable = () => {
                             <IconButton
                               onClick={() => openEditProjectDialog(project._id)}
                               size="small"
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
                             >
                               <EditIcon fontSize="small" />
                             </IconButton>
@@ -317,6 +346,8 @@ const ProjectsTable = () => {
                               onClick={() => openDeleteDialog(project)}
                               color="error"
                               size="small"
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
