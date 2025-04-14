@@ -78,12 +78,14 @@ const architectSchema = new mongoose.Schema(
       },
     ],
 
-    // clients
-    //i have 2 type of clients Platform-native clients aka "Visionaires" and "ArchitectClient"
-    clients: [{ type: mongoose.Schema.Types.ObjectId, ref: "ArchitectClient" }],
-    visionaClients: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }],
-
+    //for the clients
+    clientsCount: { type: Number, default: 0 },
+    clients: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ArchitectClient",
+      },
+    ],
     //subs
     subscription: {
       type: mongoose.Schema.Types.ObjectId,

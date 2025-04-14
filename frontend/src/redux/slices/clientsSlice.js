@@ -13,12 +13,17 @@ const initialState = {
 // Async thunk to fetch all clients
 export const fetchClients = createAsyncThunk(
   "clients/fetchClients",
-  async () => {
-    const response = await axios.get("/api/client-arch/");
-    return response.data.data;
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("/api/client-arch/");
+      return response.data.data; // Make sure this matches your API response structure
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { message: error.message }
+      );
+    }
   }
 );
-
 // Async thunk to create a client
 export const createClient = createAsyncThunk(
   "clients/createClient",

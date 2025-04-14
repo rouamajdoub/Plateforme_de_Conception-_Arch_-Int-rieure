@@ -4,6 +4,8 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const User = require("./models/User");
 const bodyParser = require("body-parser");
+const path = require("path");
+
 const asyncHandler = require("express-async-handler");
 const cookieParser = require("cookie-parser");
 const { auth } = require("express-openid-connect");
@@ -43,6 +45,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Auth0 Configuration
 const config = {

@@ -2,17 +2,12 @@ const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema(
   {
-    //for the architect dash
     clientId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "ArchitectClient",
       required: true,
     },
-    clientType: {
-      type: String,
-      enum: ["visionaClient", "architectClient"],
-      required: true,
-    },
+    //for the architect dash
 
     architectId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -27,9 +22,10 @@ const projectSchema = new mongoose.Schema(
       enum: ["pending", "in_progress", "completed", "canceled"],
       default: "pending",
     },
-    budget: { type: Number },
+    budget: { type: Number, min: 0 },
     startDate: { type: Date },
     endDate: { type: Date },
+    actualEndDate: { type: Date }, // Actual completion date that may differ from planned
     isPublic: { type: Boolean, default: false },
     showroomStatus: {
       type: String,
@@ -37,9 +33,9 @@ const projectSchema = new mongoose.Schema(
       default: "normal",
     },
     coverImage: { type: String, required: true },
-    images: [{ type: String }],
+    beforePhotos: [{ type: String }],
+    afterPhotos: [{ type: String }],
     videos: [{ type: String }],
-
     //for the stats and interactions
     views: { type: Number, default: 0 },
     likes: [
@@ -49,7 +45,6 @@ const projectSchema = new mongoose.Schema(
       },
     ],
     shares: { type: Number, default: 0 },
-    progressPercentage: { type: Number, default: 0 },
     // for search
     tags: [{ type: String }],
 
@@ -60,6 +55,9 @@ const projectSchema = new mongoose.Schema(
     invoices: [{ type: mongoose.Schema.Types.ObjectId, ref: "Invoice" }],
     reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
     rating: { type: Number, default: 0 },
+
+    //for the project progress
+    progressPercentage: { type: Number, default: 0 },
     milestones: [
       {
         title: { type: String, required: true },
@@ -78,29 +76,38 @@ const projectSchema = new mongoose.Schema(
         timestamp: { type: Date, default: Date.now },
       },
     ],
-    meetings: [
-      {
-        date: { type: Date },
-        time: { type: String },
-        link: { type: String },
-      },
-    ],
+    //payments
     paymentStatus: {
       type: String,
       enum: ["pending", "paid", "partially_paid"],
       default: "pending",
     },
+    paymentHistory: [
+      {
+        amount: { type: Number, required: true },
+        date: { type: Date, default: Date.now },
+        method: { type: String },
+        reference: { type: String },
+        notes: { type: String },
+      },
+    ],
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 // Virtual field for architect name
 projectSchema.virtual("architectName", {
-  ref: "User", // The model to use
-  localField: "architectId", // Find architectId in the project
-  foreignField: "_id", // Find the _id in the User model
-  justOne: true, // Only need one result
+  ref: "User",
+  localField: "architectId",
+  foreignField: "_id",
+  justOne: true,
 });
-
+// Validation for end date to be after start date
+projectSchema.pre("validate", function (next) {
+  if (this.startDate && this.endDate && this.startDate > this.endDate) {
+    this.invalidate("endDate", "End date must be after start date");
+  }
+  next();
+});
 // Exporting the model
 module.exports = mongoose.model("Project", projectSchema);

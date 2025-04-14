@@ -179,66 +179,89 @@ exports.googleLogin = asyncHandler(async (req, res) => {
 });
 
 // Login
+// Login
 exports.login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
+    console.log("Login attempt for:", email);
 
-  const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password");
+    console.log("User found:", user ? "Yes" : "No");
 
-  if (!user) {
-    return res
-      .status(401)
-      .json({ success: false, error: "Email ou mot de passe incorrect" });
-  }
+    if (!user) {
+      console.log("User not found with email:", email);
+      return res
+        .status(401)
+        .json({ success: false, error: "Email ou mot de passe incorrect" });
+    }
 
-  if (user.authMethod === "auth0") {
-    return res.status(401).json({
+    console.log("User role:", user.role);
+    console.log("User status:", user.status);
+    console.log("Auth method:", user.authMethod);
+
+    if (user.authMethod === "auth0") {
+      console.log("Auth0 login attempt - redirecting to Auth0");
+      return res.status(401).json({
+        success: false,
+        error: "Veuillez utiliser Auth0 pour vous connecter",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match:", isMatch);
+
+    if (!isMatch) {
+      console.log("Password mismatch for user:", email);
+      return res
+        .status(401)
+        .json({ success: false, error: "Email ou mot de passe incorrect" });
+    }
+
+    if (user.role === "architect" && user.status !== "approved") {
+      console.log("Architect not approved. Status:", user.status);
+      return res.status(401).json({
+        success: false,
+        error: "Compte en attente d'approbation",
+      });
+    }
+
+    // Check if this is the architect's first login
+    const isFirstLogin = user.role === "architect" && !user.firstLogin;
+    console.log("Is first login:", isFirstLogin);
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    user.authTokens.push({ token });
+
+    // Only update firstLogin after successful authentication
+    if (isFirstLogin) {
+      user.firstLogin = true;
+    }
+
+    await user.save();
+    console.log("User saved with token");
+
+    const userObject = user.toObject();
+    delete userObject.password;
+    delete userObject.authTokens;
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: userObject,
+      isFirstLogin: isFirstLogin,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
       success: false,
-      error: "Veuillez utiliser Auth0 pour vous connecter",
+      error: error.message || "An error occurred during login",
     });
   }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    return res
-      .status(401)
-      .json({ success: false, error: "Email ou mot de passe incorrect" });
-  }
-
-  if (user.role === "architect" && user.status !== "approved") {
-    return res.status(401).json({
-      success: false,
-      error: "Compte en attente d'approbation",
-    });
-  }
-
-  // Check if this is the architect's first login
-  const isFirstLogin = user.role === "architect" && !user.firstLogin;
-
-  const token = jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
-
-  user.authTokens.push({ token });
-
-  // Only update firstLogin after successful authentication
-  if (isFirstLogin) {
-    user.firstLogin = true;
-  }
-
-  await user.save();
-
-  const userObject = user.toObject();
-  delete userObject.password;
-  delete userObject.authTokens;
-
-  res.status(200).json({
-    success: true,
-    token,
-    user: userObject,
-    isFirstLogin: isFirstLogin,
-  });
 });
 
 // Get Profile

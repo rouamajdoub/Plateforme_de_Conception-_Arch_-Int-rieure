@@ -17,6 +17,7 @@ const Signup = () => {
     formState: { errors },
     reset,
     watch,
+    control,
   } = useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -26,6 +27,12 @@ const Signup = () => {
   const [step, setStep] = useState(1);
   const [userType, setUserType] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [educationFields, setEducationFields] = useState([
+    { degree: "", institution: "", graduationYear: "" },
+  ]);
+  const [softwareFields, setSoftwareFields] = useState([
+    { name: "", level: "" },
+  ]);
 
   useEffect(() => {
     if (authStatus === "succeeded") {
@@ -46,11 +53,32 @@ const Signup = () => {
     };
   }, [dispatch]);
 
+  const addEducationField = () => {
+    setEducationFields([
+      ...educationFields,
+      { degree: "", institution: "", graduationYear: "" },
+    ]);
+  };
+
+  const removeEducationField = (index) => {
+    const values = [...educationFields];
+    values.splice(index, 1);
+    setEducationFields(values);
+  };
+
+  const addSoftwareField = () => {
+    setSoftwareFields([...softwareFields, { name: "", level: "" }]);
+  };
+
+  const removeSoftwareField = (index) => {
+    const values = [...softwareFields];
+    values.splice(index, 1);
+    setSoftwareFields(values);
+  };
+
   const onSubmit = (data) => {
-    // Map the data to match the expected backend structure
     let formData = { ...data, role: userType };
 
-    // For client, convert location.country to pays and structure correctly
     if (userType === "client") {
       formData = {
         ...formData,
@@ -58,27 +86,23 @@ const Signup = () => {
         region: data.location?.region,
         city: data.location?.city || "",
       };
-      // Remove the nested location object since we're flattening it
       delete formData.location;
-    }
-    // For architect, ensure all required fields are properly formatted
-    else if (userType === "architect") {
+    } else if (userType === "architect") {
       formData = {
         ...formData,
-        // Convert any arrays from comma-separated strings
+        education: educationFields.filter(
+          (edu) => edu.degree && edu.institution && edu.graduationYear
+        ),
+        softwareProficiency: softwareFields.filter(
+          (soft) => soft.name && soft.level
+        ),
         certifications: data.certifications
           ? data.certifications.split(",").map((item) => item.trim())
           : [],
-        softwareProficiency: data.softwareProficiency
-          ? data.softwareProficiency.split(",").map((item) => item.trim())
-          : [],
-        // Ensure numeric fields are numbers
         experienceYears: parseInt(data.experienceYears, 10),
-        // Add default values for required location info
-        pays: "",
-        region: "",
-        city: "",
-        // Ensure coordinates has a default value
+        pays: data.pays || "",
+        region: data.region || "",
+        city: data.city || "",
         coordinates: [0, 0],
       };
     }
@@ -116,6 +140,8 @@ const Signup = () => {
     setStep(1);
     setUserType(null);
     setIsSubmitted(false);
+    setEducationFields([{ degree: "", institution: "", graduationYear: "" }]);
+    setSoftwareFields([{ name: "", level: "" }]);
     dispatch(resetStatus());
   };
 
@@ -262,106 +288,254 @@ const Signup = () => {
         {step === 2 && userType === "architect" && (
           <div className="form-step">
             <h2>Step 2: Professional Details</h2>
-            <div className="form-group">
-              <input
-                {...register("cin", { required: "CIN is required" })}
-                placeholder="CIN"
-              />
-              {errors.cin && (
-                <p className="error-message">{errors.cin.message}</p>
-              )}
+
+            {/* Personal Information Section */}
+            <div className="form-section">
+              <h3>Personal Information</h3>
+              <div className="form-group">
+                <input
+                  {...register("cin", { required: "CIN is required" })}
+                  placeholder="CIN"
+                />
+                {errors.cin && (
+                  <p className="error-message">{errors.cin.message}</p>
+                )}
+              </div>
+              <div className="form-group">
+                <input
+                  {...register("patenteNumber", {
+                    required: "Patente number is required",
+                  })}
+                  placeholder="Patente Number"
+                />
+                {errors.patenteNumber && (
+                  <p className="error-message">
+                    {errors.patenteNumber.message}
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="form-group">
-              <input
-                {...register("patenteNumber", {
-                  required: "Patente number is required",
-                })}
-                placeholder="Patente Number"
-              />
-              {errors.patenteNumber && (
-                <p className="error-message">{errors.patenteNumber.message}</p>
-              )}
+
+            {/* Business Information Section */}
+            <div className="form-section">
+              <h3>Business Information</h3>
+              <div className="form-group">
+                <input
+                  {...register("companyName", {
+                    required: "Company name is required",
+                  })}
+                  placeholder="Company Name"
+                />
+                {errors.companyName && (
+                  <p className="error-message">{errors.companyName.message}</p>
+                )}
+              </div>
+              <div className="form-group">
+                <input
+                  {...register("experienceYears", {
+                    required: "Years of experience is required",
+                    min: {
+                      value: 0,
+                      message: "Experience years must be a positive number",
+                    },
+                  })}
+                  placeholder="Years of Experience"
+                  type="number"
+                />
+                {errors.experienceYears && (
+                  <p className="error-message">
+                    {errors.experienceYears.message}
+                  </p>
+                )}
+              </div>
+              <div className="form-group">
+                <input
+                  {...register("specialization", {
+                    required: "Specialization is required",
+                  })}
+                  placeholder="Specialization (comma separated)"
+                />
+                {errors.specialization && (
+                  <p className="error-message">
+                    {errors.specialization.message}
+                  </p>
+                )}
+              </div>
+              <div className="form-group">
+                <input
+                  {...register("portfolioURL", {
+                    required: "Portfolio URL is required",
+                    pattern: {
+                      value: /^(https?:\/\/)?([\w.-]+)(:[0-9]+)?(\/[^\s]*)?$/,
+                      message: "Invalid URL format",
+                    },
+                  })}
+                  placeholder="Portfolio URL"
+                  type="url"
+                />
+                {errors.portfolioURL && (
+                  <p className="error-message">{errors.portfolioURL.message}</p>
+                )}
+              </div>
+              <div className="form-group">
+                <input
+                  {...register("certifications")}
+                  placeholder="Certifications (comma separated)"
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <input
-                {...register("companyName", {
-                  required: "Company name is required",
-                })}
-                placeholder="Company Name"
-              />
-              {errors.companyName && (
-                <p className="error-message">{errors.companyName.message}</p>
-              )}
+
+            {/* Education Section */}
+            <div className="form-section">
+              <h3>Education</h3>
+              {educationFields.map((field, index) => (
+                <div key={index} className="education-field-group">
+                  <div className="form-group">
+                    <input
+                      value={field.degree}
+                      onChange={(e) => {
+                        const values = [...educationFields];
+                        values[index].degree = e.target.value;
+                        setEducationFields(values);
+                      }}
+                      placeholder="Degree"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <input
+                      value={field.institution}
+                      onChange={(e) => {
+                        const values = [...educationFields];
+                        values[index].institution = e.target.value;
+                        setEducationFields(values);
+                      }}
+                      placeholder="Institution"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <input
+                      value={field.graduationYear}
+                      onChange={(e) => {
+                        const values = [...educationFields];
+                        values[index].graduationYear = e.target.value;
+                        setEducationFields(values);
+                      }}
+                      placeholder="Graduation Year"
+                      type="number"
+                    />
+                  </div>
+                  {educationFields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeEducationField(index)}
+                      className="btn remove-btn"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addEducationField}
+                className="btn add-btn"
+              >
+                Add Another Education
+              </button>
             </div>
-            <div className="form-group">
-              <input
-                {...register("experienceYears", {
-                  required: "Years of experience is required",
-                  min: {
-                    value: 0,
-                    message: "Experience years must be a positive number",
-                  },
-                })}
-                placeholder="Years of Experience"
-                type="number"
-              />
-              {errors.experienceYears && (
-                <p className="error-message">
-                  {errors.experienceYears.message}
-                </p>
-              )}
+
+            {/* Software Proficiency Section */}
+            <div className="form-section">
+              <h3>Software Proficiency</h3>
+              {softwareFields.map((field, index) => (
+                <div key={index} className="software-field-group">
+                  <div className="form-group">
+                    <input
+                      value={field.name}
+                      onChange={(e) => {
+                        const values = [...softwareFields];
+                        values[index].name = e.target.value;
+                        setSoftwareFields(values);
+                      }}
+                      placeholder="Software Name"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <select
+                      value={field.level}
+                      onChange={(e) => {
+                        const values = [...softwareFields];
+                        values[index].level = e.target.value;
+                        setSoftwareFields(values);
+                      }}
+                    >
+                      <option value="">Select Level</option>
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Advanced">Advanced</option>
+                      <option value="Expert">Expert</option>
+                    </select>
+                  </div>
+                  {softwareFields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeSoftwareField(index)}
+                      className="btn remove-btn"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addSoftwareField}
+                className="btn add-btn"
+              >
+                Add Another Software
+              </button>
             </div>
-            <div className="form-group">
-              <input
-                {...register("specialization", {
-                  required: "Specialization is required",
-                })}
-                placeholder="Specialization"
-              />
-              {errors.specialization && (
-                <p className="error-message">{errors.specialization.message}</p>
-              )}
+
+            {/* Location Section */}
+            <div className="form-section">
+              <h3>Location</h3>
+              <div className="form-group">
+                <input {...register("pays")} placeholder="Country" />
+              </div>
+              <div className="form-group">
+                <input {...register("region")} placeholder="Region" />
+              </div>
+              <div className="form-group">
+                <input {...register("city")} placeholder="City" />
+              </div>
             </div>
-            <div className="form-group">
-              <input
-                {...register("portfolioURL", {
-                  required: "Portfolio URL is required",
-                  pattern: {
-                    value: /^(https?:\/\/)?([\w.-]+)(:[0-9]+)?(\/[^\s]*)?$/,
-                    message: "Invalid URL format",
-                  },
-                })}
-                placeholder="Portfolio URL"
-                type="url"
-              />
-              {errors.portfolioURL && (
-                <p className="error-message">{errors.portfolioURL.message}</p>
-              )}
+
+            {/* Contact Information Section */}
+            <div className="form-section">
+              <h3>Contact Information</h3>
+              <div className="form-group">
+                <input
+                  {...register("website")}
+                  placeholder="Website (Optional)"
+                  type="url"
+                />
+              </div>
+              <div className="form-group">
+                <input
+                  {...register("socialMedia.linkedin")}
+                  placeholder="LinkedIn URL (Optional)"
+                  type="url"
+                />
+              </div>
+              <div className="form-group">
+                <input
+                  {...register("socialMedia.instagram")}
+                  placeholder="Instagram URL (Optional)"
+                  type="url"
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <input
-                {...register("certifications")}
-                placeholder="Certifications (comma separated)"
-              />
-            </div>
-            <div className="form-group">
-              <input {...register("education")} placeholder="Education" />
-            </div>
-            <div className="form-group">
-              <input
-                {...register("softwareProficiency")}
-                placeholder="Software Proficiency (comma separated)"
-              />
-            </div>
-            <div className="form-group">
-              <input {...register("pays")} placeholder="Country" />
-            </div>
-            <div className="form-group">
-              <input {...register("region")} placeholder="Region" />
-            </div>
-            <div className="form-group">
-              <input {...register("city")} placeholder="City" />
-            </div>
+
             <button type="submit" className="btn">
               Finish Registration
             </button>

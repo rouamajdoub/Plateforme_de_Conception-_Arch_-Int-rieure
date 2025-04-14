@@ -1,8 +1,7 @@
-// frontend/src/redux/slices/ProjectSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// API base URL - replace with your actual API URL
+// API base URL
 const API_URL = "/api/projects";
 
 // Async thunks
@@ -36,11 +35,19 @@ export const fetchProjectById = createAsyncThunk(
 
 export const createProject = createAsyncThunk(
   "projects/create",
-  async (projectData, { rejectWithValue }) => {
+  async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(API_URL, projectData);
+      // Set headers for form data with proper boundary handling
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      };
+
+      const response = await axios.post(API_URL, formData, config);
       return response.data.project;
     } catch (error) {
+      console.error("Project creation error:", error);
       return rejectWithValue(
         error.response?.data || { message: error.message }
       );
@@ -50,11 +57,25 @@ export const createProject = createAsyncThunk(
 
 export const updateProject = createAsyncThunk(
   "projects/update",
-  async ({ projectId, projectData }, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`${API_URL}/${projectId}`, projectData);
+      const { projectId, formData } = params;
+
+      // Set headers for form data
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      };
+
+      const response = await axios.put(
+        `${API_URL}/${projectId}`,
+        formData,
+        config
+      );
       return response.data.project;
     } catch (error) {
+      console.error("Project update error:", error);
       return rejectWithValue(
         error.response?.data || { message: error.message }
       );
@@ -107,11 +128,11 @@ export const likeProject = createAsyncThunk(
   }
 );
 
-export const fetchArchitectProjects = createAsyncThunk(
-  "projects/fetchArchitectProjects",
-  async (_, { rejectWithValue }) => {
+export const getProjectLikesCount = createAsyncThunk(
+  "projects/getLikesCount",
+  async (projectId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/architect`);
+      const response = await axios.get(`${API_URL}/${projectId}/likes`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -121,13 +142,11 @@ export const fetchArchitectProjects = createAsyncThunk(
   }
 );
 
-export const fetchClientProjects = createAsyncThunk(
-  "projects/fetchClientProjects",
-  async ({ clientId, clientType }, { rejectWithValue }) => {
+export const fetchProjectsByClient = createAsyncThunk(
+  "projects/fetchByClient",
+  async (clientId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${API_URL}/client/${clientId}/${clientType}`
-      );
+      const response = await axios.get(`${API_URL}/client/${clientId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -146,6 +165,7 @@ const initialState = {
   error: null,
   success: false,
   message: "",
+  likesCount: 0,
 };
 
 // Create slice
@@ -162,18 +182,11 @@ const projectSlice = createSlice({
     clearCurrentProject: (state) => {
       state.currentProject = null;
     },
-    incrementViewCount: (state, action) => {
-      const projectId = action.payload;
-      const project = state.projects.find((p) => p._id === projectId);
-      if (project) {
-        project.views += 1;
-      }
-      if (state.currentProject && state.currentProject._id === projectId) {
-        state.currentProject.views += 1;
-      }
-    },
     setFilteredProjects: (state, action) => {
       state.searchResults = action.payload;
+    },
+    clearErrors: (state) => {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -185,7 +198,7 @@ const projectSlice = createSlice({
       })
       .addCase(fetchAllProjects.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.projects = action.payload;
+        state.projects = action.payload.projects;
         state.success = true;
       })
       .addCase(fetchAllProjects.rejected, (state, action) => {
@@ -200,7 +213,7 @@ const projectSlice = createSlice({
       })
       .addCase(fetchProjectById.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.currentProject = action.payload;
+        state.currentProject = action.payload.project;
         state.success = true;
       })
       .addCase(fetchProjectById.rejected, (state, action) => {
@@ -212,6 +225,7 @@ const projectSlice = createSlice({
       .addCase(createProject.pending, (state) => {
         state.isLoading = true;
         state.error = null;
+        state.success = false;
       })
       .addCase(createProject.fulfilled, (state, action) => {
         state.isLoading = false;
@@ -221,6 +235,7 @@ const projectSlice = createSlice({
       })
       .addCase(createProject.rejected, (state, action) => {
         state.isLoading = false;
+        state.success = false;
         state.error = action.payload || { message: "Failed to create project" };
       })
 
@@ -228,6 +243,7 @@ const projectSlice = createSlice({
       .addCase(updateProject.pending, (state) => {
         state.isLoading = true;
         state.error = null;
+        state.success = false;
       })
       .addCase(updateProject.fulfilled, (state, action) => {
         state.isLoading = false;
@@ -243,6 +259,7 @@ const projectSlice = createSlice({
       })
       .addCase(updateProject.rejected, (state, action) => {
         state.isLoading = false;
+        state.success = false;
         state.error = action.payload || { message: "Failed to update project" };
       })
 
@@ -282,61 +299,49 @@ const projectSlice = createSlice({
       })
 
       // Like project
+      .addCase(likeProject.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(likeProject.fulfilled, (state, action) => {
-        const projectId = action.payload.project._id;
-        const updatedProject = action.payload.project;
-
-        // Update in projects array
-        const projectIndex = state.projects.findIndex(
-          (p) => p._id === projectId
-        );
-        if (projectIndex !== -1) {
-          state.projects[projectIndex] = {
-            ...state.projects[projectIndex],
-            likes: updatedProject.likes,
-          };
-        }
-
-        // Update current project if it's the one being liked
-        if (state.currentProject && state.currentProject._id === projectId) {
-          state.currentProject = {
-            ...state.currentProject,
-            likes: updatedProject.likes,
-          };
-        }
-
+        state.isLoading = false;
+        state.likesCount = action.payload.likesCount;
         state.message = action.payload.message;
         state.success = true;
       })
+      .addCase(likeProject.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || { message: "Failed to like project" };
+      })
 
-      // Fetch architect projects
-      .addCase(fetchArchitectProjects.pending, (state) => {
+      // Get project likes count
+      .addCase(getProjectLikesCount.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchArchitectProjects.fulfilled, (state, action) => {
+      .addCase(getProjectLikesCount.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.projects = action.payload;
+        state.likesCount = action.payload.likesCount;
         state.success = true;
       })
-      .addCase(fetchArchitectProjects.rejected, (state, action) => {
+      .addCase(getProjectLikesCount.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || {
-          message: "Failed to fetch architect projects",
+          message: "Failed to get project likes count",
         };
       })
 
-      // Fetch client projects
-      .addCase(fetchClientProjects.pending, (state) => {
+      // Fetch projects by client
+      .addCase(fetchProjectsByClient.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchClientProjects.fulfilled, (state, action) => {
+      .addCase(fetchProjectsByClient.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.projects = action.payload;
+        state.projects = action.payload.projects;
         state.success = true;
       })
-      .addCase(fetchClientProjects.rejected, (state, action) => {
+      .addCase(fetchProjectsByClient.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || {
           message: "Failed to fetch client projects",
@@ -349,7 +354,7 @@ const projectSlice = createSlice({
 export const {
   resetProjectState,
   clearCurrentProject,
-  incrementViewCount,
   setFilteredProjects,
+  clearErrors,
 } = projectSlice.actions;
 export default projectSlice.reducer;

@@ -1,3 +1,5 @@
+// Architect Client Controller
+const mongoose = require("mongoose");
 const ArchitectClient = require("../models/Arch_Clients");
 
 // Create a new client
@@ -8,6 +10,16 @@ exports.createClient = async (req, res) => {
       architect: req.user._id, // Associate client with the architect
     });
     await client.save();
+
+    // Update the architect's clients array
+    await mongoose
+      .model("User")
+      .findByIdAndUpdate(
+        req.user._id,
+        { $push: { clients: client._id } },
+        { new: true }
+      );
+
     res.status(201).json({ success: true, data: client });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
@@ -27,15 +39,17 @@ exports.getClients = async (req, res) => {
 // Update a client
 exports.updateClient = async (req, res) => {
   try {
-    const client = await ArchitectClient.findByIdAndUpdate(
-      req.params.id,
+    // Ensure the architect can only update their own clients
+    const client = await ArchitectClient.findOneAndUpdate(
+      { _id: req.params.id, architect: req.user._id },
       req.body,
       { new: true }
     );
+
     if (!client) {
       return res
         .status(404)
-        .json({ success: false, error: "Client not found" });
+        .json({ success: false, error: "Client not found or not authorized" });
     }
     res.status(200).json({ success: true, data: client });
   } catch (error) {
@@ -46,13 +60,24 @@ exports.updateClient = async (req, res) => {
 // Delete a client
 exports.deleteClient = async (req, res) => {
   try {
-    const client = await ArchitectClient.findByIdAndDelete(req.params.id);
+    // Ensure the architect can only delete their own clients
+    const client = await ArchitectClient.findOneAndDelete({
+      _id: req.params.id,
+      architect: req.user._id,
+    });
+
     if (!client) {
       return res
         .status(404)
-        .json({ success: false, error: "Client not found" });
+        .json({ success: false, error: "Client not found or not authorized" });
     }
-    res.status(204).json({ success: true, data: null });
+
+    // Also remove client from architect's clients array
+    await mongoose
+      .model("User")
+      .findByIdAndUpdate(req.user._id, { $pull: { clients: client._id } });
+
+    res.status(200).json({ success: true, data: null });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
   }
@@ -71,14 +96,20 @@ exports.searchClients = async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 };
+
 // Get a client by ID
 exports.getClientById = async (req, res) => {
   try {
-    const client = await ArchitectClient.findById(req.params.id);
+    // Ensure the architect can only view their own clients
+    const client = await ArchitectClient.findOne({
+      _id: req.params.id,
+      architect: req.user._id,
+    });
+
     if (!client) {
       return res
         .status(404)
-        .json({ success: false, error: "Client not found" });
+        .json({ success: false, error: "Client not found or not authorized" });
     }
     res.status(200).json({ success: true, data: client });
   } catch (error) {

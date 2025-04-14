@@ -54,7 +54,7 @@ const getAllQuotes = async (req, res) => {
     const { status, client } = req.query;
     const filter = {
       architect: req.user.userId,
-      type: "quote", // Only get quotes
+      type: "quote",
     };
 
     if (status) filter.status = status;
@@ -84,7 +84,7 @@ const getQuoteById = async (req, res) => {
     const quote = await Quote.findOne({
       _id: req.params.id,
       architect: req.user.userId,
-      type: "quote", // Ensure it's a quote
+      type: "quote",
     }).populate("client project");
 
     if (!quote) {
@@ -108,7 +108,6 @@ const updateQuote = async (req, res) => {
   try {
     const { items, taxRate, discount } = req.body;
 
-    // Recalculate financials if items/tax/discount change
     let updateData = req.body;
 
     if (items || taxRate !== undefined || discount !== undefined) {
@@ -124,7 +123,6 @@ const updateQuote = async (req, res) => {
       const newDiscount =
         discount !== undefined ? discount : existingQuote.discount;
 
-      // Calculate new subtotal and item totals
       const subtotal = newItems.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice,
         0
@@ -527,8 +525,6 @@ const recordPayment = async (req, res) => {
 
 // ============== SHARED FUNCTIONS ==============
 
-
-
 // Generate PDF for quote or invoice
 const generatePDF = async (req, res) => {
   try {
@@ -701,7 +697,6 @@ const generatePDF = async (req, res) => {
 };
 
 module.exports = {
-  // Quote functions
   createQuote,
   getAllQuotes,
   getQuoteById,
@@ -709,7 +704,6 @@ module.exports = {
   deleteQuote,
   convertToInvoice,
 
-  // Invoice functions
   createInvoice,
   getAllInvoices,
   getInvoiceById,

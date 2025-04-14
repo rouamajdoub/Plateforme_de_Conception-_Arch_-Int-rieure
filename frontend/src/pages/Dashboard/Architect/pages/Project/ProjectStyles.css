@@ -1,0 +1,94 @@
+/* ProjectStyles.css */
+
+/* General container styling */
+.projects-container {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Table styling */
+.transparent-table {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.transparent-table th {
+  font-weight: bold;
+  color: #555;
+  background-color: #f1f3f5;
+}
+
+.transparent-table tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Project form styling */
+.add-project-container,
+.edit-project-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.add-project-dialog {
+  padding: 0;
+}
+
+.add-project-content {
+  padding: 0 !important;
+}
+
+.add-project-btn {
+  background: linear-gradient(45deg, #1976d2, #2196f3);
+  transition: all 0.3s ease;
+}
+
+.add-project-btn:hover {
+  background: linear-gradient(45deg, #1565c0, #1976d2);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.submit-btn {
+  background: linear-gradient(45deg, #1976d2, #2196f3);
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(45deg, #1565c0, #1976d2);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.close-btn {
+  color: #757575;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  color: #d32f2f;
+  background-color: rgba(211, 47, 47, 0.04);
+}
+
+/* Project details styling */
+.project-detail-card {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.project-detail-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .projects-container,
+  .add-project-container,
+  .edit-project-container {
+    padding: 16px;
+  }
+}
