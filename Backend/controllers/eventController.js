@@ -3,7 +3,11 @@ const Event = require("../models/eventModel");
 // Get all events
 exports.getAllEvents = async (req, res) => {
   try {
-    const events = await Event.find()
+    // Only fetch events created by the current user if they're an architect
+    const query =
+      req.user.role === "architect" ? { createdBy: req.user.id } : {};
+
+    const events = await Event.find(query)
       .populate("createdBy", "name email")
       .sort({ date: 1 });
 
@@ -26,16 +30,19 @@ exports.getFilteredEvents = async (req, res) => {
     const { startDate, endDate, createdBy } = req.query;
     const query = {};
 
+    // Only allow architects to see their own events
+    if (req.user.role === "architect") {
+      query.createdBy = req.user.id;
+    } else if (createdBy) {
+      query.createdBy = createdBy;
+    }
+
     if (startDate && endDate) {
       query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     } else if (startDate) {
       query.date = { $gte: new Date(startDate) };
     } else if (endDate) {
       query.date = { $lte: new Date(endDate) };
-    }
-
-    if (createdBy) {
-      query.createdBy = createdBy;
     }
 
     const events = await Event.find(query)
@@ -67,6 +74,17 @@ exports.getEventById = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Event not found",
+      });
+    }
+
+    // Ensure architects can only view their own events
+    if (
+      req.user.role === "architect" &&
+      event.createdBy._id.toString() !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to view this event",
       });
     }
 

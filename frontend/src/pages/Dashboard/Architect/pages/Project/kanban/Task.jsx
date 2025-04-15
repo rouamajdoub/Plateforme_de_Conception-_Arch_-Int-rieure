@@ -19,9 +19,26 @@ const TextContent = styled.div`
   text-align: center;
 `;
 
+// Fixed description display
+const Description = styled.div`
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  text-align: left;
+`;
+
+// Adding due date display
+const DueDate = styled.div`
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
+  text-align: right;
+`;
+
 export default function Task({ task, index }) {
+  // Using _id instead of id for MongoDB
   return (
-    <Draggable draggableId={task.id.toString()} index={index}>
+    <Draggable draggableId={task._id.toString()} index={index}>
       {(provided, snapshot) => (
         <Container
           {...provided.draggableProps}
@@ -30,6 +47,12 @@ export default function Task({ task, index }) {
           $isDragging={snapshot.isDragging}
         >
           <TextContent>{task.title}</TextContent>
+          {task.description && <Description>{task.description}</Description>}
+          {task.dueDate && (
+            <DueDate>
+              Due: {new Date(task.dueDate).toLocaleDateString()}
+            </DueDate>
+          )}
         </Container>
       )}
     </Draggable>

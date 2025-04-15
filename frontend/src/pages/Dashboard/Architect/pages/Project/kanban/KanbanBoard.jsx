@@ -5,10 +5,9 @@ import {
   fetchTasks,
   updateTaskStatus,
   selectTasksByStatus,
-  selectTasksLoading,
 } from "../../../../../../redux/slices/TaskSlice"; // Adjust the import path as needed
 import Column from "./Column";
-import TaskForm from "./TaskForm";
+import TaskForm from "./TaskForm.jsx";
 import { Button, Box, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add"; // If using Material UI icons
 
@@ -62,7 +61,7 @@ export default function KanbanBoard() {
       // Update task status in Redux and backend
       dispatch(
         updateTaskStatus({
-          id: draggableId,
+          id: draggableId, // This should match the MongoDB _id
           status: newStatus,
         })
       );
@@ -108,6 +107,7 @@ export default function KanbanBoard() {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleOpenTaskForm}
+          sx={{ backgroundColor: "var(--pink)" }}
         >
           New Task
         </Button>
@@ -119,6 +119,7 @@ export default function KanbanBoard() {
             display: "flex",
             justifyContent: "space-between",
             gap: "20px",
+            flexWrap: "wrap",
           }}
         >
           <Column title="To Do" tasks={todoTasks} id={"1"} />

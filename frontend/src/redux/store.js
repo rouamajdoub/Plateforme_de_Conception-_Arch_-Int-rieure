@@ -8,6 +8,7 @@ import projectReducer from "./slices/ProjectSlice";
 import eventReducer from "./slices/eventSlice";
 import clientsReducer from "./slices/clientsSlice";
 import tasksReducer from "./slices/TaskSlice";
+import quotesInvouceReducer from "./slices/quotesInvoiceSlice";
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -18,6 +19,7 @@ const store = configureStore({
     events: eventReducer,
     clients: clientsReducer,
     tasks: tasksReducer,
+    quotesInvoice: quotesInvouceReducer,
   },
 });
 

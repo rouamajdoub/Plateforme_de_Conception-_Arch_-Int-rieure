@@ -4,6 +4,7 @@ import {
   addEvent,
   deleteEvent,
   fetchEvents,
+  updateEvent,
 } from "../../../../../redux/slices/eventSlice";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -19,17 +20,30 @@ import {
   Typography,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
 } from "@mui/material";
 import "./Calendar.css";
 
 const Calendar = () => {
   const dispatch = useDispatch();
-
-  // Make sure to access the correct state path
   const { events, loading, error } = useSelector((state) => state.events);
 
-  // State for event form
+  // State for event dialog
   const [showError, setShowError] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [dialogMode, setDialogMode] = useState("add"); // "add" or "edit"
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventForm, setEventForm] = useState({
+    title: "",
+    description: "",
+    date: "",
+    location: "",
+  });
 
   useEffect(() => {
     dispatch(fetchEvents());
@@ -54,35 +68,92 @@ const Calendar = () => {
         extendedProps: {
           description: event.description,
           location: event.location,
+          createdBy: event.createdBy,
+          _id: event._id,
         },
       }))
     : [];
 
   const handleDateClick = (selected) => {
-    const title = prompt("Please enter a new title for your event");
-    if (!title) return;
+    // Format the date to YYYY-MM-DD for the date input
+    const formattedDate = selected.startStr.split("T")[0];
 
-    const description = prompt("Please enter a description (optional)");
-    const location = prompt("Please enter a location (optional)");
-
-    const newEvent = {
-      title,
-      description: description || "Added from calendar",
-      date: selected.startStr, // This matches your backend schema
-      location: location || "Online",
-      // createdBy is added by the backend based on the authenticated user
-    };
-
-    dispatch(addEvent(newEvent));
+    setEventForm({
+      title: "",
+      description: "",
+      date: formattedDate,
+      location: "",
+    });
+    setDialogMode("add");
+    setOpenDialog(true);
   };
 
   const handleEventClick = (selected) => {
+    const event = events.find(
+      (e) => e._id === selected.event.extendedProps._id
+    );
+
+    if (event) {
+      // Format the date to YYYY-MM-DD for the date input
+      const formattedDate = new Date(event.date).toISOString().split("T")[0];
+
+      setSelectedEvent(event);
+      setEventForm({
+        title: event.title,
+        description: event.description || "",
+        date: formattedDate,
+        location: event.location || "",
+      });
+      setDialogMode("edit");
+      setOpenDialog(true);
+    }
+  };
+
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setEventForm({
+      title: "",
+      description: "",
+      date: "",
+      location: "",
+    });
+    setSelectedEvent(null);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEventForm({
+      ...eventForm,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = () => {
+    if (!eventForm.title || !eventForm.date) {
+      alert("Title and date are required");
+      return;
+    }
+
+    if (dialogMode === "add") {
+      dispatch(addEvent(eventForm));
+    } else {
+      dispatch(
+        updateEvent({
+          id: selectedEvent._id,
+          eventData: eventForm,
+        })
+      );
+    }
+
+    handleDialogClose();
+  };
+
+  const handleDeleteEvent = () => {
     if (
-      window.confirm(
-        `Are you sure you want to delete '${selected.event.title}'?`
-      )
+      window.confirm(`Are you sure you want to delete '${eventForm.title}'?`)
     ) {
-      dispatch(deleteEvent(selected.event.id));
+      dispatch(deleteEvent(selectedEvent._id));
+      handleDialogClose();
     }
   };
 
@@ -124,6 +195,21 @@ const Calendar = () => {
                       backgroundColor: "#ff919d",
                       margin: "10px 0",
                       borderRadius: "2px",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => {
+                      const formattedDate = new Date(event.date)
+                        .toISOString()
+                        .split("T")[0];
+                      setSelectedEvent(event);
+                      setEventForm({
+                        title: event.title,
+                        description: event.description || "",
+                        date: formattedDate,
+                        location: event.location || "",
+                      });
+                      setDialogMode("edit");
+                      setOpenDialog(true);
                     }}
                   >
                     <ListItemText
@@ -185,6 +271,76 @@ const Calendar = () => {
           </Box>
         </Box>
       )}
+
+      {/* Event Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {dialogMode === "add" ? "Add New Event" : "Edit Event"}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Title"
+            name="title"
+            fullWidth
+            value={eventForm.title}
+            onChange={handleInputChange}
+            required
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Description"
+            name="description"
+            fullWidth
+            multiline
+            rows={3}
+            value={eventForm.description}
+            onChange={handleInputChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Date"
+            name="date"
+            type="date"
+            fullWidth
+            value={eventForm.date}
+            onChange={handleInputChange}
+            required
+            InputLabelProps={{ shrink: true }}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Location"
+            name="location"
+            fullWidth
+            value={eventForm.location}
+            onChange={handleInputChange}
+            sx={{ mb: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose} color="primary">
+            Cancel
+          </Button>
+          {dialogMode === "edit" && (
+            <Button onClick={handleDeleteEvent} color="error">
+              Delete
+            </Button>
+          )}
+          <Button onClick={handleSubmit} color="primary" variant="contained">
+            {dialogMode === "add" ? "Add" : "Update"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

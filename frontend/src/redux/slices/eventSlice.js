@@ -3,9 +3,14 @@ import axios from "axios";
 
 const API_URL = "http://localhost:5000/api/events";
 
-// Get auth token function
-const getAuthToken = () => {
-  return localStorage.getItem("authToken"); // or however you store your token
+// Get auth token function - unified approach
+const getAuthConfig = () => {
+  const token = localStorage.getItem("token");
+
+  return {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    withCredentials: true, // For Auth0 cookie-based auth
+  };
 };
 
 // Fetch all events
@@ -13,13 +18,9 @@ export const fetchEvents = createAsyncThunk(
   "events/fetchEvents",
   async (_, { rejectWithValue }) => {
     try {
-      // Make sure withCredentials is set to true to pass cookies
-      const response = await axios.get(API_URL, {
-        withCredentials: true,
-      });
-
+      const response = await axios.get(API_URL, getAuthConfig());
       console.log("Fetched events data:", response.data);
-      return response.data.data; // Make sure this is correctly extracting the events array
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching events:", error);
       return rejectWithValue(
@@ -34,16 +35,7 @@ export const addEvent = createAsyncThunk(
   "events/addEvent",
   async (eventData, { rejectWithValue }) => {
     try {
-      // Use withCredentials: true to include cookies (for Auth0)
-      // If using JWT, include the token in Authorization header
-      const token = localStorage.getItem("token"); // or sessionStorage, or however you store it
-
-      const config = {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        withCredentials: true, // This is crucial for Auth0 cookie-based auth
-      };
-
-      const response = await axios.post(API_URL, eventData, config);
+      const response = await axios.post(API_URL, eventData, getAuthConfig());
       return response.data.data;
     } catch (error) {
       console.error("Error adding event:", error);
@@ -54,20 +46,32 @@ export const addEvent = createAsyncThunk(
   }
 );
 
+// Update an event
+export const updateEvent = createAsyncThunk(
+  "events/updateEvent",
+  async ({ id, eventData }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/${id}`,
+        eventData,
+        getAuthConfig()
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Error updating event:", error);
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update event"
+      );
+    }
+  }
+);
+
 // Delete an event
 export const deleteEvent = createAsyncThunk(
   "events/deleteEvent",
   async (eventId, { rejectWithValue }) => {
     try {
-      const token = getAuthToken();
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      };
-
-      await axios.delete(`${API_URL}/${eventId}`, config);
+      await axios.delete(`${API_URL}/${eventId}`, getAuthConfig());
       return eventId;
     } catch (error) {
       return rejectWithValue(
@@ -108,6 +112,23 @@ const eventSlice = createSlice({
         state.events.push(action.payload);
       })
       .addCase(addEvent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateEvent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateEvent.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.events.findIndex(
+          (event) => event._id === action.payload._id
+        );
+        if (index !== -1) {
+          state.events[index] = action.payload;
+        }
+      })
+      .addCase(updateEvent.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

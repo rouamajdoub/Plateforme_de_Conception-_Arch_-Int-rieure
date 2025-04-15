@@ -13,7 +13,7 @@ const quoteInvoiceSchema = new mongoose.Schema(
     // Client Information
     client: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "ArchitectClient",
       required: true,
     },
     clientName: {
