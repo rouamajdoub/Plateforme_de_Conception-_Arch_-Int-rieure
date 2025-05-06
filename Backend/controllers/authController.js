@@ -178,8 +178,91 @@ exports.googleLogin = asyncHandler(async (req, res) => {
   });
 });
 
-// Login
-// Login
+// Admin Registration
+exports.registerAdmin = asyncHandler(async (req, res) => {
+  try {
+    const {
+      pseudo,
+      nomDeFamille,
+      prenom,
+      email,
+      password,
+      phoneNumber,
+      adminPrivileges,
+      superAdmin,
+      adminSecretKey,
+    } = req.body;
+
+    // Verify admin secret key to prevent unauthorized admin creation
+    if (adminSecretKey !== process.env.ADMIN_SECRET_KEY) {
+      return res.status(403).json({
+        success: false,
+        error: "Invalid admin secret key. Admin creation not authorized.",
+      });
+    }
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email déjà utilisé" });
+    }
+
+    // Password validation
+    if (!password || password.length < 8) {
+      return res.status(400).json({
+        error: "Password must be at least 8 characters long.",
+      });
+    }
+
+    // Create admin user
+    const adminData = {
+      pseudo,
+      nomDeFamille,
+      prenom,
+      email,
+      password,
+      phoneNumber: phoneNumber || "",
+      role: "admin",
+      authMethod: "local",
+      isVerified: true,
+      adminPrivileges: adminPrivileges || ["content-moderation"],
+      superAdmin: superAdmin || false,
+      isActive: true,
+    };
+
+    const admin = new User(adminData);
+    await admin.save();
+
+    // Generate JWT token for immediate login
+    const token = jwt.sign(
+      { id: admin._id, role: admin.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    admin.authTokens.push({ token });
+    await admin.save();
+
+    const adminObject = admin.toObject();
+    delete adminObject.password;
+    delete adminObject.authTokens;
+
+    res.status(201).json({
+      success: true,
+      message: "Admin account created successfully",
+      token,
+      user: adminObject,
+    });
+  } catch (error) {
+    console.error("Admin registration error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "An error occurred during admin registration",
+    });
+  }
+});
+
+// Update your login function to handle admin login
 exports.login = asyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -192,7 +275,7 @@ exports.login = asyncHandler(async (req, res) => {
       console.log("User not found with email:", email);
       return res
         .status(401)
-        .json({ success: false, error: "Email ou mot de passe incorrect" });
+        .json({ success: false, error: "Email or password incorrect" });
     }
 
     console.log("User role:", user.role);
@@ -203,7 +286,7 @@ exports.login = asyncHandler(async (req, res) => {
       console.log("Auth0 login attempt - redirecting to Auth0");
       return res.status(401).json({
         success: false,
-        error: "Veuillez utiliser Auth0 pour vous connecter",
+        error: "Please use Auth0 to log in",
       });
     }
 
@@ -217,16 +300,26 @@ exports.login = asyncHandler(async (req, res) => {
         .json({ success: false, error: "Email ou mot de passe incorrect" });
     }
 
+    // Extra check for architects
     if (user.role === "architect" && user.status !== "approved") {
       console.log("Architect not approved. Status:", user.status);
       return res.status(401).json({
         success: false,
-        error: "Compte en attente d'approbation",
+        error: "Account pending approval",
       });
     }
 
-    // Check if this is the architect's first login
-    const isFirstLogin = user.role === "architect" && !user.firstLogin;
+    // Extra check for admins
+    if (user.role === "admin" && !user.isActive) {
+      console.log("Admin account inactive");
+      return res.status(401).json({
+        success: false,
+        error: "Admin account inactive",
+      });
+    }
+
+    // Check if this is the first login
+    const isFirstLogin = !user.firstLogin;
     console.log("Is first login:", isFirstLogin);
 
     const token = jwt.sign(
@@ -263,7 +356,6 @@ exports.login = asyncHandler(async (req, res) => {
     });
   }
 });
-
 // Get Profile
 exports.getProfile = asyncHandler(async (req, res) => {
   try {

@@ -49,6 +49,55 @@ const sendApprovalEmail = async (user) => {
   }
 };
 
+// Function to send rejection email to architects
+const sendRejectionEmail = async (user) => {
+  try {
+    const apiInstance = initBrevoClient();
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+    // Format rejection reason
+    let reasonText = "";
+    if (user.rejectionDetails && user.rejectionDetails.reason) {
+      reasonText = user.rejectionDetails.reason;
+      if (
+        user.rejectionDetails.reason === "Other" &&
+        user.rejectionDetails.customReason
+      ) {
+        reasonText += `: ${user.rejectionDetails.customReason}`;
+      } else if (user.rejectionDetails.customReason) {
+        reasonText += `\nAdditional information: ${user.rejectionDetails.customReason}`;
+      }
+    }
+
+    sendSmtpEmail.sender = {
+      email: process.env.EMAIL_USER,
+      name: "Visiona",
+    };
+
+    sendSmtpEmail.to = [{ email: user.email }];
+    sendSmtpEmail.subject = "Your Architect Account Application Status";
+    sendSmtpEmail.htmlContent = `
+      <h1>Architect Account Application Update</h1>
+      <p>Dear ${user.firstName || user.prenom || "Architect"},</p>
+      <p>Thank you for your interest in joining our platform as an architect.</p>
+      <p>After careful review of your application, we regret to inform you that we are unable to approve your account at this time.</p>
+      ${reasonText ? `<p><strong>Reason:</strong> ${reasonText}</p>` : ""}
+      <p>You may address the issues mentioned above and submit a new application in the future.</p>
+      <p>If you believe there has been an error or would like to provide additional information, please contact our support team.</p>
+      <p>Thank you for your understanding.</p>
+    `;
+
+    console.log(`Attempting to send rejection email to: ${user.email}`);
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log("Rejection email sent successfully:", result);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("Email sending error:", error);
+    return { success: false, error };
+  }
+};
+
 module.exports = {
   sendApprovalEmail,
+  sendRejectionEmail,
 };

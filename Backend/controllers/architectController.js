@@ -1,5 +1,8 @@
 const User = require("../models/User");
-const { sendApprovalEmail } = require("../utils/emailService");
+const {
+  sendApprovalEmail,
+  sendRejectionEmail,
+} = require("../utils/emailService");
 
 // Get all architect requests
 exports.getArchitectRequests = async (req, res) => {
@@ -20,7 +23,7 @@ exports.getArchitectRequests = async (req, res) => {
 // Approve or reject architect
 exports.updateArchitectStatus = async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, rejectionReason, customReason } = req.body;
 
   console.log(`Updating architect ${id} status to: ${status}`);
 
@@ -28,14 +31,31 @@ exports.updateArchitectStatus = async (req, res) => {
     return res.status(400).json({ error: "Invalid status value" });
   }
 
+  // Validate rejection reason if status is rejected
+  if (status === "rejected" && !rejectionReason) {
+    return res.status(400).json({ error: "Rejection reason is required" });
+  }
+
   try {
+    // Prepare update data
+    const updateData = { status };
+
+    // Add rejection details if applicable
+    if (status === "rejected") {
+      updateData.rejectionDetails = {
+        reason: rejectionReason,
+        customReason: customReason || "",
+        rejectedAt: new Date(),
+      };
+    }
+
     // Find and update using the base User model with role filter
     const updatedUser = await User.findOneAndUpdate(
       {
         _id: id,
         role: "architect",
       },
-      { status },
+      updateData,
       {
         new: true,
         runValidators: true,
@@ -47,31 +67,33 @@ exports.updateArchitectStatus = async (req, res) => {
       return res.status(404).json({ error: "Architect not found" });
     }
 
-    // Send email notification if status is approved
+    // Send appropriate email notification
+    let emailResult = { success: false };
+
     if (status === "approved") {
       console.log(`Sending approval email to architect: ${updatedUser.email}`);
-      try {
-        const emailResult = await sendApprovalEmail(updatedUser);
+      emailResult = await sendApprovalEmail(updatedUser);
+    } else if (status === "rejected") {
+      console.log(`Sending rejection email to architect: ${updatedUser.email}`);
+      emailResult = await sendRejectionEmail(updatedUser);
+    }
 
-        if (!emailResult.success) {
-          console.warn(
-            `Email notification failed: ${JSON.stringify(emailResult.error)}`
-          );
-        } else {
-          console.log(
-            `Approval email sent successfully to ${updatedUser.email}`
-          );
-        }
-      } catch (emailError) {
-        console.error("Error sending approval email:", emailError);
-        // Continue with the response - we don't want to fail the status update if email fails
-      }
+    if (!emailResult.success) {
+      console.warn(
+        `Email notification failed: ${JSON.stringify(emailResult.error)}`
+      );
+    } else {
+      console.log(
+        `${
+          status === "approved" ? "Approval" : "Rejection"
+        } email sent successfully to ${updatedUser.email}`
+      );
     }
 
     res.json({
       message: `Architect status updated to ${status}`,
       user: updatedUser,
-      emailSent: status === "approved" ? true : undefined,
+      emailSent: emailResult.success,
     });
   } catch (error) {
     console.error("Update error:", error);
@@ -79,5 +101,47 @@ exports.updateArchitectStatus = async (req, res) => {
       error: "Failed to update architect status",
       details: error.message,
     });
+  }
+};
+
+// Get architect statistics for admin dashboard
+exports.getArchitectStats = async (req, res) => {
+  try {
+    // Get counts for each status
+    const [pending, approved, rejected] = await Promise.all([
+      User.countDocuments({ role: "architect", status: "pending" }),
+      User.countDocuments({ role: "architect", status: "approved" }),
+      User.countDocuments({ role: "architect", status: "rejected" }),
+    ]);
+
+    // Get rejection reason statistics
+    const rejectionReasons = await User.aggregate([
+      {
+        $match: {
+          role: "architect",
+          status: "rejected",
+          "rejectionDetails.reason": { $exists: true },
+        },
+      },
+      { $group: { _id: "$rejectionDetails.reason", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+
+    // Convert to a more readable format
+    const formattedReasons = rejectionReasons.map((reason) => ({
+      reason: reason._id,
+      count: reason.count,
+    }));
+
+    res.json({
+      total: pending + approved + rejected,
+      pending,
+      approved,
+      rejected,
+      rejectionReasons: formattedReasons,
+    });
+  } catch (error) {
+    console.error("Error fetching architect statistics:", error);
+    res.status(500).json({ message: error.message });
   }
 };

@@ -10,6 +10,8 @@ const asyncHandler = require("express-async-handler");
 const cookieParser = require("cookie-parser");
 const { auth } = require("express-openid-connect");
 const userRoutes = require("./routes/userRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const projects = require("./routes/projectsRoutes");
 const marketplaceRoutes = require("./routes/marketplaceRoutes");
@@ -24,6 +26,7 @@ const profileRoutes = require("./routes/profileRoutes");
 const clientRoutes = require("./routes/clientRoutes");
 const needSheetRoutes = require("./routes/needSheetRoutes");
 const matchArchitect = require("./routes/matchRoutes");
+//const matchRequestRoutes = require("./routes/matchArxhitectRequests");
 
 // --------------------Stripe -----------------------
 const webhookRoutes = require("./Stripe/webhook/route");
@@ -43,7 +46,6 @@ app.use(
 
 // Middleware
 app.use(express.json());
-
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
@@ -75,6 +77,8 @@ connectDB();
 
 //--------------------------------------------Routes --------------------
 app.use("/api/auth", authRoutes);
+app.use("/api/admins", adminRoutes);
+
 app.use("/api/users", userRoutes);
 app.use("/api/clients", userRoutes);
 app.use("/api/architects", userRoutes);
@@ -98,6 +102,7 @@ app.use("/api/payments", paymentRoutes);
 // ---------------------------Need Sheet routes--------------------
 app.use("/api/needsheets", needSheetRoutes);
 app.use("/api/ai", matchArchitect);
+//app.use("/api/match-requests", matchRequestRoutes);
 
 // ------------------------------Auth0 callback handling---------------------------------------
 app.get("/", async (req, res) => {

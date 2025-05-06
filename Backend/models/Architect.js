@@ -91,7 +91,6 @@ const architectSchema = new mongoose.Schema(
     projectTypes: [{ type: String }], // e.g., Residential, Commercial, Industrial, etc.
 
     // Service offerings
-    // Service offerings
     services: [
       {
         type: String,
@@ -237,6 +236,22 @@ const architectSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
+    },
+    rejectionDetails: {
+      reason: {
+        type: String,
+        enum: [
+          "Incomplete Documentation",
+          "Invalid Professional Credentials",
+          "Insufficient Portfolio Quality",
+          "Duplicate Account",
+          "Inappropriate Content",
+          "Terms Violation",
+          "Other",
+        ],
+      },
+      customReason: { type: String }, // For "Other" or additional details
+      rejectedAt: { type: Date },
     },
 
     documents: [{ type: String }],

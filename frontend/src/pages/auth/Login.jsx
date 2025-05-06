@@ -21,12 +21,27 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      // If architect and first login, redirect to subscription page
-      if (user.role === "architect" && isFirstLogin) {
-        navigate("/subs");
-      } else {
-        // Otherwise, redirect to appropriate dashboard
-        navigate(user.role === "client" ? "/needSheet" : "/architect");
+      // Handle different roles and redirect accordingly
+      switch (user.role) {
+        case "admin":
+          // Redirect admin users to admin dashboard
+          navigate("/admin");
+          break;
+        case "architect":
+          // If architect and first login, redirect to subscription page
+          if (isFirstLogin) {
+            navigate("/subs");
+          } else {
+            navigate("/architect");
+          }
+          break;
+        case "client":
+          // Redirect clients to need sheet
+          navigate("/needSheet");
+          break;
+        default:
+          // Default fallback
+          navigate("/");
       }
     }
   }, [user, isFirstLogin, navigate]);
